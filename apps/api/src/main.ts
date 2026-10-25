@@ -32,7 +32,7 @@ import {
 } from "./modules/transfer/transfer.module.ts";
 import { AppConfig } from "./platform/config.ts";
 import { DbLive } from "./platform/db.ts";
-import { bodyLimit } from "./platform/http.ts";
+import { bodyLimit, corsFor } from "./platform/http.ts";
 
 // Domain modules: each exposes its services, they may depend on each other.
 const Modules = Layer.mergeAll(
@@ -62,9 +62,9 @@ const ApiRoutes = HttpApiBuilder.layer(Api, {
 
 const Server = Layer.unwrap(
   AppConfig.pipe(
-    Effect.map(({ port }) =>
+    Effect.map(({ port, corsOrigins }) =>
       HttpRouter.serve(ApiRoutes, {
-        middleware: bodyLimit,
+        middleware: (app) => bodyLimit(corsFor(corsOrigins)(app)),
       }).pipe(Layer.provide(NodeHttpServer.layer(createServer, { port }))),
     ),
   ),
