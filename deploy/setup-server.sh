@@ -94,7 +94,9 @@ fi
 
 cd "$STACK"
 docker compose config --quiet
-docker compose run --rm --no-deps proxy caddy validate --config /etc/caddy/Caddyfile
+# not `compose run`: the proxy has a fixed IP that the running one already holds
+docker run --rm --network none -v "$CADDYFILE:/etc/caddy/Caddyfile:ro,z" caddy:latest \
+  caddy validate --config /etc/caddy/Caddyfile
 # recreates the proxy because of the new volumes (a few seconds without HTTPS)
 docker compose up -d proxy
 echo "done: deploy user, directories, backend.env, compose.override.yml, Caddy"
