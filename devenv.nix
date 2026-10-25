@@ -16,6 +16,29 @@
     initialScript = "CREATE ROLE bida SUPERUSER LOGIN;";
   };
 
+  # `devenv up` starts postgres, the api (http://localhost:3000) and the
+  # swagger docs (http://localhost:5174).
+  processes.api = {
+    exec = "pnpm --filter @bida/api dev";
+    process-compose.depends_on.postgres.condition = "process_healthy";
+  };
+  processes.docs.exec = "pnpm --filter @bida/docs dev";
+
+  # Android emulator plus the Flutter app running on it. The app reaches the
+  # api through 10.0.2.2 (see apps/mobile/lib/services/api_client.dart).
+  processes.emulator.exec = "emu";
+  processes.mobile = {
+    exec = ''
+      cd "$DEVENV_ROOT/apps/mobile"
+      adb wait-for-device
+      until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do
+        sleep 2
+      done
+      flutter run -d emulator-5554
+    '';
+    process-compose.depends_on.api.condition = "process_started";
+  };
+
   languages.javascript = {
     enable = true;
     package = pkgs.nodejs_22;
