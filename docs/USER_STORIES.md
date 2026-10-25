@@ -1,7 +1,7 @@
 # User stories – Money Planner
 
 Stan apki **dziś** (przegląd kodu `apps/mobile`). Opisuje, co użytkownik faktycznie może zrobić.
-Zakres na start: **jeden użytkownik, brak logowania i kont**. `userId` dojdzie do tabel później.
+Sekcje 1–8 opisują apkę jednoosobową. Konta, logowanie i wspólne budżety opisują sekcje 9–11 (stan na ich wprowadzenie; patrz `ARCHITECTURE.md`, „Konta i sesje" oraz „Wspólne budżety").
 
 Oznaczenia: 🌐 = po przejściu na backend wymaga endpointu · 📱 = zostaje lokalnie w apce.
 
@@ -93,6 +93,69 @@ Pojęcia: **okres** (np. „Lipiec 2026", z dochodem), **kategoria** (np. Jedzen
 - **US-8.2** Po włączeniu blokady muszę podać PIN przy wejściu do apki. 📱
 - **US-8.3** Zmieniam i wyłączam PIN. 📱
 - **US-8.4** Włączam odblokowanie biometryczne, jeśli urządzenie je obsługuje. 📱
+
+---
+
+## 9. Konto i logowanie
+
+- **US-9.1** Loguję się adresem e-mail: dostaję mail z kodem i linkiem, bez hasła. 🌐
+- **US-9.2** Loguję się kontem Google. 🌐
+- **US-9.3** Zostaję zalogowany na urządzeniu, a wylogowanie kończy sesję od razu. 🌐
+- **US-9.4** Przy pierwszym logowaniu powstaje moja przestrzeń osobista. 🌐
+
+## 10. Przestrzenie: osobista i wspólne
+
+Każdy ma jedną **przestrzeń osobistą** (tylko dla niego) i może należeć do dowolnej liczby **przestrzeni wspólnych**.
+
+- **US-10.1** Mam jedną przestrzeń osobistą. Nie mogę z niej wyjść, usunąć jej ani nikogo do niej zaprosić. 🌐
+- **US-10.2** Zakładam przestrzeń wspólną (nazwa, waluta); zostaję jej właścicielem. 🌐
+- **US-10.3** Przełączam się między przestrzeniami z nagłówka ekranu; apka pamięta wybraną i bieżący okres osobno dla każdej. 📱
+- **US-10.4** Przy pierwszym uruchomieniu wybieram, czego używam: osobistego, wspólnego czy obu, i apka otwiera się w wybranej przestrzeni. 📱
+- **US-10.5** Jako właściciel zapraszam osobę adresem e-mail, wybierając jej rolę. Zaproszenie wygasa po 14 dniach i mogę je cofnąć. 🌐
+- **US-10.6** Zapraszana osoba widzi zaproszenie po zalogowaniu tym adresem i je przyjmuje albo odrzuca. Przyjęcie czeka na zatwierdzenie przez właściciela, dopiero potem osoba zostaje członkiem. 🌐
+- **US-10.7** Widzę członków przestrzeni, ich role i oczekujące zaproszenia. 🌐
+- **US-10.8** Jako właściciel zmieniam role, usuwam członków i zatwierdzam albo odrzucam przyjęte zaproszenia. 🌐
+- **US-10.9** Mogę wyjść ze wspólnej przestrzeni. Ostatni właściciel nie może, dopóki nie przekaże roli albo nie usunie przestrzeni. 🌐
+- **US-10.10** Mogę usunąć wspólną przestrzeń, jeśli jestem w niej sam; w przeciwnym razie najpierw usuwam pozostałych. 🌐
+- **US-10.11** Przy wydatku widzę, kto go dodał, i filtruję „tylko moje". Po odejściu autora widzę „były członek". 🌐
+- **US-10.12** Ustawiam swoją nazwę, którą widzą inni członkowie. 🌐
+- **US-10.13** Gdy usunięto mnie z przestrzeni, którą miałem wybraną, apka przełącza mnie na inną i mówi dlaczego. 📱
+
+**Uprawnienia we wspólnej przestrzeni**
+
+| | właściciel | członek |
+| --- | --- | --- |
+| widzi wszystkie dane, eksportuje | tak | tak |
+| dodaje, edytuje i usuwa wydatki (także cudze) | tak | tak |
+| tworzy i edytuje okresy, kategorie, plan i reguły cykliczne | tak | tak |
+| usuwa okres lub kategorię | tak | nie |
+| zmienia nazwę i walutę przestrzeni | tak | nie |
+| zaprasza, zatwierdza, zmienia role, usuwa członków | tak | nie |
+| odtwarza dane z kopii (zastępuje wszystko) | tak | nie |
+| usuwa przestrzeń (gdy jest w niej sam) | tak | nie |
+| wychodzi z przestrzeni | tak (nie ostatni właściciel) | tak |
+
+## 11. Wpłaty na wspólny budżet
+
+Wspólny okres zachowuje **zaplanowany dochód** (liczba ustawiana przez właściciela, jak dziś). **Wpłaty** to stan faktyczny: kto, ile i kiedy wpłacił.
+
+- **US-11.1** We wspólnym okresie widzę „wpłacono X z Y" i podział na osoby. 🌐
+- **US-11.2** Dodaję wpłatę (swoją, albo bez autora, np. gotówka od kogoś): kwota w walucie okresu, data, opcjonalna notatka. 🌐
+- **US-11.3** Usuwam wpłatę, którą dodałem; właściciel usuwa każdą. 🌐
+- **US-11.4** *(etap 2, portfel)* W planie osobistym mam kopertę „Dom (wspólny)" dla każdej wspólnej przestrzeni, w której jestem. Wydatek z niej to wpłata na wspólny budżet i tworzy ją po stronie wspólnej. 🌐
+- **US-11.5** *(etap 2)* Zmiana i usunięcie takiego wydatku zmienia i usuwa wpłatę. Wpłata po stronie wspólnej jest tylko do odczytu. 🌐
+- **US-11.6** *(etap 2)* Gdy wspólny okres nie obejmuje daty wpłaty, dostaję komunikat, że trzeba go najpierw utworzyć. 🌐
+- **US-11.7** *(etap 2)* Gdy waluty się różnią, podaję kwotę w obu (jak przy wydatku w obcej walucie). 🌐
+- **US-11.8** *(etap 2)* Po wyjściu z przestrzeni moja koperta „wspólna" staje się zwykła, tylko do odczytu, a stare wpłaty zostają jako historia. 🌐
+
+### Przypadki brzegowe (decyzje)
+
+- Edycja planu okresu przez dwie osoby naraz: druga dostaje błąd 409 (okres ma wersję) zamiast po cichu nadpisać zmiany. 🌐
+- Zaproszenie na adres, który już jest członkiem, daje błąd; ponowne zaproszenie tego samego adresu odświeża rolę i termin.
+- Literówka w adresie: przyjęcie zaproszenia nie daje dostępu bez zatwierdzenia przez właściciela.
+- Limity: 10 członków na przestrzeń, 20 przestrzeni na użytkownika, 10 zaproszeń na godzinę.
+- Zapłaciłem za wspólny rachunek z własnych pieniędzy: na razie jako wpłata plus wydatek; automatyczny zwrot odłożony.
+- Rozliczanie „kto komu ile winien" nie jest celem aplikacji.
 
 ---
 

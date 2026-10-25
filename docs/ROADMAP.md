@@ -63,11 +63,24 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 - Eksport i import CSV z deduplikacją (`US-7.3`–`7.5`)
 - Jednorazowa migracja danych z lokalnej bazy aplikacji
 
-## Etap 8 – Dalej
+## Etap 8 – Wspólne budżety
+
+Opis: `ARCHITECTURE.md` („Wspólne budżety"), historyjki: `USER_STORIES.md` (sekcje 10–11).
+
+- Rodzaj przestrzeni (osobista / wspólna), role i uprawnienia
+- Zaproszenia po adresie e-mail z zatwierdzaniem przez właściciela, członkowie, wyjście i usunięcie przestrzeni
+- Autor wydatku, nazwa użytkownika, wersja okresu (409 przy równoległej edycji planu)
+- Wpłaty na wspólny okres
+- Apka: przełącznik przestrzeni, wybór przy pierwszym uruchomieniu, członkowie i zaproszenia
+
+## Etap 9 – Portfel
+
+- Kategoria osobista powiązana ze wspólną przestrzenią; wydatek z niej to wpłata na wspólny budżet
+
+## Etap 10 – Dalej
 
 - Konta i logowanie przez link i kod z e-maila: zrobione (sesje, członkostwo w przestrzeniach)
 - Logowanie przez Google: zrobione (token ID weryfikowany po stronie serwera)
-- Zaproszenia i role w przestrzeniach, przeniesienie okresu do wspólnej przestrzeni
 - Zarządzanie sesjami (lista urządzeń, wylogowanie ze wszystkich), usuwanie konta
 - Pilnowanie zmian niekompatybilnych kontraktu (np. sprawdzanie diffa `openapi.json` w CI)
 - Ewentualnie tryb offline i synchronizacja (decyzja po etapie 5)

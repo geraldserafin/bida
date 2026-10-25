@@ -158,6 +158,55 @@ Bez haseł: użytkownik dowodzi, że ma dostęp do adresu e-mail.
 - **Middleware `Authenticated`** (kontrakt, `HttpApiSecurity`: bearer i cookie) dostarcza `CurrentUser`. Jego implementacja jest w module `auth`, a schematy trafiają do OpenAPI (przycisk Authorize w Swaggerze).
 - **E-mail** wysyła `Mailer` (`platform/mailer.ts`, `nodemailer`). Bez `SMTP_URL` wiadomości trafiają tylko do logu, co jest przeznaczone do developmentu. Ustawienia: `SMTP_URL`, `MAIL_FROM`, `APP_URL`, `COOKIE_SECURE`, `CLAIM_EMAIL`, `CORS_ORIGINS`, `GOOGLE_CLIENT_IDS`.
 
+## Wspólne budżety
+
+Przestrzeń ma **rodzaj** (`kind`): `personal` albo `shared`.
+
+- **Osobista** jest dokładnie jedna na użytkownika i powstaje przy pierwszym logowaniu. Ma jednego członka, nie można do niej zapraszać, z niej wychodzić ani jej usuwać. Dzięki temu użytkownik nigdy nie zostaje bez przestrzeni, a prywatne dane nie mieszają się ze wspólnymi.
+- **Wspólna** jest zakładana osobno (`POST /spaces`), ma właściciela i członków.
+- Istniejące przestrzenie z kont sprzed tej zmiany dostają rodzaj `personal`.
+
+### Role i uprawnienia
+
+Role to `owner` i `member` (kolumna `memberships.role`). Tabela uprawnień jest w `USER_STORIES.md`, sekcja 10. `SpaceContext` dostarcza oprócz `CurrentSpace` także rolę (`CurrentMember`), a endpointy porównują ją przed wykonaniem akcji. Brak uprawnień to 403, brak przestrzeni lub członkostwa to nadal 404.
+
+- Reguła „co najmniej jeden właściciel" jest sprawdzana w transakcji z blokadą wiersza przestrzeni, żeby równoległe żądania (dwóch właścicieli usuwających siebie) jej nie złamały.
+- Z przestrzeni osobistej i dla jedynej przestrzeni nie da się wyjść; wspólną można usunąć tylko samemu będąc w niej jedynym członkiem.
+
+### Zaproszenia
+
+Zaproszenie jest przypisane do **adresu e-mail**, a nie do linku: osoba loguje się tym adresem (kod albo Google, oba dają zweryfikowany adres) i widzi zaproszenia dla siebie.
+
+```
+invited ──(zaproszony przyjmuje)──► accepted ──(właściciel zatwierdza)──► approved (powstaje członkostwo)
+   │                                    │
+   ├─ declined (zaproszony odrzuca)     └─ rejected (właściciel odrzuca)
+   ├─ revoked  (właściciel cofa)
+   └─ wygasa po 14 dniach
+```
+
+- Przyjęcie samo nie daje dostępu: właściciel musi je zatwierdzić. Chroni to przed literówką w adresie (obca osoba z takim adresem mogłaby inaczej zobaczyć cudzy budżet). Właściciel dostaje o przyjęciu maila.
+- Zaproszenie na adres, który jest już członkiem, jest błędem; ponowne zaproszenie tego samego adresu odświeża rolę i termin.
+- Limity: 10 członków na przestrzeń (z oczekującymi zaproszeniami), 20 przestrzeni na użytkownika, 10 zaproszeń na godzinę na użytkownika (ochrona serwera pocztowego). Mail zawiera nazwę przestrzeni i kto zaprasza, nic z danych finansowych.
+
+### Autor i konflikty
+
+- Wydatki i wpłaty mają `created_by` (`ON DELETE SET NULL`): po odejściu autora historia zostaje, a apka pokazuje „były członek". Użytkownik ma nazwę (`PUT /me`), domyślnie część adresu przed `@`.
+- Okres ma `version`. Edycja planu (`PUT /periods/:id/plan` i `PUT /periods/:id`) wymaga podania wersji, a niezgodna daje `409 PeriodChanged`. Dzięki temu dwie osoby edytujące plan naraz nie nadpiszą się po cichu.
+- Nie ma synchronizacji na żywo: ostatni zapis wygrywa dla wydatków, apka odświeża dane przy otwarciu i po akcjach.
+
+### Wpłaty (etap 1)
+
+Wspólny okres zachowuje `income` jako **plan**. **Wpłata** (`contributions`: przestrzeń, okres, autor lub brak autora, kwota w walucie okresu, data, notatka) to stan faktyczny; widać sumę i podział na osoby („wpłacono X z Y"). Wpłatę dodaje członek (siebie albo bez autora, np. gotówka), usuwa autor albo właściciel. Wpłaty widzą wszyscy członkowie.
+
+### Portfel (etap 2)
+
+W przestrzeni osobistej kategoria może być **powiązana ze wspólną przestrzenią** (`categories.linked_space_id`). Taka kategoria powstaje sama po dołączeniu do wspólnej przestrzeni i staje się zwykłą, tylko do odczytu, po wyjściu. Wydatek na jej kopercie jest **przelewem na wspólny budżet**: serwer w jednej transakcji tworzy, zmienia albo usuwa wpłatę (`contributions.source_expense_id`) w okresie wspólnym obejmującym datę wydatku. Źródłem prawdy jest wydatek osobisty, a wpłata po stronie wspólnej jest tylko do odczytu.
+
+- Brak okresu wspólnego dla daty: zapis odrzucony z komunikatem.
+- Waluty: wydatek osobisty trzyma kwotę w walucie okresu osobistego, a kwotę w walucie wspólnej w polach `original…` (istnieją już).
+- Import CSV tworzy zwykłe wydatki bez wpłat. Usunięcie okresu osobistego nie usuwa wpłaty (odpina powiązanie).
+
 ## Walidacja i konwencje API
 
 Zasada: zły input kończy się na brzegu odpowiedzią 400, a nie błędem bazy (500). Dlatego kontrakt sprawdza więcej, niż wymaga sam typ.
