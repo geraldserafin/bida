@@ -282,7 +282,7 @@ layer(TestLayer)("TransferService", (it) => {
 
       const csv = yield* transfer.exportCsv;
       const lines = csv.trimEnd().split("\n");
-      assert.strictEqual(lines[0], "Period,Category,Amount,Date,Note");
+      assert.strictEqual(lines[0], "Period,Category,Amount,Date,Note,Currency");
       assert.strictEqual(lines.length, 4); // header + 3 expenses
       assert.include(csv, 'July,Food,45.99,2026-07-03,"Biedronka, ""fresh"""');
       assert.include(csv, "July,Food,1.00,2026-07-01,");
@@ -298,7 +298,7 @@ layer(TestLayer)("TransferService", (it) => {
       const expenses = yield* ExpensesService;
 
       const csv = [
-        "Period,Category,Amount,Date,Note",
+        "Period,Category,Amount,Date,Note,Currency",
         "June 2026,Food,12.34,2026-06-03,lunch",
         'June 2026,food,5,2026-06-04,"a, b"',
         "June 2026,Fun,7.5,2026-06-05,",
@@ -332,7 +332,7 @@ layer(TestLayer)("TransferService", (it) => {
       yield* resetDb;
       const transfer = yield* TransferService;
       const csv =
-        "Period,Category,Amount,Date,Note\nJune,Food,12.34,2026-06-03,lunch\nJune,Food,12.34,2026-06-03,lunch\n";
+        "Period,Category,Amount,Date,Note,Currency\nJune,Food,12.34,2026-06-03,lunch\nJune,Food,12.34,2026-06-03,lunch\n";
 
       // the duplicate inside the file counts as skipped too
       assert.deepStrictEqual(yield* transfer.importCsv(csv), {
@@ -363,7 +363,7 @@ layer(TestLayer)("TransferService", (it) => {
       const transfer = yield* TransferService;
       const budgets = yield* BudgetsService;
       const csv =
-        "Period,Category,Amount,Date,Note\nJune,Food,1,2026-06-03,ok\nJune,Food,nope,2026-06-03,bad\n";
+        "Period,Category,Amount,Date,Note,Currency\nJune,Food,1,2026-06-03,ok\nJune,Food,nope,2026-06-03,bad\n";
       const error = yield* transfer.importCsv(csv).pipe(Effect.flip);
       assert.instanceOf(error, InvalidCsv);
       assert.strictEqual(error.line, 3);

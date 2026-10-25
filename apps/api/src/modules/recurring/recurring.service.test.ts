@@ -134,7 +134,7 @@ layer(TestLayer)("RecurringService", (it) => {
       yield* recurring.create(rule(gym, 99_000, { active: false }));
 
       const plan = Object.fromEntries(
-        (yield* recurring.suggestedPlan).map((p) => [
+        (yield* recurring.suggestedPlan()).map((p) => [
           p.categoryId,
           p.plannedMinor,
         ]),

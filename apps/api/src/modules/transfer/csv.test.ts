@@ -36,6 +36,7 @@ it("round-trips through formatCsv and parseCsv", () =>
         period: "July, 2026",
         category: "Food",
         amountMinor: 4599,
+        currency: "PLN" as const,
         date: "2026-07-03",
         note: 'a "b"',
       },
@@ -43,6 +44,7 @@ it("round-trips through formatCsv and parseCsv", () =>
         period: "July, 2026",
         category: "Rent",
         amountMinor: 200000,
+        currency: "PLN" as const,
         date: "2026-07-01",
         note: null,
       },
@@ -50,17 +52,17 @@ it("round-trips through formatCsv and parseCsv", () =>
     const rows = yield* parseCsv(text);
     assert.strictEqual(rows.length, 2);
     assert.deepStrictEqual(
-      rows.map((r) => [r.period, r.category, r.amountMinor, r.date, r.note]),
+      rows.map((r) => [r.period, r.category, r.amount, r.date, r.note]),
       [
-        ["July, 2026", "Food", 4599, "2026-07-03", 'a "b"'],
-        ["July, 2026", "Rent", 200000, "2026-07-01", ""],
+        ["July, 2026", "Food", "45.99", "2026-07-03", 'a "b"'],
+        ["July, 2026", "Rent", "2000.00", "2026-07-01", ""],
       ],
     );
   }).pipe(Effect.runPromise));
 
 it("reports the line of an invalid row", () =>
   Effect.gen(function* () {
-    const header = "Period,Category,Amount,Date,Note";
+    const header = "Period,Category,Amount,Date,Note,Currency";
     const badAmount = yield* parseCsv(
       `${header}\nJuly,Food,x,2026-07-03,\n`,
     ).pipe(Effect.flip);
@@ -80,7 +82,7 @@ it("an empty or header-only file has no rows", () =>
   Effect.gen(function* () {
     assert.deepStrictEqual(yield* parseCsv(""), []);
     assert.deepStrictEqual(
-      yield* parseCsv("Period,Category,Amount,Date,Note\n"),
+      yield* parseCsv("Period,Category,Amount,Date,Note,Currency\n"),
       [],
     );
   }).pipe(Effect.runPromise));
