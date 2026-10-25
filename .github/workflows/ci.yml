@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend, contract and docs
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: bida
+          POSTGRES_DB: bida_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U bida"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # the tests run against this database (see apps/api/vitest.config.ts)
+      TEST_DATABASE_URL: postgres://bida@127.0.0.1:5432/bida_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.9.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm --filter @bida/api test
+      - run: pnpm --filter @bida/docs build
+
+  flutter:
+    name: Dart client and mobile app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.9.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.4
+          cache: true
+      # the migration tests open a real SQLite database
+      - run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+      - run: pnpm install --frozen-lockfile
+      # the generated client must match the contract: regenerate and compare
+      - name: Dart client is up to date
+        run: pnpm check:dart-client
+      - run: flutter pub get
+        working-directory: apps/mobile
+      - run: dart format --output=none --set-exit-if-changed lib test
+        working-directory: apps/mobile
+      - run: flutter analyze
+        working-directory: apps/mobile
+      - run: flutter test
+        working-directory: apps/mobile
