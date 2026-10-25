@@ -28,6 +28,14 @@ export const GoogleSignIn = Schema.Struct({
   transport: Transport,
 }).annotate({ identifier: "GoogleSignIn" });
 
+export const GoogleAccessToken = Schema.Struct({
+  accessToken: Schema.String.check(
+    Schema.isMinLength(20),
+    Schema.isMaxLength(4096),
+  ),
+  transport: Transport,
+}).annotate({ identifier: "GoogleAccessToken" });
+
 export const AuthResult = Schema.Struct({
   user: UserJson,
   /** Only with the `token` transport. Send it as `Authorization: Bearer`. */
@@ -75,6 +83,17 @@ export class AuthApi extends HttpApiGroup.make("auth")
         summary: "Sign in with a Google ID token",
         description:
           "The app signs in with Google and sends the ID token it got. The token has to be for one of this server's Google client ids and its e-mail address verified by Google. Creates the account on the first sign-in; an account with the same address is the same account.",
+      }),
+    ),
+    HttpApiEndpoint.post("googleAccessToken", "/google/access-token", {
+      payload: GoogleAccessToken,
+      success: AuthResult,
+      error: wire(InvalidLogin),
+    }).annotateMerge(
+      OpenApi.annotations({
+        summary: "Sign in with a Google access token",
+        description:
+          "For the browser app, which gets an access token from Google's popup instead of an ID token. The server asks Google whom the token was issued to and refuses one that was not issued to one of its client ids or whose address Google has not verified. Otherwise the same as the ID token sign-in.",
       }),
     ),
     HttpApiEndpoint.get("me", "/me", {

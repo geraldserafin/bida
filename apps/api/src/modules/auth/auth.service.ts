@@ -49,6 +49,11 @@ export class AuthService extends Context.Service<
       idToken: string,
       userAgent: string | null,
     ): Effect.Effect<SignedIn, InvalidLogin>;
+    /** Signs in with the access token a browser got from Google. */
+    signInWithGoogleAccessToken(
+      accessToken: string,
+      userAgent: string | null,
+    ): Effect.Effect<SignedIn, InvalidLogin>;
     /** The user and session behind a session token. */
     authenticate(
       token: string,
@@ -208,11 +213,19 @@ export class AuthService extends Context.Service<
         return { user: user.value, sessionId: session.value.id };
       });
 
+      const signInWithGoogleAccessToken = Effect.fn(
+        "AuthService.signInWithGoogleAccessToken",
+      )(function* (accessToken: string, userAgent: string | null) {
+        const profile = yield* google.verifyAccessToken(accessToken);
+        return yield* signIn(userForGoogle(profile), userAgent);
+      });
+
       return AuthService.of({
         requestLink,
         verifyCode,
         verifyToken,
         signInWithGoogle,
+        signInWithGoogleAccessToken,
         authenticate,
         logout: repo.deleteSession,
       });

@@ -17,19 +17,48 @@ export interface GoogleKey {
   readonly [field: string]: unknown;
 }
 
+/** What the verifier needs from the outside; replaced in tests. */
+export interface GoogleOptions {
+  /** Fetches Google's current signing keys (and how long they stay valid). */
+  readonly loadKeys: Effect.Effect<{
+    readonly keys: ReadonlyArray<GoogleKey>;
+    readonly ttlSeconds: number;
+  }>;
+  /** GETs a JSON document from Google, with an access token when given. */
+  readonly getJson: (
+    url: string,
+    bearer?: string,
+  ) => Effect.Effect<unknown, unknown>;
+  /** OAuth client ids of our apps; a token for any other is refused. */
+  readonly clientIds: ReadonlyArray<string>;
+  readonly now?: () => number;
+}
+
 const CERTS_URL = "https://www.googleapis.com/oauth2/v3/certs";
+const TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo";
+const USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 const ISSUERS = ["accounts.google.com", "https://accounts.google.com"];
 
 const Header = Schema.Struct({ alg: Schema.String, kid: Schema.String });
+const Verified = Schema.Union([Schema.Boolean, Schema.Literal("true")]);
 const Claims = Schema.Struct({
   iss: Schema.String,
   aud: Schema.String,
   sub: Schema.String,
   exp: Schema.Number,
   email: Schema.String,
-  email_verified: Schema.Union([Schema.Boolean, Schema.Literal("true")]),
+  email_verified: Verified,
   name: Schema.optional(Schema.String),
 });
+/** Google's answer about an access token: who it was issued to and for. */
+const TokenInfo = Schema.Struct({
+  aud: Schema.String,
+  sub: Schema.String,
+  email: Schema.String,
+  email_verified: Verified,
+  expires_in: Schema.NumberFromString,
+});
+const UserInfo = Schema.Struct({ name: Schema.optional(Schema.String) });
 
 const decodeJson = <
   S extends Schema.Top & { readonly DecodingServices: never },
@@ -41,24 +70,32 @@ const decodeJson = <
     Buffer.from(part, "base64url").toString("utf8"),
   );
 
+const displayName = (name: string | undefined) =>
+  name?.trim() ? name.trim().slice(0, 200) : null;
+
 /**
- * Checks the ID token an app got from Google sign-in: signed by Google, meant
- * for one of our client ids, not expired, and the address verified by Google.
+ * Checks what an app got from Google sign-in: an ID token (Android) or an
+ * access token (browser). Either has to be for one of our client ids, with the
+ * address verified by Google.
  */
 export class GoogleVerifier extends Context.Service<
   GoogleVerifier,
-  { verify(idToken: string): Effect.Effect<GoogleProfile, InvalidLogin> }
+  {
+    /** Checks the signature and the claims of an ID token. */
+    verify(idToken: string): Effect.Effect<GoogleProfile, InvalidLogin>;
+    /**
+     * Asks Google whom an access token was issued to. The token has to be
+     * for our client: one issued to another app must not sign anybody in.
+     */
+    verifyAccessToken(
+      accessToken: string,
+    ): Effect.Effect<GoogleProfile, InvalidLogin>;
+  }
 >()("bida/auth/GoogleVerifier") {
-  /** [loadKeys] fetches Google's current keys; the verifier caches them. */
-  static readonly layerWith = (
-    loadKeys: Effect.Effect<{
-      readonly keys: ReadonlyArray<GoogleKey>;
-      readonly ttlSeconds: number;
-    }>,
-    clientIds: ReadonlyArray<string>,
-    now: () => number = Date.now,
-  ) =>
+  static readonly layerWith = (options: GoogleOptions) =>
     Layer.sync(GoogleVerifier, () => {
+      const { loadKeys, getJson, clientIds } = options;
+      const now = options.now ?? Date.now;
       let cached: { keys: ReadonlyArray<GoogleKey>; until: number } = {
         keys: [],
         until: 0,
@@ -106,26 +143,67 @@ export class GoogleVerifier extends Context.Service<
         return {
           subject: claims.sub,
           email: claims.email,
-          name: claims.name?.trim() ? claims.name.trim().slice(0, 200) : null,
+          name: displayName(claims.name),
         } satisfies GoogleProfile;
       });
 
+      const checkAccessToken = Effect.fn("GoogleVerifier.verifyAccessToken")(
+        function* (accessToken: string) {
+          const info = yield* getJson(
+            `${TOKENINFO_URL}?access_token=${encodeURIComponent(accessToken)}`,
+          ).pipe(Effect.flatMap(Schema.decodeUnknownEffect(TokenInfo)));
+          if (
+            !clientIds.includes(info.aud) ||
+            info.expires_in <= 0 ||
+            info.email_verified === false ||
+            info.email === "" ||
+            info.sub === ""
+          )
+            return yield* new InvalidLogin();
+          // the name is a nicety: without it the person still signs in
+          const profile = yield* getJson(USERINFO_URL, accessToken).pipe(
+            Effect.flatMap(Schema.decodeUnknownEffect(UserInfo)),
+            Effect.catch(() => Effect.succeed({ name: undefined })),
+          );
+          return {
+            subject: info.sub,
+            email: info.email,
+            name: displayName(profile.name),
+          } satisfies GoogleProfile;
+        },
+      );
+
       return GoogleVerifier.of({
-        // anything wrong with the token, however it is wrong, is a refusal
+        // anything wrong with a token, however it is wrong, is a refusal
         verify: (idToken) =>
           check(idToken).pipe(
+            Effect.catch(() => Effect.fail(new InvalidLogin())),
+          ),
+        verifyAccessToken: (accessToken) =>
+          checkAccessToken(accessToken).pipe(
             Effect.catch(() => Effect.fail(new InvalidLogin())),
           ),
       });
     });
 
-  /** Fetches Google's keys over HTTPS. Without client ids nothing passes. */
+  /** Talks to Google over HTTPS. Without client ids nothing passes. */
   static readonly layer = Layer.unwrap(
     AppConfig.pipe(
-      Effect.map(({ googleClientIds }) =>
-        GoogleVerifier.layerWith(
+      Effect.map(({ googleClientIds }) => {
+        const getJson = (url: string, bearer?: string) =>
           Effect.tryPromise(async () => {
-            const response = await fetch(CERTS_URL);
+            const response = await fetch(url, {
+              headers: bearer ? { authorization: `Bearer ${bearer}` } : {},
+              signal: AbortSignal.timeout(5000),
+            });
+            if (!response.ok) throw new Error(`google: ${response.status}`);
+            return (await response.json()) as unknown;
+          });
+        return GoogleVerifier.layerWith({
+          loadKeys: Effect.tryPromise(async () => {
+            const response = await fetch(CERTS_URL, {
+              signal: AbortSignal.timeout(5000),
+            });
             if (!response.ok) throw new Error(`certs: ${response.status}`);
             const body = (await response.json()) as {
               keys: ReadonlyArray<GoogleKey>;
@@ -135,9 +213,10 @@ export class GoogleVerifier extends Context.Service<
             );
             return { keys: body.keys, ttlSeconds: Number(age?.[1] ?? 3600) };
           }).pipe(Effect.orDie),
-          googleClientIds,
-        ),
-      ),
+          getJson,
+          clientIds: googleClientIds,
+        });
+      }),
     ),
   );
 }

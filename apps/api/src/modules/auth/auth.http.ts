@@ -68,6 +68,13 @@ export const AuthHttp = HttpApiBuilder.group(
           Effect.flatMap((signedIn) => respond(signedIn, payload.transport)),
         ),
       )
+      .handle("googleAccessToken", ({ payload }) =>
+        Effect.flatMap(userAgent, (agent) =>
+          auth.signInWithGoogleAccessToken(payload.accessToken, agent),
+        ).pipe(
+          Effect.flatMap((signedIn) => respond(signedIn, payload.transport)),
+        ),
+      )
       .handle("me", () => Effect.map(CurrentUser, ({ user }) => user))
       .handle("logout", () =>
         Effect.gen(function* () {

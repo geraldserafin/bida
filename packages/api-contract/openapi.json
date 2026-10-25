@@ -198,6 +198,50 @@
         }
       }
     },
+    "/auth/google/access-token": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "auth.googleAccessToken",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "AuthResult",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "InvalidLogin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidLogin"
+                }
+              }
+            }
+          }
+        },
+        "description": "For the browser app, which gets an access token from Google's popup instead of an ID token. The server asks Google whom the token was issued to and refuses one that was not issued to one of its client ids or whose address Google has not verified. Otherwise the same as the ID token sign-in.",
+        "summary": "Sign in with a Google access token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleAccessToken"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
     "/auth/me": {
       "get": {
         "tags": [
@@ -4339,6 +4383,32 @@
         ],
         "additionalProperties": false
       },
+      "GoogleAccessToken": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 4096
+          },
+          "transport": {
+            "$ref": "#/components/schemas/Transport"
+          }
+        },
+        "required": [
+          "accessToken",
+          "transport"
+        ],
+        "additionalProperties": false
+      },
+      "Transport": {
+        "type": "string",
+        "enum": [
+          "token",
+          "cookie"
+        ],
+        "description": "`token` returns the session token in the response body (mobile apps); `cookie` sets it as an HTTP-only cookie instead (browser apps)."
+      },
       "GoogleSignIn": {
         "type": "object",
         "properties": {
@@ -4356,14 +4426,6 @@
           "transport"
         ],
         "additionalProperties": false
-      },
-      "Transport": {
-        "type": "string",
-        "enum": [
-          "token",
-          "cookie"
-        ],
-        "description": "`token` returns the session token in the response body (mobile apps); `cookie` sets it as an HTTP-only cookie instead (browser apps)."
       },
       "VerifyToken": {
         "type": "object",

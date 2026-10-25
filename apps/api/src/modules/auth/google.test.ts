@@ -53,9 +53,26 @@ const loadKeys = Effect.sync(() => {
   return { keys: [jwk("k1")], ttlSeconds: 3600 };
 });
 
+/** What Google's token endpoints answer, by URL; anything else fails. */
+let answers: Record<string, unknown> = {};
+const getJson = (url: string) =>
+  Object.entries(answers).find(([prefix]) => url.startsWith(prefix))?.[1] ===
+  undefined
+    ? Effect.fail("no answer")
+    : Effect.succeed(
+        Object.entries(answers).find(([prefix]) => url.startsWith(prefix))?.[1],
+      );
+
 const verifier = (clients = [CLIENT]) =>
   Effect.service(GoogleVerifier).pipe(
-    Effect.provide(GoogleVerifier.layerWith(loadKeys, clients, () => NOW)),
+    Effect.provide(
+      GoogleVerifier.layerWith({
+        loadKeys,
+        getJson,
+        clientIds: clients,
+        now: () => NOW,
+      }),
+    ),
   );
 
 const refused = (idToken: string, clients?: string[]) =>
@@ -145,4 +162,76 @@ it.effect("keeps Google's keys instead of asking for every token", () =>
     yield* google.verify(token());
     assert.strictEqual(fetches, 1);
   }),
+);
+
+// ------------------------------------------------------------- access tokens
+
+const TOKENINFO = "https://oauth2.googleapis.com/tokeninfo";
+const USERINFO = "https://openidconnect.googleapis.com/v1/userinfo";
+
+/** What Google's tokeninfo says about an access token. */
+const info = (changes: Record<string, unknown> = {}) => ({
+  aud: CLIENT,
+  sub: "1234",
+  email: "ann@example.com",
+  email_verified: "true",
+  expires_in: "3000",
+  ...changes,
+});
+
+const refusedAccessToken = (
+  tokeninfo: Record<string, unknown> | undefined,
+  clients?: string[],
+) =>
+  Effect.gen(function* () {
+    answers = tokeninfo === undefined ? {} : { [TOKENINFO]: tokeninfo };
+    const google = yield* verifier(clients);
+    const error = yield* google
+      .verifyAccessToken("access-token-from-the-browser")
+      .pipe(Effect.flip);
+    assert.instanceOf(error, InvalidLogin);
+  });
+
+it.effect("accepts an access token issued to this app", () =>
+  Effect.gen(function* () {
+    answers = { [TOKENINFO]: info(), [USERINFO]: { name: " Ann " } };
+    const google = yield* verifier();
+    const profile = yield* google.verifyAccessToken("access-token");
+    assert.deepStrictEqual(profile, {
+      subject: "1234",
+      email: "ann@example.com",
+      name: "Ann",
+    });
+  }),
+);
+
+it.effect("signs in without a name when Google does not give one", () =>
+  Effect.gen(function* () {
+    answers = { [TOKENINFO]: info() };
+    const google = yield* verifier();
+    const profile = yield* google.verifyAccessToken("access-token");
+    assert.strictEqual(profile.name, null);
+  }),
+);
+
+it.effect("refuses an access token issued to another app", () =>
+  refusedAccessToken(info({ aud: "someone-elses.apps.googleusercontent.com" })),
+);
+it.effect("refuses any access token when no client id is set", () =>
+  refusedAccessToken(info(), []),
+);
+it.effect("refuses an access token for an address Google did not verify", () =>
+  refusedAccessToken(info({ email_verified: "false" })),
+);
+it.effect("refuses an expired access token", () =>
+  refusedAccessToken(info({ expires_in: "0" })),
+);
+it.effect("refuses an access token without a subject", () =>
+  refusedAccessToken(info({ sub: "" })),
+);
+it.effect("refuses an access token Google does not know", () =>
+  refusedAccessToken(undefined),
+);
+it.effect("refuses a tokeninfo answer of the wrong shape", () =>
+  refusedAccessToken({ error: "invalid_token" }),
 );

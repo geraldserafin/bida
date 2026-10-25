@@ -22,6 +22,12 @@ const TestGoogle = Layer.succeed(
         ? Effect.succeed({ subject, email, name: name || null })
         : Effect.fail(new InvalidLogin());
     },
+    verifyAccessToken: (accessToken) => {
+      const [subject, email, name] = accessToken.split("|");
+      return subject && email
+        ? Effect.succeed({ subject, email, name: name || null })
+        : Effect.fail(new InvalidLogin());
+    },
   }),
 );
 
@@ -267,6 +273,32 @@ layer(TestLayer)("sign-in", (it) => {
 
       assert.strictEqual(after.user.id, before.user.id);
       assert.strictEqual(after.user.email, "old@example.com");
+    }),
+  );
+
+  it.effect("an access token from a browser signs in the same way", () =>
+    Effect.gen(function* () {
+      yield* start;
+      const auth = yield* AuthService;
+      const spaces = yield* SpacesService;
+
+      yield* auth.requestLink("jo@example.com");
+      const byMail = yield* auth.verifyCode(
+        "jo@example.com",
+        lastMail().code,
+        null,
+      );
+      const byBrowser = yield* auth.signInWithGoogleAccessToken(
+        "g9|jo@example.com|Jo",
+        null,
+      );
+
+      assert.strictEqual(byBrowser.user.id, byMail.user.id);
+      assert.strictEqual((yield* spaces.listFor(byMail.user.id)).length, 1);
+      const refused = yield* auth
+        .signInWithGoogleAccessToken("nonsense", null)
+        .pipe(Effect.flip);
+      assert.instanceOf(refused, InvalidLogin);
     }),
   );
 
