@@ -2,6 +2,16 @@
 {
   packages = [ pkgs.pnpm ];
 
+  env.DATABASE_URL = "postgres://bida@127.0.0.1:5432/bida";
+
+  services.postgres = {
+    enable = true;
+    listen_addresses = "127.0.0.1";
+    port = 5432;
+    initialDatabases = [ { name = "bida"; } ];
+    initialScript = "CREATE ROLE bida SUPERUSER LOGIN;";
+  };
+
   languages.javascript = {
     enable = true;
     package = pkgs.nodejs_22;
