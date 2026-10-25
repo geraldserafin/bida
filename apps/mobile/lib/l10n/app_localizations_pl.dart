@@ -467,4 +467,64 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get loadFailed => 'Nie udało się wczytać danych';
+
+  @override
+  String get errorUnauthorized => 'Sesja wygasła. Zaloguj się ponownie.';
+
+  @override
+  String get errorRateLimited =>
+      'Za dużo prób. Poczekaj chwilę i spróbuj ponownie.';
+
+  @override
+  String get signInTitle => 'Zaloguj się';
+
+  @override
+  String get signInSubtitle =>
+      'Podaj adres e-mail. Wyślemy Ci kod i link do zalogowania, nie ma hasła.';
+
+  @override
+  String get emailAddress => 'Adres e-mail';
+
+  @override
+  String get enterValidEmail => 'Podaj poprawny adres e-mail';
+
+  @override
+  String get sendCode => 'Wyślij kod';
+
+  @override
+  String codeSentTo(String email) {
+    return 'Wysłaliśmy kod na $email. Wpisz go poniżej.';
+  }
+
+  @override
+  String get signInCode => 'Kod';
+
+  @override
+  String get enterCode => 'Wpisz 6-cyfrowy kod';
+
+  @override
+  String get signInAction => 'Zaloguj';
+
+  @override
+  String get useOtherEmail => 'Użyj innego adresu';
+
+  @override
+  String get resendCode => 'Wyślij kod ponownie';
+
+  @override
+  String get invalidCode => 'Kod jest zły albo wygasł.';
+
+  @override
+  String get account => 'Konto';
+
+  @override
+  String signedInAs(String email) {
+    return 'Zalogowano jako $email';
+  }
+
+  @override
+  String get signOut => 'Wyloguj';
+
+  @override
+  String get signOutConfirm => 'Wylogować z tego urządzenia?';
 }

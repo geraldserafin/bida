@@ -22,13 +22,21 @@ class Reply {
 
 /// A request that reached the fake, with its body decoded.
 class Seen {
-  Seen(this.method, this.path, this.query, this.body, this.contentType);
+  Seen(
+    this.method,
+    this.path,
+    this.query,
+    this.body,
+    this.contentType, [
+    this.headers = const {},
+  ]);
 
   final String method;
   final String path;
   final Map<String, String> query;
   final Object? body;
   final String? contentType;
+  final Map<String, Object?> headers;
 
   String get route => '$method $path';
 }
@@ -74,6 +82,7 @@ class FakeBackend implements HttpClientAdapter {
       options.uri.queryParameters,
       body,
       contentType,
+      options.headers,
     );
     requests.add(seen);
 
@@ -197,4 +206,11 @@ Map<String, Object?> expenseJson(
   'recurringId': recurringId,
   'createdAt': '2026-07-03T10:30:00.000Z',
   'updatedAt': '2026-07-03T10:30:00.000Z',
+};
+
+Map<String, Object?> userJson(String email) => {
+  'id': '019845e1-682f-4b02-a706-3b2422d13aec',
+  'email': email,
+  'name': null,
+  'createdAt': '2026-01-01T00:00:00Z',
 };

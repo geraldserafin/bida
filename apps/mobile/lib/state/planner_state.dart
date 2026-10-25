@@ -86,6 +86,29 @@ class PlannerState extends ChangeNotifier {
 
   // ---- lifecycle ------------------------------------------------------------
 
+  bool _signedIn = false;
+
+  /// Tells the state whether somebody is signed in: it loads their data when
+  /// they are, and forgets it when they sign out.
+  void signedIn(bool value) {
+    if (value == _signedIn) return;
+    _signedIn = value;
+    // this is called while the widget tree builds, so change state after it
+    scheduleMicrotask(() => value ? load() : _forget());
+  }
+
+  Future<void> _forget() async {
+    _categories = const [];
+    _recurringRules = const [];
+    _periods = const [];
+    _progress = const [];
+    _currentPeriod = null;
+    _loadError = null;
+    _loading = true;
+    await _storage.delete(key: _kCurrentPeriod);
+    notifyListeners();
+  }
+
   /// Fetches everything from the server. Call again to retry after a failure.
   Future<void> load() async {
     _loading = true;

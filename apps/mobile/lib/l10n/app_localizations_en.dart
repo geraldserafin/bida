@@ -462,4 +462,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadFailed => 'Couldn\'t load your data';
+
+  @override
+  String get errorUnauthorized => 'You are signed out. Sign in again.';
+
+  @override
+  String get errorRateLimited => 'Too many tries. Wait a while and try again.';
+
+  @override
+  String get signInTitle => 'Sign in';
+
+  @override
+  String get signInSubtitle =>
+      'Enter your e-mail address. We will send you a code and a link to sign in; there is no password.';
+
+  @override
+  String get emailAddress => 'E-mail address';
+
+  @override
+  String get enterValidEmail => 'Enter a valid e-mail address';
+
+  @override
+  String get sendCode => 'Send code';
+
+  @override
+  String codeSentTo(String email) {
+    return 'We sent a code to $email. Enter it below.';
+  }
+
+  @override
+  String get signInCode => 'Code';
+
+  @override
+  String get enterCode => 'Enter the 6-digit code';
+
+  @override
+  String get signInAction => 'Sign in';
+
+  @override
+  String get useOtherEmail => 'Use another address';
+
+  @override
+  String get resendCode => 'Send the code again';
+
+  @override
+  String get invalidCode => 'The code is wrong or has expired.';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String signedInAs(String email) {
+    return 'Signed in as $email';
+  }
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get signOutConfirm => 'Sign out of this device?';
 }

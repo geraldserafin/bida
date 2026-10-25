@@ -73,6 +73,29 @@ void main() {
     expect(backend.requests, isEmpty);
   });
 
+  test(
+    'loads when somebody signs in and forgets everything on sign-out',
+    () async {
+      final state = newState();
+
+      state.signedIn(true);
+      await Future<void>.delayed(Duration.zero);
+      await state.load(); // wait for the load the sign-in started
+      expect(state.categories, isNotEmpty);
+      final asked = backend.requests.length;
+
+      state.signedIn(true); // already signed in: nothing more is asked
+      await Future<void>.delayed(Duration.zero);
+      expect(backend.requests.length, asked);
+
+      state.signedIn(false);
+      await Future<void>.delayed(Duration.zero);
+      expect(state.categories, isEmpty);
+      expect(state.currentPeriod, isNull);
+      expect(state.isLoading, isTrue);
+    },
+  );
+
   test('load picks the newest period and derives the totals', () async {
     final state = newState();
 

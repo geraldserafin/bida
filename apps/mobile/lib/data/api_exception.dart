@@ -12,6 +12,12 @@ enum ApiFailure {
   /// The server refused the values that were sent.
   invalid,
   server,
+
+  /// Not signed in, or the session is over.
+  unauthorized,
+
+  /// Too many requests; wait before trying again.
+  rateLimited,
 }
 
 class ApiException implements Exception {
@@ -30,7 +36,9 @@ class ApiException implements Exception {
     final failure = switch (status) {
       null => ApiFailure.unreachable,
       404 => ApiFailure.notFound,
+      401 => ApiFailure.unauthorized,
       409 => ApiFailure.conflict,
+      429 => ApiFailure.rateLimited,
       400 || 422 => ApiFailure.invalid,
       _ => ApiFailure.server,
     };

@@ -3,11 +3,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'data/auth_repository.dart';
 import 'data/planner_repository.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/lock/lock_gate.dart';
+import 'screens/login/auth_gate.dart';
 import 'state/app_settings.dart';
+import 'state/auth_state.dart';
 import 'state/planner_state.dart';
 import 'theme/app_theme.dart';
 import 'widgets/phone_frame.dart';
@@ -19,14 +22,20 @@ class MoneyPlannerApp extends StatefulWidget {
     super.key,
     required this.settings,
     required this.repository,
+    required this.auth,
     this.beforeLoad,
+    this.linkToken,
   });
 
   final AppSettings settings;
   final PlannerRepository repository;
+  final AuthRepository auth;
 
   /// Runs before the first load, e.g. to move data from an older version.
   final Future<void> Function()? beforeLoad;
+
+  /// The token of the sign-in link the browser app was opened from, if any.
+  final String? linkToken;
 
   @override
   State<MoneyPlannerApp> createState() => _MoneyPlannerAppState();
@@ -34,6 +43,27 @@ class MoneyPlannerApp extends StatefulWidget {
 
 class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
   final _navigatorKey = GlobalKey<NavigatorState>();
+  late final AuthState _auth = AuthState(widget.auth);
+
+  @override
+  void initState() {
+    super.initState();
+    _auth.addListener(_closeScreensWhenSignedOut);
+    _auth.restore(linkToken: widget.linkToken);
+  }
+
+  @override
+  void dispose() {
+    _auth.dispose();
+    super.dispose();
+  }
+
+  /// Screens opened on top of the home screen would hide the sign-in screen.
+  void _closeScreensWhenSignedOut() {
+    if (_auth.status == AuthStatus.signedOut) {
+      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    }
+  }
 
   // Desktop mice send back/forward as extra pointer buttons; Flutter doesn't
   // pop on them by default, so wire the back button to Navigator.maybePop.
@@ -49,11 +79,14 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
     return MultiProvider(
       providers: [
         Provider.value(value: widget.repository),
-        ChangeNotifierProvider(
+        ChangeNotifierProvider.value(value: _auth),
+        // loads the data once somebody is signed in, forgets it on sign-out
+        ChangeNotifierProxyProvider<AuthState, PlannerState>(
           create: (_) => PlannerState(
             repository: widget.repository,
             beforeLoad: widget.beforeLoad,
-          )..load(),
+          ),
+          update: (_, auth, planner) => planner!..signedIn(auth.isSignedIn),
         ),
         ChangeNotifierProvider.value(value: widget.settings),
       ],
@@ -73,7 +106,7 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
             locale: const Locale('pl'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const LockGate(child: DashboardScreen()),
+            home: const LockGate(child: AuthGate(child: DashboardScreen())),
           ),
         ),
       ),
