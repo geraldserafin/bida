@@ -114,11 +114,10 @@ jobs:
           echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           printf 'Host vps\n  HostName %s\n  User %s\n  Port %s\n  IdentityFile ~/.ssh/id_deploy\n' \
             "${{ secrets.VPS_HOST }}" "${{ secrets.VPS_USER }}" "${{ vars.VPS_PORT || 22 }}" > ~/.ssh/config
-      - name: Upload the web app, the docs and the compose file
+      - name: Upload the web app and the docs
         run: |
-          rsync -az --delete web/ vps:${{ vars.VPS_DIR }}/web/
+          rsync -az --delete web/ vps:${{ vars.VPS_DIR }}/app/
           rsync -az --delete docs/ vps:${{ vars.VPS_DIR }}/docs/
-          scp deploy/docker-compose.yml vps:${{ vars.VPS_DIR }}/docker-compose.yml
       - name: Restart the API
         run: |
-          ssh vps "cd ${{ vars.VPS_DIR }} && TAG=${{ env.SHA }} docker compose pull && TAG=${{ env.SHA }} docker compose up -d --remove-orphans"
+          ssh vps "cd ${{ vars.VPS_DIR }} && TAG=${{ env.SHA }} docker compose pull backend && TAG=${{ env.SHA }} docker compose up -d backend"
