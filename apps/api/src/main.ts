@@ -5,6 +5,10 @@ import { Effect, Layer } from "effect";
 import { HttpRouter } from "effect/http";
 import { HttpApiBuilder } from "effect/http-api";
 import {
+  BudgetsHttp,
+  BudgetsModule,
+} from "./modules/budgets/budgets.module.ts";
+import {
   CategoriesHttp,
   CategoriesModule,
 } from "./modules/categories/categories.module.ts";
@@ -13,12 +17,12 @@ import { AppConfig } from "./platform/config.ts";
 import { DbLive } from "./platform/db.ts";
 
 // Domain modules: each exposes its services, they may depend on each other.
-const Modules = Layer.mergeAll(CategoriesModule);
+const Modules = Layer.mergeAll(CategoriesModule, BudgetsModule);
 
 const ApiRoutes = HttpApiBuilder.layer(Api, {
   openapiPath: "/openapi.json",
 }).pipe(
-  Layer.provide([SystemHttp, CategoriesHttp]),
+  Layer.provide([SystemHttp, CategoriesHttp, BudgetsHttp]),
   Layer.provide(Modules),
   Layer.provide(DbLive),
 );
