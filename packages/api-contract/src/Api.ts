@@ -1,5 +1,5 @@
 import { HttpApi, OpenApi } from "effect/http-api";
-import { SystemApi } from "./System.ts";
+import { SystemApi } from "./system/index.ts";
 
 export class Api extends HttpApi.make("bida")
   .add(SystemApi)

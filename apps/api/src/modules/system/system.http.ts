@@ -2,7 +2,7 @@ import { Api } from "@bida/api-contract";
 import { Effect } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
 
-export const SystemLive = HttpApiBuilder.group(
+export const SystemHttp = HttpApiBuilder.group(
   Api,
   "system",
   Effect.fn(function* (handlers) {
