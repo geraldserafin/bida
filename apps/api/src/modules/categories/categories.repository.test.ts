@@ -3,6 +3,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect, Layer, Option } from "effect";
 import { SqlClient } from "effect/sql";
 import { DbLive } from "../../platform/db.ts";
+import { resetDb } from "../../platform/testing.ts";
 import { CategoriesRepository } from "./categories.repository.ts";
 
 const TestLayer = CategoriesRepository.layer.pipe(Layer.provideMerge(DbLive));
@@ -14,8 +15,7 @@ const newCategory = (name: string) =>
 layer(TestLayer)("CategoriesRepository", (it) => {
   it.effect("inserts, finds and lists ordered by name", () =>
     Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`DELETE FROM categories`;
+      yield* resetDb;
       const repo = yield* CategoriesRepository;
       const b = yield* repo.insert(yield* newCategory("banana"));
       const a = yield* repo.insert(yield* newCategory("Apple"));
