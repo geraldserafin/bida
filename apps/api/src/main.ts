@@ -4,17 +4,21 @@ import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { HttpRouter } from "effect/http";
 import { HttpApiBuilder } from "effect/http-api";
+import {
+  CategoriesHttp,
+  CategoriesModule,
+} from "./modules/categories/categories.module.ts";
 import { SystemHttp } from "./modules/system/system.module.ts";
 import { AppConfig } from "./platform/config.ts";
 import { DbLive } from "./platform/db.ts";
 
-// Domain modules (services) go here as they are added.
-const Modules = Layer.empty;
+// Domain modules: each exposes its services, they may depend on each other.
+const Modules = Layer.mergeAll(CategoriesModule);
 
 const ApiRoutes = HttpApiBuilder.layer(Api, {
   openapiPath: "/openapi.json",
 }).pipe(
-  Layer.provide([SystemHttp]),
+  Layer.provide([SystemHttp, CategoriesHttp]),
   Layer.provide(Modules),
   Layer.provide(DbLive),
 );
