@@ -12,4 +12,7 @@ ImportLegacy _$ImportLegacyFromJson(Map<String, dynamic> json) => ImportLegacy(
 );
 
 Map<String, dynamic> _$ImportLegacyToJson(ImportLegacy instance) =>
-    <String, dynamic>{'backup': instance.backup, 'timeZone': instance.timeZone};
+    <String, dynamic>{
+      'backup': instance.backup,
+      'timeZone': ?instance.timeZone,
+    };

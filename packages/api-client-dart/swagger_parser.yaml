@@ -8,3 +8,4 @@ swagger_parser:
   root_client_name: BidaApi
   put_in_folder: true
   squash_clients: false
+  include_if_null: true

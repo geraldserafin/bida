@@ -15,6 +15,6 @@ LegacyBackup _$LegacyBackupFromJson(Map<String, dynamic> json) => LegacyBackup(
 Map<String, dynamic> _$LegacyBackupToJson(LegacyBackup instance) =>
     <String, dynamic>{
       'version': instance.version,
-      'exportedAt': instance.exportedAt,
+      'exportedAt': ?instance.exportedAt,
       'data': instance.data,
     };

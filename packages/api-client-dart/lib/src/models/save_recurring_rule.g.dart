@@ -24,7 +24,7 @@ Map<String, dynamic> _$SaveRecurringRuleToJson(SaveRecurringRule instance) =>
     <String, dynamic>{
       'categoryId': instance.categoryId,
       'amountMinor': instance.amountMinor,
-      'currency': _$CurrencyEnumMap[instance.currency],
+      'currency': ?_$CurrencyEnumMap[instance.currency],
       'frequency': _$SaveRecurringRuleFrequencyEnumMap[instance.frequency]!,
       'note': instance.note,
       'active': instance.active,

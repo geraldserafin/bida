@@ -27,6 +27,7 @@ class CreatePeriod {
   final String startDate;
   final String endDate;
   final int incomeMinor;
+  @JsonKey(includeIfNull: false)
   final Currency? currency;
   final List<EnvelopePlan> envelopes;
 

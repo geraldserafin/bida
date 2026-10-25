@@ -20,6 +20,7 @@ class LegacyBackup {
       _$LegacyBackupFromJson(json);
 
   final int version;
+  @JsonKey(includeIfNull: false)
   final String? exportedAt;
   final LegacyData data;
 

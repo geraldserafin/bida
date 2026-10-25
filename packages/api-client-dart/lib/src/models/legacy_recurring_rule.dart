@@ -25,6 +25,7 @@ class LegacyRecurringRule {
   final int categoryId;
   final num amount;
   final String frequency;
+  @JsonKey(includeIfNull: true)
   final String? note;
   final int active;
 

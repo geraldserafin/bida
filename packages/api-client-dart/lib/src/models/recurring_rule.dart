@@ -31,6 +31,7 @@ class RecurringRule {
   final int amountMinor;
   final Currency currency;
   final RecurringRuleFrequency frequency;
+  @JsonKey(includeIfNull: true)
   final String? note;
   final bool active;
   final String createdAt;

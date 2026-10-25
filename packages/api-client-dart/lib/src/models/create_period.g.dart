@@ -25,7 +25,7 @@ Map<String, dynamic> _$CreatePeriodToJson(CreatePeriod instance) =>
       'startDate': instance.startDate,
       'endDate': instance.endDate,
       'incomeMinor': instance.incomeMinor,
-      'currency': _$CurrencyEnumMap[instance.currency],
+      'currency': ?_$CurrencyEnumMap[instance.currency],
       'envelopes': instance.envelopes,
     };
 

@@ -31,10 +31,14 @@ class Expense {
   final String envelopeId;
   final String periodId;
   final int amountMinor;
+  @JsonKey(includeIfNull: true)
   final int? originalAmountMinor;
+  @JsonKey(includeIfNull: true)
   final Currency? originalCurrency;
   final String spentAt;
+  @JsonKey(includeIfNull: true)
   final String? note;
+  @JsonKey(includeIfNull: true)
   final String? recurringId;
   final String createdAt;
   final String updatedAt;

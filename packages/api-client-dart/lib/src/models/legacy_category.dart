@@ -21,6 +21,7 @@ class LegacyCategory {
   final int id;
   final String name;
   final String color;
+  @JsonKey(includeIfNull: true)
   final String? icon;
 
   Map<String, Object?> toJson() => _$LegacyCategoryToJson(this);

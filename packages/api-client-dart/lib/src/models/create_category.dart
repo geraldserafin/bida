@@ -19,6 +19,7 @@ class CreateCategory {
 
   final String name;
   final String color;
+  @JsonKey(includeIfNull: true)
   final String? icon;
 
   Map<String, Object?> toJson() => _$CreateCategoryToJson(this);

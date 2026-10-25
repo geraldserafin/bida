@@ -16,6 +16,7 @@ class ImportLegacy {
       _$ImportLegacyFromJson(json);
 
   final LegacyBackup backup;
+  @JsonKey(includeIfNull: false)
   final String? timeZone;
 
   Map<String, Object?> toJson() => _$ImportLegacyToJson(this);

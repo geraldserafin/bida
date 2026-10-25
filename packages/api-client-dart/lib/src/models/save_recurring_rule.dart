@@ -25,8 +25,10 @@ class SaveRecurringRule {
 
   final String categoryId;
   final int amountMinor;
+  @JsonKey(includeIfNull: false)
   final Currency? currency;
   final SaveRecurringRuleFrequency frequency;
+  @JsonKey(includeIfNull: true)
   final String? note;
   final bool active;
 

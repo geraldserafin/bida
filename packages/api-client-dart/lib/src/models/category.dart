@@ -23,6 +23,7 @@ class Category {
   final String id;
   final String name;
   final String color;
+  @JsonKey(includeIfNull: true)
   final String? icon;
   final String createdAt;
   final String updatedAt;

@@ -23,5 +23,5 @@ Map<String, dynamic> _$CreateExpenseToJson(CreateExpense instance) =>
       'amountMinor': instance.amountMinor,
       'spentAt': instance.spentAt,
       'note': instance.note,
-      'original': instance.original,
+      'original': ?instance.original,
     };

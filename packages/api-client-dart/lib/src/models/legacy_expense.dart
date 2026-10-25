@@ -25,8 +25,9 @@ class LegacyExpense {
   final int splitId;
   final num amount;
   final String date;
+  @JsonKey(includeIfNull: true)
   final String? note;
-  @JsonKey(name: 'recurring_id')
+  @JsonKey(includeIfNull: true, name: 'recurring_id')
   final int? recurringId;
 
   Map<String, Object?> toJson() => _$LegacyExpenseToJson(this);

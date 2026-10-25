@@ -24,7 +24,9 @@ class CreateExpense {
   final String envelopeId;
   final int amountMinor;
   final String spentAt;
+  @JsonKey(includeIfNull: true)
   final String? note;
+  @JsonKey(includeIfNull: false)
   final OriginalAmount? original;
 
   Map<String, Object?> toJson() => _$CreateExpenseToJson(this);
