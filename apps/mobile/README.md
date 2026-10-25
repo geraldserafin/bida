@@ -144,7 +144,8 @@ has, and keeps the file if anything goes wrong so the next launch can retry.
 ## 🚀 Getting started
 
 From the repository root, `devenv shell` and `devenv up` start Postgres, the
-API and the docs; `devenv up` also starts an emulator and runs the app on it.
+API, the docs and the web app (http://localhost:8080). `start-mobile` starts
+an emulator (if none runs) and runs the phone app on it.
 To run the app by hand:
 
 ```bash
