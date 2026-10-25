@@ -5,6 +5,7 @@ import { ExpensesApi } from "./expenses/index.ts";
 import { IncomesApi } from "./incomes/index.ts";
 import { OverviewApi } from "./overview/index.ts";
 import { RecurringApi } from "./recurring/index.ts";
+import { InvitationsApi, MembersApi } from "./sharing/index.ts";
 import { SystemApi } from "./system/index.ts";
 import { TransferApi } from "./transfer/index.ts";
 
@@ -13,6 +14,8 @@ export class Api extends HttpApi.make("bida")
   .add(AuthApi)
   .add(EnvelopesApi)
   .add(AllocationsApi)
+  .add(MembersApi)
+  .add(InvitationsApi)
   .add(IncomesApi)
   .add(ExpensesApi)
   .add(RecurringApi)

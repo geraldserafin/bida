@@ -8,6 +8,8 @@ import 'system/system_client.dart';
 import 'auth/auth_client.dart';
 import 'envelopes/envelopes_client.dart';
 import 'allocations/allocations_client.dart';
+import 'members/members_client.dart';
+import 'invitations/invitations_client.dart';
 import 'incomes/incomes_client.dart';
 import 'expenses/expenses_client.dart';
 import 'recurring/recurring_client.dart';
@@ -29,6 +31,8 @@ class BidaApi {
   AuthClient? _auth;
   EnvelopesClient? _envelopes;
   AllocationsClient? _allocations;
+  MembersClient? _members;
+  InvitationsClient? _invitations;
   IncomesClient? _incomes;
   ExpensesClient? _expenses;
   RecurringClient? _recurring;
@@ -44,6 +48,12 @@ class BidaApi {
 
   AllocationsClient get allocations =>
       _allocations ??= AllocationsClient(_dio, baseUrl: _baseUrl);
+
+  MembersClient get members =>
+      _members ??= MembersClient(_dio, baseUrl: _baseUrl);
+
+  InvitationsClient get invitations =>
+      _invitations ??= InvitationsClient(_dio, baseUrl: _baseUrl);
 
   IncomesClient get incomes =>
       _incomes ??= IncomesClient(_dio, baseUrl: _baseUrl);

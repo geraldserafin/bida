@@ -11,6 +11,14 @@ export const HexColor = Schema.String.check(
   Schema.isPattern(/^#[0-9a-fA-F]{6}$/),
 );
 
+/** What a member may do in an envelope. */
+export const Role = Schema.Literals(["owner", "member"]).annotate({
+  identifier: "Role",
+  description:
+    "`owner` manages the envelope and its members; `member` works with the money in it.",
+});
+export type Role = typeof Role.Type;
+
 // set by the server from the signed-in user, never taken from a request
 const ServerUser = Model.Field({
   select: UserId,

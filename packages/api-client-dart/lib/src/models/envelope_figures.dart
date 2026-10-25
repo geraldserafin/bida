@@ -4,6 +4,8 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
+import 'role.dart';
+
 part 'envelope_figures.g.dart';
 
 @JsonSerializable()
@@ -16,6 +18,8 @@ class EnvelopeFigures {
     required this.spentMinor,
     required this.balanceMinor,
     required this.freeMinor,
+    required this.role,
+    required this.memberCount,
   });
 
   factory EnvelopeFigures.fromJson(Map<String, Object?> json) =>
@@ -29,6 +33,8 @@ class EnvelopeFigures {
   final int spentMinor;
   final int balanceMinor;
   final int freeMinor;
+  final Role role;
+  final int memberCount;
 
   Map<String, Object?> toJson() => _$EnvelopeFiguresToJson(this);
 }

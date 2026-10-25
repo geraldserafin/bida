@@ -24,6 +24,14 @@ import {
   IncomesModule,
 } from "./modules/incomes/incomes.module.ts";
 import {
+  InvitationsHttp,
+  InvitationsModule,
+} from "./modules/invitations/invitations.module.ts";
+import {
+  MembersHttp,
+  MembersModule,
+} from "./modules/members/members.module.ts";
+import {
   OverviewHttp,
   OverviewModule,
 } from "./modules/overview/overview.module.ts";
@@ -44,6 +52,8 @@ import { Mailer } from "./platform/mailer.ts";
 // Domain modules: each exposes its services, they may depend on each other.
 const Modules = Layer.mergeAll(
   EnvelopesModule,
+  MembersModule,
+  InvitationsModule,
   IncomesModule,
   ExpensesModule,
   RecurringModule,
@@ -60,6 +70,8 @@ const Handlers = Layer.mergeAll(
   AuthHttp,
   EnvelopesHttp,
   AllocationsHttp,
+  MembersHttp,
+  InvitationsHttp,
   IncomesHttp,
   ExpensesHttp,
   RecurringHttp,

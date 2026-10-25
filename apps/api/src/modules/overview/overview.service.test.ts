@@ -16,6 +16,7 @@ import {
   ExpensesService,
 } from "../expenses/expenses.module.ts";
 import { IncomesModule, IncomesService } from "../incomes/incomes.module.ts";
+import { MembersModule, MembersService } from "../members/members.module.ts";
 import { OverviewModule, OverviewService } from "./overview.module.ts";
 
 // Real services on the test database: the sums are the point.
@@ -24,6 +25,7 @@ const TestLayer = Layer.mergeAll(
   EnvelopesModule,
   ExpensesModule,
   IncomesModule,
+  MembersModule,
 ).pipe(Layer.provideMerge(DbLive));
 
 const look = { color: "#112233", icon: null } as const;
@@ -179,6 +181,55 @@ layer(TestLayer)("OverviewService", (it) => {
       assert.strictEqual(warsaw.spentMinor, 17_700);
       assert.strictEqual(utc.spentMinor, 17_000);
     }),
+  );
+
+  it.effect(
+    "a shared envelope shows its members and what the user may do",
+    () =>
+      Effect.gen(function* () {
+        const { ann, bob, home, rent, food } = yield* setup;
+        const members = yield* MembersService;
+        const envelopes = yield* EnvelopesService;
+        const overview = yield* OverviewService;
+        yield* members.add(home.id, bob.id, "member");
+        yield* envelopes.createAllocation(bob.id, {
+          envelopeId: home.id,
+          amountMinor: 7_000,
+          madeOn: "2026-07-06",
+          note: null,
+        });
+
+        const mine = (yield* overview.get(ann.id, July)).envelopes;
+        assert.deepStrictEqual(
+          [home.id, rent.id, food.id].map((id) => {
+            const f = figuresOf(mine, id);
+            return [f.role, f.memberCount];
+          }),
+          [
+            ["owner", 2],
+            ["owner", 2],
+            ["owner", 1],
+          ],
+        );
+        // the money of everybody is in the envelope, Bob's too
+        assert.strictEqual(figuresOf(mine, home.id).balanceMinor, 65_000);
+
+        const his = yield* overview.get(bob.id, July);
+        assert.deepStrictEqual(
+          his.envelopes.map((f) => [f.envelopeId, f.role]).sort(),
+          [
+            [home.id, "member"],
+            [rent.id, "member"],
+          ].sort(),
+        );
+        // what he put in came out of his pool, not out of Ann's
+        assert.strictEqual(his.allocatedMinor, 7_000);
+        assert.strictEqual(his.poolMinor, -7_000);
+        assert.strictEqual(
+          (yield* overview.get(ann.id, July)).poolMinor,
+          200_000,
+        );
+      }),
   );
 
   it.effect("other people's money is not in it", () =>

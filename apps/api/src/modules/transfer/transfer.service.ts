@@ -262,26 +262,14 @@ export class TransferService extends Context.Service<
       const exportCsv = Effect.fn("TransferService.exportCsv")(function* (
         userId: UserId,
       ) {
-        const snapshot = yield* repo.snapshot(userId);
-        const byId = new Map(snapshot.envelopes.map((e) => [e.id, e]));
-        const rows = [...snapshot.expenses]
-          .sort(
-            (a, b) => b.spentAt.epochMilliseconds - a.spentAt.epochMilliseconds,
-          )
-          .map((expense) => {
-            const envelope = byId.get(expense.envelopeId);
-            const parent =
-              envelope?.parentId == null
-                ? undefined
-                : byId.get(envelope.parentId);
-            return {
-              envelope: (parent ?? envelope)?.name ?? "",
-              subenvelope: parent === undefined ? "" : (envelope?.name ?? ""),
-              amountMinor: expense.amountMinor,
-              date: day(expense.spentAt),
-              note: expense.note,
-            };
-          });
+        // the user's own expenses, also in envelopes they share
+        const rows = (yield* repo.csvRows(userId)).map((row) => ({
+          envelope: row.parent ?? row.envelope,
+          subenvelope: row.parent === null ? "" : row.envelope,
+          amountMinor: row.amountMinor,
+          date: day(row.spentAt),
+          note: row.note,
+        }));
         return formatCsv(rows);
       });
 

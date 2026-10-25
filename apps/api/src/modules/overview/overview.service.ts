@@ -56,6 +56,8 @@ const figuresOf = (
     return {
       envelopeId: row.id as EnvelopeId,
       parentId: row.parentId as EnvelopeId,
+      role: row.role,
+      memberCount: row.memberCount,
       openingMinor: opening,
       allocatedMinor: row.allocatedInside,
       spentMinor: row.spentInside,
@@ -78,6 +80,8 @@ const figuresOf = (
     out.push({
       envelopeId: row.id as EnvelopeId,
       parentId: null,
+      role: row.role,
+      memberCount: row.memberCount,
       openingMinor: opening,
       allocatedMinor: row.allocatedInside,
       spentMinor: spentInside,

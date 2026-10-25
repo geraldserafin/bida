@@ -5,6 +5,8 @@ import { SqlClient, SqlSchema } from "effect/sql";
 export interface EnvelopeSums {
   readonly id: string;
   readonly parentId: string | null;
+  readonly role: "owner" | "member";
+  readonly memberCount: number;
   readonly allocatedBefore: number;
   readonly allocatedInside: number;
   readonly spentBefore: number;
@@ -30,6 +32,8 @@ export interface MonthSums {
 const EnvelopeSums = Schema.Struct({
   id: Schema.String,
   parentId: Schema.NullOr(Schema.String),
+  role: Schema.Literals(["owner", "member"]),
+  memberCount: Schema.Number,
   allocatedBefore: Schema.Number,
   allocatedInside: Schema.Number,
   spentBefore: Schema.Number,
@@ -93,7 +97,10 @@ export class OverviewRepository extends Context.Service<
         Result: EnvelopeSums,
         execute: ({ userId, from, to, timeZone }) =>
           sql`WITH visible AS (
-              SELECT e.id, e.parent_id FROM envelopes e
+              SELECT e.id, e.parent_id, m.role,
+                (SELECT count(*) FROM envelope_members c
+                  WHERE c.envelope_id = m.envelope_id)::int AS member_count
+              FROM envelopes e
               JOIN envelope_members m
                 ON m.envelope_id = COALESCE(e.parent_id, e.id) AND m.user_id = ${userId}
             ), allocated AS (
@@ -117,7 +124,7 @@ export class OverviewRepository extends Context.Service<
               WHERE d.day <= ${to}::date
               GROUP BY d.envelope_id
             )
-            SELECT v.id, v.parent_id,
+            SELECT v.id, v.parent_id, v.role, v.member_count,
               COALESCE(allocated.before, 0)::float8 AS allocated_before,
               COALESCE(allocated.inside, 0)::float8 AS allocated_inside,
               COALESCE(spent.before, 0)::float8 AS spent_before,

@@ -19,6 +19,7 @@ import {
   ExpensesService,
 } from "../expenses/expenses.module.ts";
 import { IncomesModule, IncomesService } from "../incomes/incomes.module.ts";
+import { MembersModule, MembersService } from "../members/members.module.ts";
 import {
   RecurringModule,
   RecurringService,
@@ -33,6 +34,7 @@ const TestLayer = Layer.mergeAll(
   IncomesModule,
   ExpensesModule,
   RecurringModule,
+  MembersModule,
 ).pipe(Layer.provideMerge(DbLive));
 
 const look = { color: "#112233", icon: null } as const;
@@ -192,6 +194,46 @@ layer(TestLayer)("TransferService", (it) => {
       yield* transfer.importDocument(ann.id, doc);
       assert.strictEqual((yield* transfer.export(ann.id)).envelopes.length, 3);
     }),
+  );
+
+  it.effect(
+    "a shared envelope is not in a backup and an import leaves it alone",
+    () =>
+      Effect.gen(function* () {
+        const { ann, bob, home } = yield* setup;
+        const transfer = yield* TransferService;
+        const members = yield* MembersService;
+        const envelopes = yield* EnvelopesService;
+        const expenses = yield* ExpensesService;
+        yield* members.add(home.id, bob.id, "member");
+
+        // Home (and Rent, which is in it) is shared, so only Food is left
+        const doc = roundTrip(yield* transfer.export(ann.id));
+        assert.deepStrictEqual(
+          doc.envelopes.map((e) => e.name),
+          ["Food"],
+        );
+        assert.deepStrictEqual(doc.recurringRules, []);
+
+        yield* transfer.importDocument(ann.id, doc);
+        assert.deepStrictEqual(
+          (yield* envelopes.list(bob.id)).map((e) => e.name),
+          ["Home", "Rent"],
+        );
+        assert.deepStrictEqual(
+          (yield* envelopes.list(ann.id)).map((e) => e.name),
+          ["Food", "Home", "Rent"],
+        );
+        // the money in the shared envelope is still there
+        assert.strictEqual(
+          (yield* expenses.list(bob.id, { envelopeId: home.id })).length,
+          1,
+        );
+
+        // the CSV has the expenses of the user, also from shared envelopes
+        const csv = yield* transfer.exportCsv(ann.id);
+        assert.include(csv, "Home,Rent,400.00");
+      }),
   );
 
   it.effect("previews what an import would replace", () =>

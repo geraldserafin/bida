@@ -15,6 +15,8 @@ EnvelopeFigures _$EnvelopeFiguresFromJson(Map<String, dynamic> json) =>
       spentMinor: (json['spentMinor'] as num).toInt(),
       balanceMinor: (json['balanceMinor'] as num).toInt(),
       freeMinor: (json['freeMinor'] as num).toInt(),
+      role: Role.fromJson(json['role'] as String),
+      memberCount: (json['memberCount'] as num).toInt(),
     );
 
 Map<String, dynamic> _$EnvelopeFiguresToJson(EnvelopeFigures instance) =>
@@ -26,4 +28,12 @@ Map<String, dynamic> _$EnvelopeFiguresToJson(EnvelopeFigures instance) =>
       'spentMinor': instance.spentMinor,
       'balanceMinor': instance.balanceMinor,
       'freeMinor': instance.freeMinor,
+      'role': _$RoleEnumMap[instance.role]!,
+      'memberCount': instance.memberCount,
     };
+
+const _$RoleEnumMap = {
+  Role.owner: 'owner',
+  Role.member: 'member',
+  Role.$unknown: r'$unknown',
+};

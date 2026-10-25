@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import { EnvelopeId } from "../envelopes/envelope.model.ts";
+import { EnvelopeId, Role } from "../envelopes/envelope.model.ts";
 import { Balance, Money } from "../money.ts";
 import { IsoDate } from "../text.ts";
 
@@ -21,6 +21,10 @@ export const EnvelopeFigures = Schema.Struct({
   /** Opening plus allocated minus spent. Negative when overspent. */
   balanceMinor: Balance,
   freeMinor: Balance,
+  /** What the user who asks may do with the envelope. */
+  role: Role,
+  /** How many people share the envelope; 1 when it is only theirs. */
+  memberCount: Schema.Int,
 }).annotate({ identifier: "EnvelopeFigures" });
 export type EnvelopeFigures = typeof EnvelopeFigures.Type;
 

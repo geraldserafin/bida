@@ -7,6 +7,7 @@ export * from "./incomes/index.ts";
 export * from "./money.ts";
 export * from "./overview/index.ts";
 export * from "./recurring/index.ts";
+export * from "./sharing/index.ts";
 export * from "./system/index.ts";
 export * from "./text.ts";
 export * from "./transfer/index.ts";
