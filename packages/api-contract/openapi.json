@@ -2,7 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Money Planner API",
-    "version": "0.0.0"
+    "version": "0.0.0",
+    "description": "Everything except `/health` and the space list works inside a space. Pick it with the `X-Space-Id` header; without the header the default space is used. Amounts are integers in the minor unit of their currency (12.34 PLN is 1234)."
   },
   "paths": {
     "/health": {
@@ -29,6 +30,150 @@
         "summary": "Health check"
       }
     },
+    "/spaces": {
+      "get": {
+        "tags": [
+          "Spaces"
+        ],
+        "operationId": "spaces.list",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Space"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List spaces"
+      },
+      "post": {
+        "tags": [
+          "Spaces"
+        ],
+        "operationId": "spaces.create",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Space",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Space"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a space",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveSpace"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/spaces/current": {
+      "get": {
+        "tags": [
+          "Spaces"
+        ],
+        "operationId": "spaces.current",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Space",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Space"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Chosen by the `X-Space-Id` header, the default space when it is missing.",
+        "summary": "Get the space of this request"
+      }
+    },
+    "/spaces/{id}": {
+      "put": {
+        "tags": [
+          "Spaces"
+        ],
+        "operationId": "spaces.update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Space",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Space"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "The default currency only applies to what is created afterwards.",
+        "summary": "Edit a space",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveSpace"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
     "/categories": {
       "get": {
         "tags": [
@@ -50,6 +195,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                }
+              }
+            }
           }
         },
         "summary": "List categories"
@@ -68,6 +223,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Category"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
                 }
               }
             }
@@ -115,11 +280,18 @@
             }
           },
           "404": {
-            "description": "CategoryNotFound",
+            "description": "CategoryNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -155,11 +327,18 @@
             }
           },
           "404": {
-            "description": "CategoryNotFound",
+            "description": "CategoryNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -198,11 +377,18 @@
             "description": "<No Content>"
           },
           "404": {
-            "description": "CategoryNotFound",
+            "description": "CategoryNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -243,6 +429,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                }
+              }
+            }
           }
         },
         "description": "Newest first.",
@@ -267,11 +463,18 @@
             }
           },
           "404": {
-            "description": "CategoryNotFound",
+            "description": "CategoryNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -321,11 +524,18 @@
             }
           },
           "404": {
-            "description": "NoPeriods",
+            "description": "NoPeriods | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NoPeriodsEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/NoPeriodsEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -364,11 +574,18 @@
             }
           },
           "404": {
-            "description": "PeriodNotFound",
+            "description": "PeriodNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -397,11 +614,18 @@
             "description": "<No Content>"
           },
           "404": {
-            "description": "PeriodNotFound",
+            "description": "PeriodNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -440,7 +664,7 @@
             }
           },
           "404": {
-            "description": "PeriodNotFound | CategoryNotFound",
+            "description": "PeriodNotFound | CategoryNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
@@ -450,6 +674,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
                     }
                   ]
                 }
@@ -500,7 +727,7 @@
             }
           },
           "404": {
-            "description": "PeriodNotFound | CategoryNotFound",
+            "description": "PeriodNotFound | CategoryNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
@@ -510,6 +737,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
                     }
                   ]
                 }
@@ -560,11 +790,18 @@
             }
           },
           "404": {
-            "description": "EnvelopeNotFound",
+            "description": "EnvelopeNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EnvelopeNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -612,11 +849,18 @@
             }
           },
           "404": {
-            "description": "ExpenseNotFound",
+            "description": "ExpenseNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -652,7 +896,7 @@
             }
           },
           "404": {
-            "description": "ExpenseNotFound | EnvelopeNotFound",
+            "description": "ExpenseNotFound | EnvelopeNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
@@ -662,6 +906,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/EnvelopeNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
                     }
                   ]
                 }
@@ -702,11 +949,18 @@
             "description": "<No Content>"
           },
           "404": {
-            "description": "ExpenseNotFound",
+            "description": "ExpenseNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -837,11 +1091,18 @@
             }
           },
           "404": {
-            "description": "PeriodNotFound",
+            "description": "PeriodNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -880,11 +1141,18 @@
             }
           },
           "404": {
-            "description": "PeriodNotFound",
+            "description": "PeriodNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -915,6 +1183,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                }
+              }
+            }
           }
         },
         "description": "Newest first.",
@@ -939,11 +1217,18 @@
             }
           },
           "404": {
-            "description": "CategoryNotFound",
+            "description": "CategoryNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -991,7 +1276,7 @@
             }
           },
           "404": {
-            "description": "RecurringRuleNotFound | CategoryNotFound",
+            "description": "RecurringRuleNotFound | CategoryNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
@@ -1001,6 +1286,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
                     }
                   ]
                 }
@@ -1042,11 +1330,18 @@
             "description": "<No Content>"
           },
           "404": {
-            "description": "RecurringRuleNotFound",
+            "description": "RecurringRuleNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RecurringRuleNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RecurringRuleNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -1093,6 +1388,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                }
+              }
+            }
           }
         },
         "description": "Sum of the active rules in one currency per category, to prefill a new period's plan.",
@@ -1128,11 +1433,18 @@
             }
           },
           "404": {
-            "description": "PeriodNotFound",
+            "description": "PeriodNotFound | SpaceNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                    }
+                  ]
                 }
               }
             }
@@ -1160,6 +1472,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                }
+              }
+            }
           }
         },
         "description": "A full snapshot as JSON, with ids and timestamps.",
@@ -1181,6 +1503,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ImportPreview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
                 }
               }
             }
@@ -1215,6 +1547,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Counts"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
                 }
               }
             }
@@ -1263,6 +1605,16 @@
               }
             }
           },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                }
+              }
+            }
+          },
           "422": {
             "description": "InvalidImport",
             "content": {
@@ -1306,6 +1658,16 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                }
+              }
+            }
           }
         },
         "description": "Columns: Period, Category, Amount, Date, Note.",
@@ -1327,6 +1689,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CsvImportResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
                 }
               }
             }
@@ -1359,6 +1731,25 @@
   },
   "components": {
     "schemas": {
+      "SpaceNotFoundEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "SpaceNotFound"
+            ]
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
       "InvalidCsvEncoded": {
         "type": "object",
         "properties": {
@@ -2722,6 +3113,53 @@
         "additionalProperties": false,
         "title": "Category.jsonCreate"
       },
+      "Space": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "defaultCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "defaultCurrency",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "title": "Space.json"
+      },
+      "SaveSpace": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "defaultCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          }
+        },
+        "required": [
+          "name",
+          "defaultCurrency"
+        ],
+        "additionalProperties": false
+      },
       "Health": {
         "type": "object",
         "properties": {
@@ -2750,6 +3188,9 @@
   "tags": [
     {
       "name": "System"
+    },
+    {
+      "name": "Spaces"
     },
     {
       "name": "Categories"

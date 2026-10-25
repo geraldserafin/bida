@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
+import { SpaceContext } from "../spaces/space-context.ts";
 import { CategoryInUse, CategoryNotFound } from "./categories.errors.ts";
 import {
   CategoryId,
@@ -40,4 +41,5 @@ export class CategoriesApi extends HttpApiGroup.make("categories")
     ),
   )
   .prefix("/categories")
+  .middleware(SpaceContext)
   .annotateMerge(OpenApi.annotations({ title: "Categories" })) {}

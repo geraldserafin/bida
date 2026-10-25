@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 import { CategoryNotFound } from "../categories/index.ts";
+import { SpaceContext } from "../spaces/space-context.ts";
 import {
   EnvelopeAlreadyExists,
   InvalidPeriodRange,
@@ -82,4 +83,5 @@ export class BudgetsApi extends HttpApiGroup.make("budgets")
     ),
   )
   .prefix("/periods")
+  .middleware(SpaceContext)
   .annotateMerge(OpenApi.annotations({ title: "Budgets" })) {}

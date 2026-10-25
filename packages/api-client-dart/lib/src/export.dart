@@ -4,12 +4,14 @@
 
 // Clients
 export 'system/system_client.dart';
+export 'spaces/spaces_client.dart';
 export 'categories/categories_client.dart';
 export 'budgets/budgets_client.dart';
 export 'expenses/expenses_client.dart';
 export 'recurring/recurring_client.dart';
 export 'transfer/transfer_client.dart';
 // Data classes
+export 'models/space_not_found_encoded.dart';
 export 'models/invalid_csv_encoded.dart';
 export 'models/csv_import_result.dart';
 export 'models/invalid_import_encoded.dart';
@@ -46,6 +48,8 @@ export 'models/no_periods_encoded.dart';
 export 'models/category_in_use_encoded.dart';
 export 'models/update_category.dart';
 export 'models/create_category.dart';
+export 'models/space.dart';
+export 'models/save_space.dart';
 export 'models/health.dart';
 export 'models/periods.dart';
 export 'models/categories.dart';
@@ -53,6 +57,7 @@ export 'models/recurring_rules.dart';
 export 'models/splits.dart';
 export 'models/expenses.dart';
 export 'models/data.dart';
+export 'models/space_not_found_encoded_tag.dart';
 export 'models/invalid_csv_encoded_tag.dart';
 export 'models/invalid_import_encoded_tag.dart';
 export 'models/export_document_version.dart';

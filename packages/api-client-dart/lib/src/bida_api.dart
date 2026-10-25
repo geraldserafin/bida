@@ -5,13 +5,16 @@
 import 'package:dio/dio.dart';
 
 import 'system/system_client.dart';
+import 'spaces/spaces_client.dart';
 import 'categories/categories_client.dart';
 import 'budgets/budgets_client.dart';
 import 'expenses/expenses_client.dart';
 import 'recurring/recurring_client.dart';
 import 'transfer/transfer_client.dart';
 
-/// Money Planner API `v0.0.0`
+/// Money Planner API `v0.0.0`.
+///
+/// Everything except `/health` and the space list works inside a space. Pick it with the `X-Space-Id` header; without the header the default space is used. Amounts are integers in the minor unit of their currency (12.34 PLN is 1234).
 class BidaApi {
   BidaApi(Dio dio, {String? baseUrl}) : _dio = dio, _baseUrl = baseUrl;
 
@@ -21,6 +24,7 @@ class BidaApi {
   static String get version => '0.0.0';
 
   SystemClient? _system;
+  SpacesClient? _spaces;
   CategoriesClient? _categories;
   BudgetsClient? _budgets;
   ExpensesClient? _expenses;
@@ -28,6 +32,8 @@ class BidaApi {
   TransferClient? _transfer;
 
   SystemClient get system => _system ??= SystemClient(_dio, baseUrl: _baseUrl);
+
+  SpacesClient get spaces => _spaces ??= SpacesClient(_dio, baseUrl: _baseUrl);
 
   CategoriesClient get categories =>
       _categories ??= CategoriesClient(_dio, baseUrl: _baseUrl);

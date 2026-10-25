@@ -3,6 +3,7 @@ import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 import { EnvelopePlan, PeriodId, PeriodNotFound } from "../budgets/index.ts";
 import { CategoryNotFound } from "../categories/index.ts";
 import { Currency } from "../currency/index.ts";
+import { SpaceContext } from "../spaces/space-context.ts";
 import { RecurringRuleNotFound } from "./recurring.errors.ts";
 import {
   ApplyResult,
@@ -70,4 +71,5 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
       }),
     ),
   )
+  .middleware(SpaceContext)
   .annotateMerge(OpenApi.annotations({ title: "Recurring" })) {}

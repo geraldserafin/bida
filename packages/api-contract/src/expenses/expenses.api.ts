@@ -7,6 +7,7 @@ import {
   PeriodNotFound,
 } from "../budgets/index.ts";
 import { CategoryId } from "../categories/index.ts";
+import { SpaceContext } from "../spaces/space-context.ts";
 import {
   CreateExpense,
   ExpenseId,
@@ -79,4 +80,5 @@ export class ExpensesApi extends HttpApiGroup.make("expenses")
       }),
     ),
   )
+  .middleware(SpaceContext)
   .annotateMerge(OpenApi.annotations({ title: "Expenses" })) {}

@@ -5,6 +5,7 @@ import {
   HttpApiSchema,
   OpenApi,
 } from "effect/http-api";
+import { SpaceContext } from "../spaces/space-context.ts";
 import { InvalidCsv, InvalidImport } from "./transfer.errors.ts";
 import {
   Counts,
@@ -80,4 +81,5 @@ export class TransferApi extends HttpApiGroup.make("transfer")
       }),
     ),
   )
+  .middleware(SpaceContext)
   .annotateMerge(OpenApi.annotations({ title: "Transfer" })) {}
