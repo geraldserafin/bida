@@ -15,4 +15,9 @@ export const bodyLimit = <A, E, R>(app: Effect.Effect<A, E, R>) =>
 export const corsFor = (origins: ReadonlyArray<string>) =>
   origins.length === 0
     ? HttpMiddleware.make((app) => app)
-    : HttpMiddleware.cors({ allowedOrigins: origins, maxAge: 600 });
+    : HttpMiddleware.cors({
+        allowedOrigins: origins,
+        // the browser app sends its session cookie
+        credentials: true,
+        maxAge: 600,
+      });
