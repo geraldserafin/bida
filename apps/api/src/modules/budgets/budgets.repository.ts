@@ -34,10 +34,13 @@ export class BudgetsRepository extends Context.Service<
         readonly startDate: string;
         readonly endDate: string;
       },
+      version: number,
     ): InSpace<Option.Option<Period>>;
+    /** `None` when the period is gone or its version is not `version`. */
     setIncome(
       id: PeriodId,
       incomeMinor: number,
+      version: number,
     ): InSpace<Option.Option<Period>>;
     /** Returns false when there was nothing to delete. */
     deletePeriod(id: PeriodId): InSpace<boolean>;
@@ -65,7 +68,7 @@ export class BudgetsRepository extends Context.Service<
       // amounts are cast, because pg hands bigint back as a string
       const periodColumns = sql`id, name, start_date::text AS start_date,
         end_date::text AS end_date, income_minor::float8 AS income_minor, currency,
-        created_at, updated_at`;
+        version, created_at, updated_at`;
       const envelopeColumns = sql`id, period_id, category_id,
         planned_minor::float8 AS planned_minor,
         created_at, updated_at`;
@@ -128,13 +131,19 @@ export class BudgetsRepository extends Context.Service<
           ),
       });
       const updateIncome = SqlSchema.findOneOption({
-        Request: Schema.Struct({ id: Schema.String, incomeMinor: Schema.Int }),
+        Request: Schema.Struct({
+          id: Schema.String,
+          incomeMinor: Schema.Int,
+          version: Schema.Int,
+        }),
         Result: Period,
-        execute: ({ id, incomeMinor }) =>
+        execute: ({ id, incomeMinor, version }) =>
           inSpace(
             (spaceId) =>
-              sql`UPDATE periods SET income_minor = ${incomeMinor}, updated_at = now()
-                WHERE id = ${id} AND space_id = ${spaceId} RETURNING ${periodColumns}`,
+              sql`UPDATE periods SET income_minor = ${incomeMinor},
+                version = version + 1, updated_at = now()
+                WHERE id = ${id} AND space_id = ${spaceId} AND version = ${version}
+                RETURNING ${periodColumns}`,
           ),
       });
       const updatePeriodRow = SqlSchema.findOneOption({
@@ -143,14 +152,16 @@ export class BudgetsRepository extends Context.Service<
           name: Schema.String,
           startDate: Schema.String,
           endDate: Schema.String,
+          version: Schema.Int,
         }),
         Result: Period,
-        execute: ({ id, name, startDate, endDate }) =>
+        execute: ({ id, name, startDate, endDate, version }) =>
           inSpace(
             (spaceId) =>
               sql`UPDATE periods SET name = ${name}, start_date = ${startDate},
-                end_date = ${endDate}, updated_at = now()
-                WHERE id = ${id} AND space_id = ${spaceId} RETURNING ${periodColumns}`,
+                end_date = ${endDate}, version = version + 1, updated_at = now()
+                WHERE id = ${id} AND space_id = ${spaceId} AND version = ${version}
+                RETURNING ${periodColumns}`,
           ),
       });
       const deletePeriod = SqlSchema.findAll({
@@ -248,10 +259,10 @@ export class BudgetsRepository extends Context.Service<
         ),
         findPeriod: (id) => findPeriod(id).pipe(Effect.orDie),
         insertPeriod: (input) => insertPeriod(input).pipe(Effect.orDie),
-        updatePeriod: (id, changes) =>
-          updatePeriodRow({ id, ...changes }).pipe(Effect.orDie),
-        setIncome: (id, incomeMinor) =>
-          updateIncome({ id, incomeMinor }).pipe(Effect.orDie),
+        updatePeriod: (id, changes, version) =>
+          updatePeriodRow({ id, ...changes, version }).pipe(Effect.orDie),
+        setIncome: (id, incomeMinor, version) =>
+          updateIncome({ id, incomeMinor, version }).pipe(Effect.orDie),
         deletePeriod: (id) =>
           deletePeriod(id).pipe(
             Effect.map((rows) => rows.length > 0),

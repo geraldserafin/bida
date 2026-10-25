@@ -36,7 +36,7 @@ abstract class CategoriesClient {
 
   /// Delete a category.
   ///
-  /// Fails with 409 while any envelope still uses the category.
+  /// Fails with 409 while any envelope still uses the category. Owners of the space only.
   @DELETE('/categories/{id}')
   Future<void> categoriesDelete({@Path('id') required String id});
 }

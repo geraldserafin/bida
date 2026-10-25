@@ -13,6 +13,7 @@ import {
   type PeriodSummary,
   type RecurringRuleId,
   type UpdateExpense,
+  type UserId,
 } from "@bida/api-contract";
 import { Context, type DateTime, Effect, Layer, Option } from "effect";
 import type { InSpace } from "../../platform/space.ts";
@@ -34,10 +35,15 @@ const DEFAULT_LIMIT = 50;
 export class ExpensesService extends Context.Service<
   ExpensesService,
   {
-    create(input: CreateExpense): InSpace<Expense, EnvelopeNotFound>;
-    /** Adds the expense a recurring rule produces. */
+    /** `createdBy` is the user who adds it, if any. */
+    create(
+      input: CreateExpense,
+      createdBy?: UserId | null,
+    ): InSpace<Expense, EnvelopeNotFound>;
+    /** Adds the expense a recurring rule produces, on behalf of whoever applied it. */
     createFromRule(
       input: CreateExpense & { readonly recurringId: RecurringRuleId },
+      createdBy?: UserId | null,
     ): InSpace<Expense, EnvelopeNotFound>;
     /** Rules that already produced an expense in the period. */
     appliedRecurringIds(
@@ -87,6 +93,7 @@ export class ExpensesService extends Context.Service<
       const insert = Effect.fn("ExpensesService.insert")(function* (
         input: CreateExpense,
         recurringId: RecurringRuleId | null,
+        createdBy: UserId | null,
       ) {
         const envelope = yield* budgets.getEnvelope(input.envelopeId);
         const row = yield* Expense.insert
@@ -98,16 +105,19 @@ export class ExpensesService extends Context.Service<
             spentAt: input.spentAt,
             note: input.note,
             recurringId,
+            createdBy,
           })
           .pipe(Effect.orDie);
         return yield* repo.insert(row);
       });
 
-      const create = (input: CreateExpense) => insert(input, null);
+      const create = (input: CreateExpense, createdBy: UserId | null = null) =>
+        insert(input, null, createdBy);
 
       const createFromRule = (
         input: CreateExpense & { readonly recurringId: RecurringRuleId },
-      ) => insert(input, input.recurringId);
+        createdBy: UserId | null = null,
+      ) => insert(input, input.recurringId, createdBy);
 
       const get = Effect.fn("ExpensesService.get")(function* (id: ExpenseId) {
         const found = yield* repo.findById(id);

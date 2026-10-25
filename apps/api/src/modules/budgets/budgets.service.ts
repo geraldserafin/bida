@@ -10,6 +10,7 @@ import {
   InvalidPeriodRange,
   NoPeriods,
   Period,
+  PeriodChanged,
   type PeriodDetail,
   type PeriodId,
   PeriodNotFound,
@@ -37,7 +38,7 @@ export class BudgetsService extends Context.Service<
     setPlan(
       id: PeriodId,
       input: SetPlan,
-    ): InSpace<PeriodDetail, PeriodNotFound | CategoryNotFound>;
+    ): InSpace<PeriodDetail, PeriodNotFound | CategoryNotFound | PeriodChanged>;
     addEnvelope(
       id: PeriodId,
       input: EnvelopePlan,
@@ -48,7 +49,10 @@ export class BudgetsService extends Context.Service<
     updatePeriod(
       id: PeriodId,
       input: UpdatePeriod,
-    ): InSpace<PeriodDetail, PeriodNotFound | InvalidPeriodRange>;
+    ): InSpace<
+      PeriodDetail,
+      PeriodNotFound | InvalidPeriodRange | PeriodChanged
+    >;
     getEnvelope(id: EnvelopeId): InSpace<Envelope, EnvelopeNotFound>;
     deletePeriod(id: PeriodId): InSpace<void, PeriodNotFound>;
   }
@@ -175,9 +179,14 @@ export class BudgetsService extends Context.Service<
         yield* requireCategories(input.envelopes);
 
         return yield* Effect.gen(function* () {
-          const updated = yield* repo.setIncome(id, input.incomeMinor);
+          const updated = yield* repo.setIncome(
+            id,
+            input.incomeMinor,
+            input.version,
+          );
+          // the period exists (checked above), so a miss is a stale version
           const period = yield* Option.match(updated, {
-            onNone: () => Effect.fail(new PeriodNotFound({ id })),
+            onNone: () => Effect.fail(new PeriodChanged({ id })),
             onSome: Effect.succeed,
           });
           for (const plan of input.envelopes) {
@@ -232,9 +241,19 @@ export class BudgetsService extends Context.Service<
             endDate: input.endDate,
           });
         }
-        const updated = yield* repo.updatePeriod(id, input);
+        yield* requirePeriod(id);
+        const updated = yield* repo.updatePeriod(
+          id,
+          {
+            name: input.name,
+            startDate: input.startDate,
+            endDate: input.endDate,
+          },
+          input.version,
+        );
+        // the period exists (checked above), so a miss is a stale version
         const period = yield* Option.match(updated, {
-          onNone: () => Effect.fail(new PeriodNotFound({ id })),
+          onNone: () => Effect.fail(new PeriodChanged({ id })),
           onSome: Effect.succeed,
         });
         return yield* detail(period);

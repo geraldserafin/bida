@@ -17,6 +17,7 @@ class Period {
     required this.endDate,
     required this.incomeMinor,
     required this.currency,
+    required this.version,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -29,6 +30,7 @@ class Period {
   final String endDate;
   final int incomeMinor;
   final Currency currency;
+  final int version;
   final String createdAt;
   final String updatedAt;
 

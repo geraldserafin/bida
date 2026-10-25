@@ -1,4 +1,4 @@
-import { Api } from "@bida/api-contract";
+import { Api, CurrentUser } from "@bida/api-contract";
 import { Effect } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
 import { RecurringService } from "./recurring.service.ts";
@@ -20,7 +20,9 @@ export const RecurringHttp = HttpApiBuilder.group(
         recurring.suggestedPlan(query.currency),
       )
       .handle("apply", ({ params }) =>
-        recurring.applyToPeriod(params.periodId),
+        Effect.flatMap(CurrentUser, ({ user }) =>
+          recurring.applyToPeriod(params.periodId, user.id),
+        ),
       );
   }),
 );

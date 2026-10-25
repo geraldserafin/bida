@@ -1845,6 +1845,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
           "404": {
             "description": "CategoryNotFound | SpaceNotFound",
             "content": {
@@ -1873,7 +1883,7 @@
             }
           }
         },
-        "description": "Fails with 409 while any envelope still uses the category.",
+        "description": "Fails with 409 while any envelope still uses the category. Owners of the space only.",
         "summary": "Delete a category"
       }
     },
@@ -2195,6 +2205,16 @@
               }
             }
           },
+          "409": {
+            "description": "PeriodChanged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodChanged"
+                }
+              }
+            }
+          },
           "422": {
             "description": "InvalidPeriodRange",
             "content": {
@@ -2258,6 +2278,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
           "404": {
             "description": "PeriodNotFound | SpaceNotFound",
             "content": {
@@ -2276,7 +2306,7 @@
             }
           }
         },
-        "description": "Also deletes its envelopes.",
+        "description": "Also deletes its envelopes and expenses. Owners of the space only.",
         "summary": "Delete a period"
       }
     },
@@ -2346,9 +2376,19 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "PeriodChanged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodChanged"
+                }
+              }
+            }
           }
         },
-        "description": "A zero amount removes the envelope, or keeps it at zero when it already has expenses.",
+        "description": "A zero amount removes the envelope, or keeps it at zero when it already has expenses. Send the `version` of the period the edit is based on: if somebody else changed the plan meanwhile the answer is 409 and nothing is saved.",
         "summary": "Set income and envelope amounts",
         "requestBody": {
           "content": {
@@ -3563,6 +3603,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
           "404": {
             "description": "SpaceNotFound",
             "content": {
@@ -3584,7 +3634,7 @@
             }
           }
         },
-        "description": "Replaces ALL current data with the document, in one transaction.",
+        "description": "Replaces ALL current data with the document, in one transaction. Owners of the space only.",
         "summary": "Import a snapshot",
         "requestBody": {
           "content": {
@@ -3634,6 +3684,16 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
           "404": {
             "description": "SpaceNotFound",
             "content": {
@@ -3655,7 +3715,7 @@
             }
           }
         },
-        "description": "Converts the old local format (integer ids, amounts in zloty) and replaces ALL current data.",
+        "description": "Converts the old local format (integer ids, amounts in zloty) and replaces ALL current data. Owners of the space only.",
         "summary": "Import a backup of the offline app",
         "requestBody": {
           "content": {
@@ -3870,6 +3930,21 @@
         "required": [
           "imported",
           "skipped"
+        ],
+        "additionalProperties": false
+      },
+      "Forbidden": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "Forbidden"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
         ],
         "additionalProperties": false
       },
@@ -4422,6 +4497,18 @@
               }
             ]
           },
+          "createdBy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "createdAt": {
             "type": "string"
           },
@@ -4439,6 +4526,7 @@
           "spentAt",
           "note",
           "recurringId",
+          "createdBy",
           "createdAt",
           "updatedAt"
         ],
@@ -4513,6 +4601,11 @@
           "currency": {
             "$ref": "#/components/schemas/Currency"
           },
+          "version": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "createdAt": {
             "type": "string"
           },
@@ -4527,6 +4620,7 @@
           "endDate",
           "incomeMinor",
           "currency",
+          "version",
           "createdAt",
           "updatedAt"
         ],
@@ -5035,6 +5129,27 @@
         ],
         "additionalProperties": false
       },
+      "PeriodChanged": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "PeriodChanged"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
       "PeriodDetail": {
         "type": "object",
         "properties": {
@@ -5069,6 +5184,11 @@
       "SetPlan": {
         "type": "object",
         "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "incomeMinor": {
             "type": "integer",
             "minimum": 0,
@@ -5083,6 +5203,7 @@
           }
         },
         "required": [
+          "version",
           "incomeMinor",
           "envelopes"
         ],
@@ -5114,6 +5235,11 @@
       "UpdatePeriod": {
         "type": "object",
         "properties": {
+          "version": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
           "name": {
             "type": "string",
             "minLength": 1,
@@ -5127,6 +5253,7 @@
           }
         },
         "required": [
+          "version",
           "name",
           "startDate",
           "endDate"
@@ -5425,21 +5552,6 @@
         "required": [
           "_tag",
           "limit"
-        ],
-        "additionalProperties": false
-      },
-      "Forbidden": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "Forbidden"
-            ]
-          }
-        },
-        "required": [
-          "_tag"
         ],
         "additionalProperties": false
       },

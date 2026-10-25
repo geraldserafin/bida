@@ -21,6 +21,11 @@ export class Period extends Model.Class<Period>("Period")({
   incomeMinor: Money,
   /** All amounts of the period are in this currency. */
   currency: Currency,
+  /**
+   * Counts the edits of the plan (income, name, dates). Send it back with an
+   * edit; if somebody else edited in between, the edit is refused.
+   */
+  version: Model.GeneratedByDb(Schema.Int),
   createdAt: Model.DateTimeInsertFromDate,
   updatedAt: Model.DateTimeUpdateFromDate,
 }) {}
@@ -74,6 +79,8 @@ export type CreatePeriod = typeof CreatePeriod.Type;
  * stay untouched.
  */
 export const SetPlan = Schema.Struct({
+  /** The `version` of the period this edit is based on. */
+  version: Schema.Int,
   incomeMinor: Money,
   envelopes: Schema.Array(EnvelopePlan).check(Schema.isMaxLength(500)),
 }).annotate({ identifier: "SetPlan" });
@@ -81,6 +88,8 @@ export type SetPlan = typeof SetPlan.Type;
 
 /** Renames a period and moves its dates. The currency and the plan stay. */
 export const UpdatePeriod = Schema.Struct({
+  /** The `version` of the period this edit is based on. */
+  version: Schema.Int,
   name: Name,
   startDate: IsoDate,
   endDate: IsoDate,

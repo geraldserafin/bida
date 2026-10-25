@@ -9,10 +9,12 @@ import { Authenticated } from "../auth/authenticated.ts";
 import { CategoryNotFound } from "../categories/index.ts";
 import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
+import { Forbidden } from "../spaces/spaces.errors.ts";
 import {
   EnvelopeAlreadyExists,
   InvalidPeriodRange,
   NoPeriods,
+  PeriodChanged,
   PeriodNotFound,
 } from "./budgets.errors.ts";
 import {
@@ -64,7 +66,11 @@ export class PeriodsApi extends HttpApiGroup.make("periods")
       params: { id: PeriodId },
       payload: UpdatePeriod,
       success: PeriodDetail,
-      error: [wire(PeriodNotFound), wire(InvalidPeriodRange)],
+      error: [
+        wire(PeriodNotFound),
+        wire(InvalidPeriodRange),
+        wire(PeriodChanged),
+      ],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Edit a period",
@@ -76,12 +82,16 @@ export class PeriodsApi extends HttpApiGroup.make("periods")
       params: { id: PeriodId },
       payload: SetPlan,
       success: PeriodDetail,
-      error: [wire(PeriodNotFound), wire(CategoryNotFound)],
+      error: [
+        wire(PeriodNotFound),
+        wire(CategoryNotFound),
+        wire(PeriodChanged),
+      ],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Set income and envelope amounts",
         description:
-          "A zero amount removes the envelope, or keeps it at zero when it already has expenses.",
+          "A zero amount removes the envelope, or keeps it at zero when it already has expenses. Send the `version` of the period the edit is based on: if somebody else changed the plan meanwhile the answer is 409 and nothing is saved.",
       }),
     ),
     HttpApiEndpoint.post("addEnvelope", "/:id/envelopes", {
@@ -98,11 +108,12 @@ export class PeriodsApi extends HttpApiGroup.make("periods")
     ),
     HttpApiEndpoint.delete("delete", "/:id", {
       params: { id: PeriodId },
-      error: wire(PeriodNotFound),
+      error: [wire(PeriodNotFound), wire(Forbidden)],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Delete a period",
-        description: "Also deletes its envelopes.",
+        description:
+          "Also deletes its envelopes and expenses. Owners of the space only.",
       }),
     ),
   )

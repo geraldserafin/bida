@@ -18,6 +18,7 @@ Expense _$ExpenseFromJson(Map<String, dynamic> json) => Expense(
   spentAt: json['spentAt'] as String,
   note: json['note'] as String?,
   recurringId: json['recurringId'] as String?,
+  createdBy: json['createdBy'] as String?,
   createdAt: json['createdAt'] as String,
   updatedAt: json['updatedAt'] as String,
 );
@@ -32,6 +33,7 @@ Map<String, dynamic> _$ExpenseToJson(Expense instance) => <String, dynamic>{
   'spentAt': instance.spentAt,
   'note': instance.note,
   'recurringId': instance.recurringId,
+  'createdBy': instance.createdBy,
   'createdAt': instance.createdAt,
   'updatedAt': instance.updatedAt,
 };

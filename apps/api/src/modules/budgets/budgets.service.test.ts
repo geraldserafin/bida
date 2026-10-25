@@ -170,6 +170,7 @@ layer(TestLayer)("BudgetsService", (it) => {
       });
 
       const updated = yield* budgets.setPlan(created.period.id, {
+        version: created.period.version,
         incomeMinor: 450_000,
         envelopes: [
           { categoryId: food, plannedMinor: 90_000 },
@@ -216,6 +217,7 @@ layer(TestLayer)("BudgetsService", (it) => {
 
         const updated = yield* budgets
           .setPlan(created.period.id, {
+            version: created.period.version,
             incomeMinor: 100,
             envelopes: [{ categoryId: food, plannedMinor: 0 }],
           })

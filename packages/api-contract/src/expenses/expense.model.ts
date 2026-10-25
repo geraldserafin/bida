@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 import { Model } from "effect/schema";
+import { UserId } from "../auth/user.model.ts";
 import { EnvelopeId, PeriodId, PeriodJson } from "../budgets/index.ts";
 import { CategoryId } from "../categories/index.ts";
 import { Currency } from "../currency/index.ts";
@@ -39,6 +40,11 @@ export class Expense extends Model.Class<Expense>("Expense")({
   note: Schema.NullOr(Note),
   /** Set when the expense was generated from a recurring rule. */
   recurringId: Schema.NullOr(RecurringRuleId),
+  /**
+   * Who added it. Empty for data that was imported, and when that person's
+   * account is gone. Somebody who left the space still shows here.
+   */
+  createdBy: Model.GeneratedByApp(Schema.NullOr(UserId)),
   createdAt: Model.DateTimeInsertFromDate,
   updatedAt: Model.DateTimeUpdateFromDate,
 }) {}

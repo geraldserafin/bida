@@ -8,6 +8,7 @@ import {
 import { Authenticated } from "../auth/authenticated.ts";
 import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
+import { Forbidden } from "../spaces/spaces.errors.ts";
 import { InvalidCsv, InvalidImport } from "./transfer.errors.ts";
 import {
   Counts,
@@ -44,23 +45,23 @@ export class TransferApi extends HttpApiGroup.make("transfer")
     HttpApiEndpoint.post("import", "/import", {
       payload: ExportDocument,
       success: Counts,
-      error: wire(InvalidImport),
+      error: [wire(InvalidImport), wire(Forbidden)],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Import a snapshot",
         description:
-          "Replaces ALL current data with the document, in one transaction.",
+          "Replaces ALL current data with the document, in one transaction. Owners of the space only.",
       }),
     ),
     HttpApiEndpoint.post("importLegacy", "/import/legacy", {
       payload: ImportLegacy,
       success: Counts,
-      error: wire(InvalidImport),
+      error: [wire(InvalidImport), wire(Forbidden)],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Import a backup of the offline app",
         description:
-          "Converts the old local format (integer ids, amounts in zloty) and replaces ALL current data.",
+          "Converts the old local format (integer ids, amounts in zloty) and replaces ALL current data. Owners of the space only.",
       }),
     ),
     HttpApiEndpoint.get("exportCsv", "/export.csv", {

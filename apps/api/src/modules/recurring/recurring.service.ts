@@ -10,6 +10,7 @@ import {
   type RecurringRuleId,
   RecurringRuleNotFound,
   type SaveRecurringRule,
+  type UserId,
 } from "@bida/api-contract";
 import { Context, DateTime, Effect, Layer, Option } from "effect";
 import { SqlClient } from "effect/sql";
@@ -32,7 +33,11 @@ export class RecurringService extends Context.Service<
     remove(id: RecurringRuleId): InSpace<void, RecurringRuleNotFound>;
     /** Sum of the active rules per category. */
     suggestedPlan(currency?: Currency): InSpace<ReadonlyArray<EnvelopePlan>>;
-    applyToPeriod(periodId: PeriodId): InSpace<ApplyResult, PeriodNotFound>;
+    /** The expenses it adds are credited to `createdBy`, who applied the rules. */
+    applyToPeriod(
+      periodId: PeriodId,
+      createdBy?: UserId | null,
+    ): InSpace<ApplyResult, PeriodNotFound>;
   }
 >()("bida/recurring/RecurringService") {
   static readonly layer = Layer.effect(
@@ -107,7 +112,7 @@ export class RecurringService extends Context.Service<
       );
 
       const applyToPeriod = Effect.fn("RecurringService.applyToPeriod")(
-        function* (periodId: PeriodId) {
+        function* (periodId: PeriodId, createdBy: UserId | null = null) {
           yield* budgets.getPeriod(periodId); // 404 before taking any lock
           const spentAt = yield* DateTime.now;
 
@@ -143,13 +148,16 @@ export class RecurringService extends Context.Service<
                 envelopeId = envelope.id;
                 envelopeByCategory.set(rule.categoryId, envelope.id);
               }
-              yield* expenses.createFromRule({
-                envelopeId,
-                recurringId: rule.id,
-                amountMinor: rule.amountMinor,
-                spentAt,
-                note: rule.note,
-              });
+              yield* expenses.createFromRule(
+                {
+                  envelopeId,
+                  recurringId: rule.id,
+                  amountMinor: rule.amountMinor,
+                  spentAt,
+                  note: rule.note,
+                },
+                createdBy,
+              );
             }
             return rules.length;
           }).pipe(

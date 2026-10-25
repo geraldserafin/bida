@@ -1,6 +1,7 @@
 import { Api } from "@bida/api-contract";
 import { Effect } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
+import { requireOwner } from "../../platform/space.ts";
 import { BudgetsService } from "./budgets.service.ts";
 
 /** Thin adapter: decoded request in, service call, domain errors out. */
@@ -23,6 +24,8 @@ export const BudgetsHttp = HttpApiBuilder.group(
       .handle("addEnvelope", ({ params, payload }) =>
         budgets.addEnvelope(params.id, payload),
       )
-      .handle("delete", ({ params }) => budgets.deletePeriod(params.id));
+      .handle("delete", ({ params }) =>
+        Effect.andThen(requireOwner, budgets.deletePeriod(params.id)),
+      );
   }),
 );

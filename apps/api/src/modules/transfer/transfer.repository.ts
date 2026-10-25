@@ -64,7 +64,8 @@ export class TransferRepository extends Context.Service<
       const periods = selectAll(
         Period,
         `SELECT id, name, start_date::text AS start_date, end_date::text AS end_date,
-          income_minor::float8 AS income_minor, currency, created_at, updated_at
+          income_minor::float8 AS income_minor, currency, version,
+          created_at, updated_at
           FROM periods WHERE space_id = $1 ORDER BY start_date, created_at, id`,
       );
       const envelopes = selectAll(
@@ -76,7 +77,7 @@ export class TransferRepository extends Context.Service<
         Expense,
         `SELECT id, period_id, envelope_id, amount_minor::float8 AS amount_minor,
           original_amount_minor::float8 AS original_amount_minor, original_currency,
-          spent_at, note, recurring_id, created_at, updated_at
+          spent_at, note, recurring_id, created_by, created_at, updated_at
           FROM expenses WHERE space_id = $1 ORDER BY spent_at, id`,
       );
       const recurringRules = selectAll(
@@ -159,7 +160,12 @@ export class TransferRepository extends Context.Service<
             yield* insertPeriods(snapshot.periods);
             yield* insertRecurringRules(snapshot.recurringRules);
             yield* insertEnvelopes(snapshot.envelopes);
-            yield* insertExpenses(snapshot.expenses);
+            // authors of imported data are not users of this server
+            yield* insertExpenses(
+              snapshot.expenses.map(
+                (e) => new Expense({ ...e, createdBy: null }),
+              ),
+            );
           }).pipe(Effect.withSpan("TransferRepository.replaceAll")),
       });
     }),

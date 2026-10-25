@@ -398,6 +398,7 @@ layer(TestLayer)("request hardening", (it) => {
         envelopes: [],
       });
       const updated = yield* budgets.updatePeriod(created.period.id, {
+        version: created.period.version,
         name: "Summer",
         startDate: "2026-07-05",
         endDate: "2026-08-04",
@@ -411,6 +412,7 @@ layer(TestLayer)("request hardening", (it) => {
 
       const reversed = yield* budgets
         .updatePeriod(created.period.id, {
+          version: created.period.version,
           name: "x",
           startDate: "2026-08-01",
           endDate: "2026-07-01",
@@ -420,6 +422,7 @@ layer(TestLayer)("request hardening", (it) => {
 
       const missing = yield* budgets
         .updatePeriod(PeriodId.make("019845e1-682f-4b02-a706-3b2422d13aec"), {
+          version: 1,
           name: "x",
           startDate: "2026-07-01",
           endDate: "2026-07-02",

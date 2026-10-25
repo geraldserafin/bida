@@ -20,6 +20,7 @@ class Expense {
     required this.spentAt,
     required this.note,
     required this.recurringId,
+    required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -40,6 +41,8 @@ class Expense {
   final String? note;
   @JsonKey(includeIfNull: true)
   final String? recurringId;
+  @JsonKey(includeIfNull: true)
+  final String? createdBy;
   final String createdAt;
   final String updatedAt;
 

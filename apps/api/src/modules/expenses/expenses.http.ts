@@ -1,4 +1,4 @@
-import { Api } from "@bida/api-contract";
+import { Api, CurrentUser } from "@bida/api-contract";
 import { Effect } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
 import { ExpensesService } from "./expenses.service.ts";
@@ -10,7 +10,11 @@ export const ExpensesHttp = HttpApiBuilder.group(
   Effect.fn(function* (handlers) {
     const expenses = yield* ExpensesService;
     return handlers
-      .handle("create", ({ payload }) => expenses.create(payload))
+      .handle("create", ({ payload }) =>
+        Effect.flatMap(CurrentUser, ({ user }) =>
+          expenses.create(payload, user.id),
+        ),
+      )
       .handle("get", ({ params }) => expenses.get(params.id))
       .handle("update", ({ params, payload }) =>
         expenses.update(params.id, payload),

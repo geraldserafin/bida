@@ -83,6 +83,7 @@ export const convertLegacy = (
           endDate: row.end_date.slice(0, 10),
           incomeMinor: toMinor(row.income),
           currency: DEFAULT_CURRENCY,
+          version: 1,
           createdAt: now,
           updatedAt: now,
         }),
@@ -156,6 +157,7 @@ export const convertLegacy = (
             row.recurring_id === null
               ? null
               : yield* lookup(ruleIds, row.recurring_id, "recurring rule"),
+          createdBy: null,
           createdAt: now,
           updatedAt: now,
         }),

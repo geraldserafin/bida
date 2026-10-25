@@ -1,6 +1,7 @@
 import { Api } from "@bida/api-contract";
 import { Effect } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
+import { requireOwner } from "../../platform/space.ts";
 import { CategoriesService } from "./categories.service.ts";
 
 /** Thin adapter: decoded request in, service call, domain errors out. */
@@ -16,6 +17,8 @@ export const CategoriesHttp = HttpApiBuilder.group(
       .handle("update", ({ params, payload }) =>
         categories.update(params.id, payload),
       )
-      .handle("delete", ({ params }) => categories.remove(params.id));
+      .handle("delete", ({ params }) =>
+        Effect.andThen(requireOwner, categories.remove(params.id)),
+      );
   }),
 );

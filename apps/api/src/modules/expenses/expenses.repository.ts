@@ -72,7 +72,7 @@ export class ExpensesRepository extends Context.Service<
       const columns = sql`id, period_id, envelope_id,
         amount_minor::float8 AS amount_minor,
         original_amount_minor::float8 AS original_amount_minor, original_currency,
-        spent_at, note, recurring_id,
+        spent_at, note, recurring_id, created_by,
         created_at, updated_at`;
 
       // every query runs in the space of the current request

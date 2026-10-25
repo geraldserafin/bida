@@ -296,6 +296,7 @@ layer(TestLayer)("ExpensesService", (it) => {
           note: null,
         });
         const updated = yield* budgets.setPlan(period.id, {
+          version: period.version,
           incomeMinor: 500_000,
           envelopes: [{ categoryId: food.id, plannedMinor: 0 }],
         });

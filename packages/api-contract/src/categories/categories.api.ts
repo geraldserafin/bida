@@ -8,6 +8,7 @@ import {
 import { Authenticated } from "../auth/authenticated.ts";
 import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
+import { Forbidden } from "../spaces/spaces.errors.ts";
 import { CategoryInUse, CategoryNotFound } from "./categories.errors.ts";
 import {
   CategoryId,
@@ -38,12 +39,12 @@ export class CategoriesApi extends HttpApiGroup.make("categories")
     }).annotateMerge(OpenApi.annotations({ summary: "Update a category" })),
     HttpApiEndpoint.delete("delete", "/:id", {
       params: { id: CategoryId },
-      error: [wire(CategoryNotFound), wire(CategoryInUse)],
+      error: [wire(CategoryNotFound), wire(CategoryInUse), wire(Forbidden)],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Delete a category",
         description:
-          "Fails with 409 while any envelope still uses the category.",
+          "Fails with 409 while any envelope still uses the category. Owners of the space only.",
       }),
     ),
   )

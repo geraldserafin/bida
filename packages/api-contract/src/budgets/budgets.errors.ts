@@ -8,6 +8,13 @@ export class PeriodNotFound extends Schema.TaggedError<PeriodNotFound>()(
   { httpApiStatus: 404 },
 ) {}
 
+/** Somebody edited the period since it was loaded: reload and edit again. */
+export class PeriodChanged extends Schema.TaggedError<PeriodChanged>()(
+  "PeriodChanged",
+  { id: PeriodId },
+  { httpApiStatus: 409 },
+) {}
+
 /** There is no period yet, so there is no current one. */
 export class NoPeriods extends Schema.TaggedError<NoPeriods>()(
   "NoPeriods",

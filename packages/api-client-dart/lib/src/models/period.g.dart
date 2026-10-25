@@ -13,6 +13,7 @@ Period _$PeriodFromJson(Map<String, dynamic> json) => Period(
   endDate: json['endDate'] as String,
   incomeMinor: (json['incomeMinor'] as num).toInt(),
   currency: Currency.fromJson(json['currency'] as String),
+  version: (json['version'] as num).toInt(),
   createdAt: json['createdAt'] as String,
   updatedAt: json['updatedAt'] as String,
 );
@@ -24,6 +25,7 @@ Map<String, dynamic> _$PeriodToJson(Period instance) => <String, dynamic>{
   'endDate': instance.endDate,
   'incomeMinor': instance.incomeMinor,
   'currency': _$CurrencyEnumMap[instance.currency]!,
+  'version': instance.version,
   'createdAt': instance.createdAt,
   'updatedAt': instance.updatedAt,
 };

@@ -10,11 +10,16 @@ part 'set_plan.g.dart';
 
 @JsonSerializable()
 class SetPlan {
-  const SetPlan({required this.incomeMinor, required this.envelopes});
+  const SetPlan({
+    required this.version,
+    required this.incomeMinor,
+    required this.envelopes,
+  });
 
   factory SetPlan.fromJson(Map<String, Object?> json) =>
       _$SetPlanFromJson(json);
 
+  final int version;
   final int incomeMinor;
   final List<EnvelopePlan> envelopes;
 

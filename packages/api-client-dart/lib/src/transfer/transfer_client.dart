@@ -33,13 +33,13 @@ abstract class TransferClient {
 
   /// Import a snapshot.
   ///
-  /// Replaces ALL current data with the document, in one transaction.
+  /// Replaces ALL current data with the document, in one transaction. Owners of the space only.
   @POST('/import')
   Future<Counts> transferImport({@Body() required ExportDocument body});
 
   /// Import a backup of the offline app.
   ///
-  /// Converts the old local format (integer ids, amounts in zloty) and replaces ALL current data.
+  /// Converts the old local format (integer ids, amounts in zloty) and replaces ALL current data. Owners of the space only.
   @POST('/import/legacy')
   Future<Counts> transferImportLegacy({@Body() required ImportLegacy body});
 

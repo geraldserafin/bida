@@ -52,13 +52,13 @@ abstract class PeriodsClient {
 
   /// Delete a period.
   ///
-  /// Also deletes its envelopes.
+  /// Also deletes its envelopes and expenses. Owners of the space only.
   @DELETE('/periods/{id}')
   Future<void> periodsDelete({@Path('id') required String id});
 
   /// Set income and envelope amounts.
   ///
-  /// A zero amount removes the envelope, or keeps it at zero when it already has expenses.
+  /// A zero amount removes the envelope, or keeps it at zero when it already has expenses. Send the `version` of the period the edit is based on: if somebody else changed the plan meanwhile the answer is 409 and nothing is saved.
   @PUT('/periods/{id}/plan')
   Future<PeriodDetail> periodsSetPlan({
     @Path('id') required String id,

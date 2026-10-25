@@ -9,6 +9,7 @@ part 'update_period.g.dart';
 @JsonSerializable()
 class UpdatePeriod {
   const UpdatePeriod({
+    required this.version,
     required this.name,
     required this.startDate,
     required this.endDate,
@@ -17,6 +18,7 @@ class UpdatePeriod {
   factory UpdatePeriod.fromJson(Map<String, Object?> json) =>
       _$UpdatePeriodFromJson(json);
 
+  final int version;
   final String name;
   final String startDate;
   final String endDate;
