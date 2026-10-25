@@ -3,10 +3,13 @@ import { assert, layer } from "@effect/vitest";
 import { Effect, Layer, Option } from "effect";
 import { SqlClient } from "effect/sql";
 import { DbLive } from "../../platform/db.ts";
-import { resetDb } from "../../platform/testing.ts";
+import { resetDb, TestSpace } from "../../platform/testing.ts";
 import { CategoriesRepository } from "./categories.repository.ts";
 
-const TestLayer = CategoriesRepository.layer.pipe(Layer.provideMerge(DbLive));
+const TestLayer = CategoriesRepository.layer.pipe(
+  Layer.provideMerge(DbLive),
+  Layer.provideMerge(TestSpace()),
+);
 const missing = CategoryId.make("019845e1-682f-4b02-a706-3b2422d13aec");
 
 const newCategory = (name: string) =>

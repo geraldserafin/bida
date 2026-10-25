@@ -22,7 +22,7 @@ import {
   TransferService,
 } from "./modules/transfer/transfer.module.ts";
 import { DbLive } from "./platform/db.ts";
-import { resetDb } from "./platform/testing.ts";
+import { resetDb, TestSpace } from "./platform/testing.ts";
 
 // Currency cuts across modules, so it is tested across them on the real db.
 const TestLayer = Layer.mergeAll(
@@ -31,7 +31,7 @@ const TestLayer = Layer.mergeAll(
   ExpensesModule,
   BudgetsModule,
   CategoriesModule,
-).pipe(Layer.provideMerge(DbLive));
+).pipe(Layer.provideMerge(DbLive), Layer.provideMerge(TestSpace()));
 
 const july = { name: "July", startDate: "2026-07-01", endDate: "2026-07-31" };
 

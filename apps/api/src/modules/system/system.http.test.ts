@@ -3,11 +3,12 @@ import { assert, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { HttpServer } from "effect/http";
 import { HttpApiTest } from "effect/http-api";
+import { TestSpaceContext } from "../../platform/testing.ts";
 import { SystemHttp } from "./system.module.ts";
 
 const makeClient = HttpApiTest.groups(Api, ["system"]);
 
-layer(Layer.mergeAll(SystemHttp, HttpServer.layerServices))(
+layer(Layer.mergeAll(SystemHttp, HttpServer.layerServices, TestSpaceContext()))(
   "SystemHttp",
   (it) => {
     it.effect("health reports ok", () =>

@@ -7,7 +7,7 @@ import {
 import { assert, layer } from "@effect/vitest";
 import { DateTime, Effect, Layer, Schema } from "effect";
 import { DbLive } from "../../platform/db.ts";
-import { resetDb } from "../../platform/testing.ts";
+import { resetDb, TestSpace } from "../../platform/testing.ts";
 import { BudgetsModule, BudgetsService } from "../budgets/budgets.module.ts";
 import {
   CategoriesModule,
@@ -31,7 +31,7 @@ const TestLayer = Layer.mergeAll(
   ExpensesModule,
   BudgetsModule,
   CategoriesModule,
-).pipe(Layer.provideMerge(DbLive));
+).pipe(Layer.provideMerge(DbLive), Layer.provideMerge(TestSpace()));
 
 const encode = Schema.encodeSync(ExportDocument);
 /** The exported document as plain JSON, without the export time. */

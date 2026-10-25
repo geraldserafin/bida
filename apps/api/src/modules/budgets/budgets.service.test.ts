@@ -11,7 +11,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { SqlClient } from "effect/sql";
 import { DbLive } from "../../platform/db.ts";
-import { resetDb } from "../../platform/testing.ts";
+import { resetDb, TestSpace } from "../../platform/testing.ts";
 import {
   CategoriesModule,
   CategoriesService,
@@ -22,6 +22,7 @@ import { BudgetsModule, BudgetsService } from "./budgets.module.ts";
 // (transactions, foreign keys, unique constraints).
 const TestLayer = Layer.mergeAll(BudgetsModule, CategoriesModule).pipe(
   Layer.provideMerge(DbLive),
+  Layer.provideMerge(TestSpace()),
 );
 
 const missing = PeriodId.make("019845e1-682f-4b02-a706-3b2422d13aec");

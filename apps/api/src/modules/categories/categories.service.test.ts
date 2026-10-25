@@ -1,10 +1,12 @@
 import { CategoryId, CategoryNotFound } from "@bida/api-contract";
 import { assert, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import { TestSpace } from "../../platform/testing.ts";
 import { CategoriesService } from "./categories.service.ts";
 import { CategoriesRepositoryMemory } from "./categories.testing.ts";
 
 const TestLayer = CategoriesService.layer.pipe(
+  Layer.provideMerge(TestSpace()),
   Layer.provide(CategoriesRepositoryMemory),
 );
 const missing = CategoryId.make("019845e1-682f-4b02-a706-3b2422d13aec");

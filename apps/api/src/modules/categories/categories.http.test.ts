@@ -3,6 +3,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { HttpServer } from "effect/http";
 import { HttpApiTest } from "effect/http-api";
+import { TestSpaceContext } from "../../platform/testing.ts";
 import { CategoriesHttp } from "./categories.http.ts";
 import { CategoriesService } from "./categories.service.ts";
 import { CategoriesRepositoryMemory } from "./categories.testing.ts";
@@ -13,6 +14,7 @@ const input = { name: "Food", color: "#ff8800", icon: null };
 const TestLayer = CategoriesHttp.pipe(
   Layer.provide(CategoriesService.layer),
   Layer.provide(CategoriesRepositoryMemory),
+  Layer.provideMerge(TestSpaceContext()),
   Layer.provideMerge(HttpServer.layerServices),
 );
 

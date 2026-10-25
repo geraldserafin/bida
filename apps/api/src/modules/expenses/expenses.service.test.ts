@@ -10,7 +10,7 @@ import { assert, layer } from "@effect/vitest";
 import { DateTime, Effect, Layer } from "effect";
 import { SqlClient } from "effect/sql";
 import { DbLive } from "../../platform/db.ts";
-import { resetDb } from "../../platform/testing.ts";
+import { resetDb, TestSpace } from "../../platform/testing.ts";
 import { BudgetsModule, BudgetsService } from "../budgets/budgets.module.ts";
 import {
   CategoriesModule,
@@ -24,7 +24,7 @@ const TestLayer = Layer.mergeAll(
   ExpensesModule,
   BudgetsModule,
   CategoriesModule,
-).pipe(Layer.provideMerge(DbLive));
+).pipe(Layer.provideMerge(DbLive), Layer.provideMerge(TestSpace()));
 
 const at = (iso: string) => DateTime.makeUnsafe(iso);
 
