@@ -28,6 +28,14 @@ grep -qxF "$(cat "$KEY_FILE")" /home/deploy/.ssh/authorized_keys ||
 chown deploy:deploy /home/deploy/.ssh/authorized_keys
 chmod 600 /home/deploy/.ssh/authorized_keys
 
+# The server prints a banner from /etc/profile.d in every shell, which breaks
+# rsync and scp. Non-interactive shells of the deploy user must stay silent.
+grep -q 'non-interactive' /home/deploy/.bashrc 2>/dev/null ||
+  sed -i '1a\
+\
+# non-interactive shells (rsync, scp, deploy commands) must print nothing\
+[[ $- != *i* ]] \&\& return' /home/deploy/.bashrc
+
 # --- static files the workflow uploads --------------------------------------
 install -d -m 755 -o deploy -g deploy "$STACK/app" "$STACK/docs"
 
