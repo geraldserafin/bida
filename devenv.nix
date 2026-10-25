@@ -121,14 +121,16 @@
     # crashes it with undefined-symbol errors, so drop them from the lib path.
     export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | tr ':' '\n' | grep -Ev '/(build-tools|ndk-bundle)/' | paste -sd:)
     mkdir -p "$ANDROID_AVD_HOME"
+    cfg="$ANDROID_AVD_HOME/bida.avd/config.ini"
     if [ ! -d "$ANDROID_AVD_HOME/bida.avd" ]; then
       echo "creating emulator device 'bida'..."
       echo no | avdmanager create avd -n bida -k "system-images;android-36;google_apis;x86_64" -d pixel_6
-      # default AVD is 1.5G RAM / 3 cores / no GPU, which is painfully slow
-      cfg="$ANDROID_AVD_HOME/bida.avd/config.ini"
-      sed -i -E '/^(hw.ramSize|hw.cpu.ncore|hw.gpu.enabled|hw.gpu.mode|vm.heapSize)/d' "$cfg"
-      printf 'hw.ramSize = 3072\nhw.cpu.ncore = 4\nhw.gpu.enabled = yes\nhw.gpu.mode = host\nvm.heapSize = 512\n' >> "$cfg"
     fi
+    # Settings we own, enforced on every run so an existing device picks them up:
+    # the default AVD is 1.5G RAM / 3 cores / no GPU (painfully slow) and ignores
+    # the host keyboard (hw.keyboard = no), so typing in the window does nothing.
+    sed -i -E '/^(hw\.ramSize|hw\.cpu\.ncore|hw\.gpu\.enabled|hw\.gpu\.mode|vm\.heapSize|hw\.keyboard) *=/d' "$cfg"
+    printf 'hw.ramSize = 3072\nhw.cpu.ncore = 4\nhw.gpu.enabled = yes\nhw.gpu.mode = host\nvm.heapSize = 512\nhw.keyboard = yes\n' >> "$cfg"
   '';
 
   scripts.emu.exec = ''
