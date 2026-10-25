@@ -62,94 +62,99 @@ History
 |---|---|
 | 🧧 **Envelope budgeting** | Allocate income to categories; spend against the plan |
 | 📊 **Visual insight** | Pie chart of your split, progress bars for spent-vs-planned, spending-over-time line charts |
-| 🔁 **Recurring rules** | Templates for regular income/expenses (rent, salary) that pre-fill new periods |
+| 🔁 **Recurring rules** | Templates for regular expenses (rent, subscriptions) that pre-fill new periods and add themselves with one tap |
 | 🧮 **Unallocated tracking** | Always know how much income is still free to assign |
 | 📌 **Persistent balance bar** | Remaining balance stays visible on every screen |
 | 🧭 **Bottom navigation** | Pulpit (dashboard) · Historia · Okresy · Ustawienia, one tap away |
 | 🕓 **History** | Read-only summaries and charts for past periods |
 | 🔐 **Local security** | PIN + biometric unlock (`local_auth`) |
-| ☁️ **Encrypted sync** | Push an **AES-encrypted** blob to a private GitHub repo — the cloud only ever sees ciphertext |
+| ☁️ **Server-backed** | Your data lives on the Money Planner API, so it survives a lost phone and is the base for sharing a budget |
 
 ## 🏗️ Architecture
 
-A clean, layered structure that keeps domain, data, and UI separate:
+The app is a client of the Money Planner API (`apps/api` in the monorepo). It
+needs the server: there is no local copy of the data, and a failed request
+shows why and offers to try again.
 
 ```
 lib/
-├── main.dart                 # Entry point — boots the SQLite database
-├── app.dart                  # MaterialApp: theming + routing
-├── models/                   # Domain entities (pure Dart, no Flutter deps)
-│   ├── period.dart
-│   ├── category.dart
-│   ├── split.dart            # the "plan": income → category allocation
-│   ├── expense.dart
-│   └── recurring_rule.dart
-├── data/
-│   └── database_helper.dart  # SQLite schema + connection (sqflite / ffi)
-├── theme/
-│   └── app_theme.dart        # Light & dark Material 3 themes
-├── widgets/
-│   └── remaining_balance_bar.dart   # shared sticky balance bar
-└── screens/
-    ├── dashboard/            # current-period overview + bottom nav (Pulpit)
-    ├── history/              # read-only log of past expenses (Historia)
-    ├── periods/              # period switcher (Okresy)
-    ├── settings/             # security, sync, theme (Ustawienia)
-    ├── period_setup/         # new period + income split
-    ├── categories/           # category CRUD, icon/color picker
-    ├── category_detail/      # planned/spent/remaining + charts per category
-    ├── add_expense/          # log spending against a category
-    ├── recurring/            # recurring income/expense rule templates
-    └── lock/                 # PIN/biometric lock gate
+├── main.dart                 # Entry point
+├── app.dart                  # MaterialApp: providers, theming, routing
+├── models/                   # What the UI works with (pure Dart)
+│   ├── period.dart, category.dart, expense.dart, recurring_rule.dart
+│   ├── envelope.dart         # the plan: income → category allocation
+│   ├── category_progress.dart, period_summary.dart, transaction.dart
+├── data/                     # Everything that talks to the backend
+│   ├── planner_repository.dart  # the one entry point, in the app's terms
+│   ├── mappers.dart          # API types <-> models
+│   ├── money.dart            # minor units (grosze) <-> whole units
+│   ├── api_client.dart       # Dio setup, API_URL
+│   ├── api_exception.dart    # failures the UI can react to
+│   └── legacy_migrator.dart  # one-off: old local database -> server
+├── state/
+│   ├── planner_state.dart    # current period, progress, totals (Provider)
+│   └── app_settings.dart     # theme, first day of month (on the device)
+├── widgets/                  # shared widgets (error view, remote data, …)
+└── screens/                  # dashboard, history, periods, settings, …
 ```
 
-### Data model
+**Layers.** Screens only talk to `PlannerState`; the state talks to
+`PlannerRepository`, the only place that knows about HTTP. The repository uses
+the generated client in `packages/api-client-dart`, so requests and responses
+are typed and cannot drift from the API. Models use whole units (zł) and
+`DateTime`; the API uses minor units and ISO strings, and `data/mappers.dart`
+is where they meet.
 
-Five tables in SQLite, wired with foreign keys:
+**Money.** Amounts are integers in the minor unit of the period's currency
+(12.34 PLN is 1234; JPY has none). Periods carry a currency, PLN by default;
+choosing another one is not in the UI yet, but nothing assumes złoty except
+how amounts are printed.
 
-- **`periods`** — one row per planning period, holds total income
-- **`categories`** — reusable envelopes (Rent, Food, …), with color + icon
-- **`splits`** — the plan: how much of a period's income each category gets
-- **`expenses`** — actual spending logged against a split
-- **`recurring_rules`** — templates for repeating income/expenses
+**Failures.** Repository methods throw `ApiException` (unreachable, not found,
+conflict, invalid, server). Screens run changes through `attempt(...)`, which
+shows a message and lets the user retry, and show fetched data through
+`RemoteData`, which has a spinner, an error view with a retry button, and the
+data.
 
-Expenses deliberately outlive their split so historical periods stay accurate
-even after a category is removed.
+**Moving old data.** The first version kept everything in a local SQLite
+database. On launch, `LegacyMigrator` uploads that database once (to
+`POST /import/legacy`) when the server is still empty, then renames the file
+to `money_planner.db.migrated`. It never overwrites data the server already
+has, and keeps the file if anything goes wrong so the next launch can retry.
 
 ## 🔒 Security model
 
 - **Unlock** — biometric via `local_auth`, with a PIN fallback stored as a
-  **salted hash** (never plaintext).
-- **Sync** — data is exported to JSON, **encrypted with AES** (key derived from
-  the PIN via PBKDF2), and only then pushed to GitHub as `data.enc`. The remote
-  never sees anything but ciphertext.
-- **Tokens** — the GitHub token lives in `flutter_secure_storage`, never in
-  source. Local database files and secrets are `.gitignore`d.
+  **salted hash** (never plaintext). This only guards the app on the device;
+  there are no accounts yet, so the server does not authenticate requests.
+- The PIN hash and a few preferences live in `flutter_secure_storage`.
 
 ## 🛠️ Tech stack
 
 | Concern | Package |
 |---|---|
-| Local database | `sqflite` (+ `sqflite_common_ffi` for desktop) |
+| Backend client | `bida_api_client` (generated from the API contract), `dio` |
 | Charts | `fl_chart` |
 | State management | `provider` |
-| HTTP / GitHub API | `http` |
-| Encryption | `encrypt`, `crypto` |
-| Secure token storage | `flutter_secure_storage` |
-| Biometric / PIN | `local_auth` |
+| Secure storage | `flutter_secure_storage` |
+| Biometric / PIN | `local_auth`, `crypto` |
 | Date & currency formatting | `intl` |
+| Reading the old local database | `sqflite` (+ `sqflite_common_ffi` for desktop) |
 
 ## 🚀 Getting started
 
-**Prerequisites:** [Flutter](https://docs.flutter.dev/get-started/install) 3.44+
-(bundles Dart 3.12).
+From the repository root, `devenv shell` and `devenv up` start Postgres, the
+API and the docs; `devenv up` also starts an emulator and runs the app on it.
+To run the app by hand:
 
 ```bash
-git clone https://github.com/TheLis3k/MoneyPlaner.git
-cd MoneyPlaner
+cd apps/mobile
 flutter pub get
-flutter run          # pick a device, or -d windows / -d chrome
+flutter run --dart-define=API_URL=http://10.0.2.2:3000   # Android emulator
 ```
+
+`10.0.2.2` is the host machine as seen from the Android emulator (the default).
+Use the machine's address on a real device. Debug builds allow plain HTTP.
 
 Run the checks:
 
@@ -170,7 +175,7 @@ flutter test
 - [x] **Phase 2** — Charts (pie split, planned-vs-spent bars, spending-over-time line)
 - [x] **Phase 3** — Recurring rules: templates, pre-fill new periods, auto-generate expenses
 - [x] **Phase 4** — PIN (salted PBKDF2) + biometric lock screen, Settings security section
-- [x] **Phase 5** — Encrypted GitHub sync: AES + PBKDF2, push/pull `data.enc` via the GitHub API
+- [x] **Phase 5** — Encrypted GitHub sync (replaced by the API: data now lives on the server)
 - [x] **Phase 6** — Read-only History view (past periods + charts), bottom navigation bar, edge-case polish
 
 🎉 **All planned phases are complete.**
