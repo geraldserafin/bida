@@ -3,6 +3,7 @@ import {
   Expense,
   type ExpenseId,
   type PeriodId,
+  type RecurringRuleId,
 } from "@bida/api-contract";
 import {
   Context,
@@ -46,6 +47,10 @@ export class ExpensesRepository extends Context.Service<
     remove(id: ExpenseId): Effect.Effect<boolean>;
     /** Newest first. */
     list(filter: ExpenseFilter): Effect.Effect<ReadonlyArray<Expense>>;
+    /** Rules that already produced an expense in the period. */
+    appliedRecurringIds(
+      periodId: PeriodId,
+    ): Effect.Effect<ReadonlySet<RecurringRuleId>>;
     /** Total spent per envelope of the period; envelopes without expenses are absent. */
     spentByEnvelope(
       periodId: PeriodId,
@@ -59,7 +64,7 @@ export class ExpensesRepository extends Context.Service<
 
       // bigint comes back from pg as a string, so cast it
       const columns = sql`id, period_id, envelope_id,
-        amount_minor::float8 AS amount_minor, spent_at, note,
+        amount_minor::float8 AS amount_minor, spent_at, note, recurring_id,
         created_at, updated_at`;
 
       const insert = SqlSchema.findOne({
@@ -121,6 +126,13 @@ export class ExpensesRepository extends Context.Service<
             LIMIT ${limit} OFFSET ${offset}`;
         },
       });
+      const appliedRecurringIds = SqlSchema.findAll({
+        Request: Schema.String,
+        Result: Schema.Struct({ recurringId: Schema.String }),
+        execute: (periodId) =>
+          sql`SELECT DISTINCT recurring_id FROM expenses
+            WHERE period_id = ${periodId} AND recurring_id IS NOT NULL`,
+      });
       const spentByEnvelope = SqlSchema.findAll({
         Request: Schema.String,
         Result: Schema.Struct({
@@ -142,6 +154,14 @@ export class ExpensesRepository extends Context.Service<
             Effect.orDie,
           ),
         list: (filter) => list(filter).pipe(Effect.orDie),
+        appliedRecurringIds: (periodId) =>
+          appliedRecurringIds(periodId).pipe(
+            Effect.map(
+              (rows) =>
+                new Set(rows.map((row) => row.recurringId as RecurringRuleId)),
+            ),
+            Effect.orDie,
+          ),
         spentByEnvelope: (periodId) =>
           spentByEnvelope(periodId).pipe(
             Effect.map(
