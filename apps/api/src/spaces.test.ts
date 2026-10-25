@@ -2,6 +2,7 @@ import {
   CategoryNotFound,
   CurrentSpace,
   DEFAULT_SPACE_ID,
+  PeriodId,
   PeriodNotFound,
   type Space,
   SpaceId,
@@ -328,5 +329,139 @@ layer(TestLayer)("spaces", (it) => {
         1,
       );
     }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+layer(TestLayer)("request hardening", (it) => {
+  it.effect("a header that is not a uuid is just an unknown space", () =>
+    Effect.gen(function* () {
+      const spaces = yield* SpacesService;
+      const error = yield* spaces.resolve("abc").pipe(Effect.flip);
+      assert.instanceOf(error, SpaceNotFound);
+      assert.strictEqual(error.id, "abc");
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect("a period can be renamed and moved, but not turned around", () =>
+    Effect.gen(function* () {
+      yield* resetDb;
+      const budgets = yield* BudgetsService;
+      const created = yield* budgets.createPeriod({
+        name: "July",
+        startDate: "2026-07-01",
+        endDate: "2026-07-31",
+        incomeMinor: 500,
+        envelopes: [],
+      });
+      const updated = yield* budgets.updatePeriod(created.period.id, {
+        name: "Summer",
+        startDate: "2026-07-05",
+        endDate: "2026-08-04",
+      });
+      assert.strictEqual(updated.period.name, "Summer");
+      assert.strictEqual(updated.period.startDate, "2026-07-05");
+      assert.strictEqual(updated.period.endDate, "2026-08-04");
+      // money and currency are not part of it
+      assert.strictEqual(updated.period.incomeMinor, 500);
+      assert.strictEqual(updated.period.currency, "PLN");
+
+      const reversed = yield* budgets
+        .updatePeriod(created.period.id, {
+          name: "x",
+          startDate: "2026-08-01",
+          endDate: "2026-07-01",
+        })
+        .pipe(Effect.flip);
+      assert.strictEqual(reversed._tag, "InvalidPeriodRange");
+
+      const missing = yield* budgets
+        .updatePeriod(PeriodId.make("019845e1-682f-4b02-a706-3b2422d13aec"), {
+          name: "x",
+          startDate: "2026-07-01",
+          endDate: "2026-07-02",
+        })
+        .pipe(Effect.flip);
+      assert.instanceOf(missing, PeriodNotFound);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    "applying recurring rules twice at once adds each expense once",
+    () =>
+      Effect.gen(function* () {
+        yield* resetDb;
+        const budgets = yield* BudgetsService;
+        const categories = yield* CategoriesService;
+        const recurring = yield* RecurringService;
+        const expenses = yield* ExpensesService;
+        const rent = yield* categories.create({
+          name: "Rent",
+          color: "#112233",
+          icon: null,
+        });
+        for (const amountMinor of [100, 200, 300]) {
+          yield* recurring.create({
+            categoryId: rent.id,
+            amountMinor,
+            frequency: "monthly",
+            note: null,
+            active: true,
+          });
+        }
+        const period = yield* budgets.createPeriod({
+          name: "July",
+          startDate: "2026-07-01",
+          endDate: "2026-07-31",
+          incomeMinor: 1_000,
+          envelopes: [],
+        });
+
+        // none of the concurrent calls may fail on the unique index
+        const results = yield* Effect.all(
+          Array.from({ length: 4 }, () =>
+            recurring.applyToPeriod(period.period.id),
+          ),
+          { concurrency: "unbounded" },
+        );
+        assert.strictEqual(
+          results.reduce((sum, r) => sum + r.added, 0),
+          3,
+        );
+        assert.strictEqual(
+          (yield* expenses.listForPeriod(period.period.id, {})).length,
+          3,
+        );
+      }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    "a legacy backup the API would not accept is refused, not a crash",
+    () =>
+      Effect.gen(function* () {
+        yield* resetDb;
+        const transfer = yield* TransferService;
+        const error = yield* transfer
+          .importLegacy({
+            backup: {
+              version: 1,
+              data: {
+                categories: [
+                  {
+                    id: 1,
+                    name: "n".repeat(500),
+                    color: "#22C55E",
+                    icon: null,
+                  },
+                ],
+                periods: [],
+                splits: [],
+                recurring_rules: [],
+                expenses: [],
+              },
+            },
+          })
+          .pipe(Effect.flip);
+        assert.strictEqual(error._tag, "InvalidImport");
+      }).pipe(Effect.provide(TestLayer)),
   );
 });
