@@ -1,6 +1,7 @@
 import {
   type Counts,
   type CsvImportResult,
+  CurrentSpace,
   DEFAULT_CURRENCY,
   type EnvelopeId,
   type ExportDocument,
@@ -13,6 +14,7 @@ import {
 } from "@bida/api-contract";
 import { Context, DateTime, Effect, Layer } from "effect";
 import { SqlClient } from "effect/sql";
+import type { InSpace } from "../../platform/space.ts";
 import { BudgetsService } from "../budgets/budgets.module.ts";
 import { CategoriesService } from "../categories/categories.module.ts";
 import { ExpensesService } from "../expenses/expenses.module.ts";
@@ -97,14 +99,14 @@ const day = (date: DateTime.Utc): string =>
 export class TransferService extends Context.Service<
   TransferService,
   {
-    export: Effect.Effect<ExportDocument>;
-    previewImport(doc: ExportDocument): Effect.Effect<ImportPreview>;
+    export: InSpace<ExportDocument>;
+    previewImport(doc: ExportDocument): InSpace<ImportPreview>;
     /** Replaces all data with the document. */
-    importDocument(doc: ExportDocument): Effect.Effect<Counts, InvalidImport>;
+    importDocument(doc: ExportDocument): InSpace<Counts, InvalidImport>;
     /** Replaces all data with a converted backup of the offline app. */
-    importLegacy(input: ImportLegacy): Effect.Effect<Counts, InvalidImport>;
-    exportCsv: Effect.Effect<string>;
-    importCsv(text: string): Effect.Effect<CsvImportResult, InvalidCsv>;
+    importLegacy(input: ImportLegacy): InSpace<Counts, InvalidImport>;
+    exportCsv: InSpace<string>;
+    importCsv(text: string): InSpace<CsvImportResult, InvalidCsv>;
   }
 >()("bida/transfer/TransferService") {
   static readonly layer = Layer.effect(
@@ -227,6 +229,7 @@ export class TransferService extends Context.Service<
         text: string,
       ) {
         const rows: ReadonlyArray<CsvRow> = yield* parseCsv(text);
+        const space = yield* CurrentSpace;
 
         // Everything that can be wrong with the file is found here, before
         // anything is written: amounts depend on the currency of the period.
@@ -239,7 +242,7 @@ export class TransferService extends Context.Service<
         const prepared: Array<{ row: CsvRow; amountMinor: number }> = [];
         for (const row of rows) {
           const currency =
-            currencyOf.get(row.period) ?? row.currency ?? DEFAULT_CURRENCY;
+            currencyOf.get(row.period) ?? row.currency ?? space.defaultCurrency;
           currencyOf.set(row.period, currency);
           if (row.currency !== undefined && row.currency !== currency) {
             return yield* new InvalidCsv({
@@ -279,7 +282,7 @@ export class TransferService extends Context.Service<
                   name: row.period,
                   ...monthOf(row.date),
                   incomeMinor: 0,
-                  currency: currencyOf.get(row.period) ?? DEFAULT_CURRENCY,
+                  currency: currencyOf.get(row.period) ?? space.defaultCurrency,
                   envelopes: [],
                 })
                 .pipe(Effect.orDie);

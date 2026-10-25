@@ -5,22 +5,21 @@ import {
   CategoryNotFound,
 } from "@bida/api-contract";
 import { Context, Effect, Layer, Option } from "effect";
+import type { InSpace } from "../../platform/space.ts";
 import { CategoriesRepository } from "./categories.repository.ts";
 
 /** Business rules for categories. Knows nothing about HTTP or SQL. */
 export class CategoriesService extends Context.Service<
   CategoriesService,
   {
-    list: Effect.Effect<ReadonlyArray<Category>>;
-    get(id: CategoryId): Effect.Effect<Category, CategoryNotFound>;
-    create(input: typeof Category.jsonCreate.Type): Effect.Effect<Category>;
+    list: InSpace<ReadonlyArray<Category>>;
+    get(id: CategoryId): InSpace<Category, CategoryNotFound>;
+    create(input: typeof Category.jsonCreate.Type): InSpace<Category>;
     update(
       id: CategoryId,
       input: typeof Category.jsonUpdate.Type,
-    ): Effect.Effect<Category, CategoryNotFound>;
-    remove(
-      id: CategoryId,
-    ): Effect.Effect<void, CategoryNotFound | CategoryInUse>;
+    ): InSpace<Category, CategoryNotFound>;
+    remove(id: CategoryId): InSpace<void, CategoryNotFound | CategoryInUse>;
   }
 >()("bida/categories/CategoriesService") {
   static readonly layer = Layer.effect(

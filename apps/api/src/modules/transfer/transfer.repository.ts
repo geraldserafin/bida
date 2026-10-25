@@ -1,6 +1,7 @@
 import {
   Category,
   type Counts,
+  CurrentSpace,
   Envelope,
   Expense,
   Period,
@@ -8,6 +9,7 @@ import {
 } from "@bida/api-contract";
 import { Context, Effect, Layer, Schema } from "effect";
 import { SqlClient, type SqlError, SqlSchema } from "effect/sql";
+import type { InSpace } from "../../platform/space.ts";
 
 /** Everything the application stores, in the shape of the model classes. */
 export interface Snapshot {
@@ -26,13 +28,13 @@ export interface Snapshot {
 export class TransferRepository extends Context.Service<
   TransferRepository,
   {
-    snapshot: Effect.Effect<Snapshot>;
-    counts: Effect.Effect<Counts>;
+    snapshot: InSpace<Snapshot>;
+    counts: InSpace<Counts>;
     /**
      * Deletes everything, then inserts the snapshot. Run it inside a
      * transaction so a failure leaves the data untouched.
      */
-    replaceAll(snapshot: Snapshot): Effect.Effect<void, SqlError.SqlError>;
+    replaceAll(snapshot: Snapshot): InSpace<void, SqlError.SqlError>;
   }
 >()("bida/transfer/TransferRepository") {
   static readonly layer = Layer.effect(
@@ -41,6 +43,10 @@ export class TransferRepository extends Context.Service<
       const sql = yield* SqlClient.SqlClient;
 
       // bigint comes back from pg as a string and date as a Date, so cast both
+      // every query runs in the space of the current request
+      const inSpace = <A, E>(run: (spaceId: string) => Effect.Effect<A, E>) =>
+        Effect.flatMap(CurrentSpace, (space) => run(space.id));
+
       const selectAll = <S extends Schema.Constraint>(
         Result: S,
         query: string,
@@ -48,35 +54,35 @@ export class TransferRepository extends Context.Service<
         SqlSchema.findAll({
           Request: Schema.Void,
           Result,
-          execute: () => sql.unsafe(query),
+          execute: () => inSpace((spaceId) => sql.unsafe(query, [spaceId])),
         });
 
       const categories = selectAll(
         Category,
-        "SELECT id, name, color, icon, created_at, updated_at FROM categories ORDER BY created_at, id",
+        "SELECT id, name, color, icon, created_at, updated_at FROM categories WHERE space_id = $1 ORDER BY created_at, id",
       );
       const periods = selectAll(
         Period,
         `SELECT id, name, start_date::text AS start_date, end_date::text AS end_date,
           income_minor::float8 AS income_minor, currency, created_at, updated_at
-          FROM periods ORDER BY start_date, created_at, id`,
+          FROM periods WHERE space_id = $1 ORDER BY start_date, created_at, id`,
       );
       const envelopes = selectAll(
         Envelope,
         `SELECT id, period_id, category_id, planned_minor::float8 AS planned_minor,
-          created_at, updated_at FROM envelopes ORDER BY created_at, id`,
+          created_at, updated_at FROM envelopes WHERE space_id = $1 ORDER BY created_at, id`,
       );
       const expenses = selectAll(
         Expense,
         `SELECT id, period_id, envelope_id, amount_minor::float8 AS amount_minor,
           original_amount_minor::float8 AS original_amount_minor, original_currency,
           spent_at, note, recurring_id, created_at, updated_at
-          FROM expenses ORDER BY spent_at, id`,
+          FROM expenses WHERE space_id = $1 ORDER BY spent_at, id`,
       );
       const recurringRules = selectAll(
         RecurringRule,
         `SELECT id, category_id, amount_minor::float8 AS amount_minor, currency, frequency,
-          note, active, created_at, updated_at FROM recurring_rules ORDER BY created_at, id`,
+          note, active, created_at, updated_at FROM recurring_rules WHERE space_id = $1 ORDER BY created_at, id`,
       );
 
       const countRows = SqlSchema.findOne({
@@ -88,12 +94,15 @@ export class TransferRepository extends Context.Service<
           expenses: Schema.Number,
           recurringRules: Schema.Number,
         }),
-        execute: () => sql`SELECT
-          (SELECT count(*) FROM categories)::int AS categories,
-          (SELECT count(*) FROM periods)::int AS periods,
-          (SELECT count(*) FROM envelopes)::int AS envelopes,
-          (SELECT count(*) FROM expenses)::int AS expenses,
-          (SELECT count(*) FROM recurring_rules)::int AS recurring_rules`,
+        execute: () =>
+          inSpace(
+            (spaceId) => sql`SELECT
+          (SELECT count(*) FROM categories WHERE space_id = ${spaceId})::int AS categories,
+          (SELECT count(*) FROM periods WHERE space_id = ${spaceId})::int AS periods,
+          (SELECT count(*) FROM envelopes WHERE space_id = ${spaceId})::int AS envelopes,
+          (SELECT count(*) FROM expenses WHERE space_id = ${spaceId})::int AS expenses,
+          (SELECT count(*) FROM recurring_rules WHERE space_id = ${spaceId})::int AS recurring_rules`,
+          ),
       });
 
       // One bulk insert per table, skipped when there is nothing to insert
@@ -104,7 +113,15 @@ export class TransferRepository extends Context.Service<
         const insert = SqlSchema.void({
           Request: Schema.NonEmptyArray(Row),
           execute: (rows) =>
-            sql`INSERT INTO ${sql(table)} ${sql.insert(rows as never)}`,
+            inSpace(
+              (spaceId) =>
+                sql`INSERT INTO ${sql(table)} ${sql.insert(
+                  (rows as ReadonlyArray<object>).map((row) => ({
+                    ...row,
+                    spaceId,
+                  })) as never,
+                )}`,
+            ),
         });
         return (rows: ReadonlyArray<S["Type"]>) =>
           rows.length === 0
@@ -131,11 +148,12 @@ export class TransferRepository extends Context.Service<
         replaceAll: (snapshot) =>
           Effect.gen(function* () {
             // children first, so foreign keys stay satisfied
-            yield* sql`DELETE FROM expenses`;
-            yield* sql`DELETE FROM envelopes`;
-            yield* sql`DELETE FROM recurring_rules`;
-            yield* sql`DELETE FROM periods`;
-            yield* sql`DELETE FROM categories`;
+            const spaceId = (yield* CurrentSpace).id;
+            yield* sql`DELETE FROM expenses WHERE space_id = ${spaceId}`;
+            yield* sql`DELETE FROM envelopes WHERE space_id = ${spaceId}`;
+            yield* sql`DELETE FROM recurring_rules WHERE space_id = ${spaceId}`;
+            yield* sql`DELETE FROM periods WHERE space_id = ${spaceId}`;
+            yield* sql`DELETE FROM categories WHERE space_id = ${spaceId}`;
             // parents first
             yield* insertCategories(snapshot.categories);
             yield* insertPeriods(snapshot.periods);

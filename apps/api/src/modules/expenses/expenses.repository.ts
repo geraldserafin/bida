@@ -1,4 +1,5 @@
 import {
+  CurrentSpace,
   type EnvelopeId,
   Expense,
   type ExpenseId,
@@ -14,6 +15,7 @@ import {
   Schema,
 } from "effect";
 import { SqlClient, SqlSchema } from "effect/sql";
+import type { InSpace } from "../../platform/space.ts";
 
 export interface ExpenseFilter {
   readonly periodId: PeriodId;
@@ -38,25 +40,25 @@ export interface ExpenseChanges {
 export class ExpensesRepository extends Context.Service<
   ExpensesRepository,
   {
-    insert(input: typeof Expense.insert.Type): Effect.Effect<Expense>;
-    findById(id: ExpenseId): Effect.Effect<Option.Option<Expense>>;
+    insert(input: typeof Expense.insert.Type): InSpace<Expense>;
+    findById(id: ExpenseId): InSpace<Option.Option<Expense>>;
     /** `None` when the row does not exist. */
     update(
       id: ExpenseId,
       changes: ExpenseChanges,
-    ): Effect.Effect<Option.Option<Expense>>;
+    ): InSpace<Option.Option<Expense>>;
     /** Returns false when there was nothing to delete. */
-    remove(id: ExpenseId): Effect.Effect<boolean>;
+    remove(id: ExpenseId): InSpace<boolean>;
     /** Newest first. */
-    list(filter: ExpenseFilter): Effect.Effect<ReadonlyArray<Expense>>;
+    list(filter: ExpenseFilter): InSpace<ReadonlyArray<Expense>>;
     /** Rules that already produced an expense in the period. */
     appliedRecurringIds(
       periodId: PeriodId,
-    ): Effect.Effect<ReadonlySet<RecurringRuleId>>;
+    ): InSpace<ReadonlySet<RecurringRuleId>>;
     /** Total spent per envelope of the period; envelopes without expenses are absent. */
     spentByEnvelope(
       periodId: PeriodId,
-    ): Effect.Effect<ReadonlyMap<EnvelopeId, number>>;
+    ): InSpace<ReadonlyMap<EnvelopeId, number>>;
   }
 >()("bida/expenses/ExpensesRepository") {
   static readonly layer = Layer.effect(
@@ -71,16 +73,29 @@ export class ExpensesRepository extends Context.Service<
         spent_at, note, recurring_id,
         created_at, updated_at`;
 
+      // every query runs in the space of the current request
+      const inSpace = <A, E>(run: (spaceId: string) => Effect.Effect<A, E>) =>
+        Effect.flatMap(CurrentSpace, (space) => run(space.id));
+
       const insert = SqlSchema.findOne({
         Request: Expense.insert,
         Result: Expense,
         execute: (request) =>
-          sql`INSERT INTO expenses ${sql.insert(request)} RETURNING ${columns}`,
+          inSpace(
+            (spaceId) =>
+              sql`INSERT INTO expenses ${sql.insert({ ...request, spaceId })}
+                RETURNING ${columns}`,
+          ),
       });
       const findById = SqlSchema.findOneOption({
         Request: Schema.String,
         Result: Expense,
-        execute: (id) => sql`SELECT ${columns} FROM expenses WHERE id = ${id}`,
+        execute: (id) =>
+          inSpace(
+            (spaceId) =>
+              sql`SELECT ${columns} FROM expenses
+                WHERE id = ${id} AND space_id = ${spaceId}`,
+          ),
       });
       const update = SqlSchema.findOneOption({
         Request: Schema.Struct({
@@ -102,18 +117,26 @@ export class ExpensesRepository extends Context.Service<
           spentAt,
           note,
         }) =>
-          sql`UPDATE expenses SET envelope_id = ${envelopeId},
-            amount_minor = ${amountMinor},
-            original_amount_minor = ${originalAmountMinor},
-            original_currency = ${originalCurrency},
-            spent_at = ${spentAt}, note = ${note},
-            updated_at = now() WHERE id = ${id} RETURNING ${columns}`,
+          inSpace(
+            (spaceId) =>
+              sql`UPDATE expenses SET envelope_id = ${envelopeId},
+                amount_minor = ${amountMinor},
+                original_amount_minor = ${originalAmountMinor},
+                original_currency = ${originalCurrency},
+                spent_at = ${spentAt}, note = ${note},
+                updated_at = now()
+                WHERE id = ${id} AND space_id = ${spaceId} RETURNING ${columns}`,
+          ),
       });
       const remove = SqlSchema.findAll({
         Request: Schema.String,
         Result: Schema.Struct({ id: Schema.String }),
         execute: (id) =>
-          sql`DELETE FROM expenses WHERE id = ${id} RETURNING id`,
+          inSpace(
+            (spaceId) =>
+              sql`DELETE FROM expenses WHERE id = ${id} AND space_id = ${spaceId}
+                RETURNING id`,
+          ),
       });
       const list = SqlSchema.findAll({
         Request: Schema.Struct({
@@ -125,30 +148,38 @@ export class ExpensesRepository extends Context.Service<
           offset: Schema.Int,
         }),
         Result: Expense,
-        execute: ({ periodId, envelopeIds, from, to, limit, offset }) => {
-          const conditions = [sql`period_id = ${periodId}`];
-          if (envelopeIds !== undefined) {
-            // sql.in with an empty list would be invalid SQL
-            conditions.push(
-              envelopeIds.length === 0
-                ? sql`FALSE`
-                : sql`${sql.in("envelope_id", envelopeIds)}`,
-            );
-          }
-          if (from !== undefined) conditions.push(sql`spent_at >= ${from}`);
-          if (to !== undefined) conditions.push(sql`spent_at < ${to}`);
-          return sql`SELECT ${columns} FROM expenses
-            WHERE ${sql.and(conditions)}
-            ORDER BY spent_at DESC, id DESC
-            LIMIT ${limit} OFFSET ${offset}`;
-        },
+        execute: ({ periodId, envelopeIds, from, to, limit, offset }) =>
+          inSpace((spaceId) => {
+            const conditions = [
+              sql`period_id = ${periodId}`,
+              sql`space_id = ${spaceId}`,
+            ];
+            if (envelopeIds !== undefined) {
+              // sql.in with an empty list would be invalid SQL
+              conditions.push(
+                envelopeIds.length === 0
+                  ? sql`FALSE`
+                  : sql`${sql.in("envelope_id", envelopeIds)}`,
+              );
+            }
+            if (from !== undefined) conditions.push(sql`spent_at >= ${from}`);
+            if (to !== undefined) conditions.push(sql`spent_at < ${to}`);
+            return sql`SELECT ${columns} FROM expenses
+              WHERE ${sql.and(conditions)}
+              ORDER BY spent_at DESC, id DESC
+              LIMIT ${limit} OFFSET ${offset}`;
+          }),
       });
       const appliedRecurringIds = SqlSchema.findAll({
         Request: Schema.String,
         Result: Schema.Struct({ recurringId: Schema.String }),
         execute: (periodId) =>
-          sql`SELECT DISTINCT recurring_id FROM expenses
-            WHERE period_id = ${periodId} AND recurring_id IS NOT NULL`,
+          inSpace(
+            (spaceId) =>
+              sql`SELECT DISTINCT recurring_id FROM expenses
+                WHERE period_id = ${periodId} AND space_id = ${spaceId}
+                  AND recurring_id IS NOT NULL`,
+          ),
       });
       const spentByEnvelope = SqlSchema.findAll({
         Request: Schema.String,
@@ -157,8 +188,12 @@ export class ExpensesRepository extends Context.Service<
           spentMinor: Schema.Number,
         }),
         execute: (periodId) =>
-          sql`SELECT envelope_id, SUM(amount_minor)::float8 AS spent_minor
-            FROM expenses WHERE period_id = ${periodId} GROUP BY envelope_id`,
+          inSpace(
+            (spaceId) =>
+              sql`SELECT envelope_id, SUM(amount_minor)::float8 AS spent_minor
+                FROM expenses WHERE period_id = ${periodId} AND space_id = ${spaceId}
+                GROUP BY envelope_id`,
+          ),
       });
 
       return ExpensesRepository.of({

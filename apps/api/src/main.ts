@@ -20,6 +20,11 @@ import {
   RecurringHttp,
   RecurringModule,
 } from "./modules/recurring/recurring.module.ts";
+import {
+  SpaceContextModule,
+  SpacesHttp,
+  SpacesModule,
+} from "./modules/spaces/spaces.module.ts";
 import { SystemHttp } from "./modules/system/system.module.ts";
 import {
   TransferHttp,
@@ -35,22 +40,24 @@ const Modules = Layer.mergeAll(
   ExpensesModule,
   RecurringModule,
   TransferModule,
+  SpacesModule,
 );
+
+// The handlers of every space-scoped group are wrapped in the SpaceContext
+// middleware, so it has to be available to them and to the router.
+const Handlers = Layer.mergeAll(
+  SystemHttp,
+  CategoriesHttp,
+  BudgetsHttp,
+  ExpensesHttp,
+  RecurringHttp,
+  TransferHttp,
+  SpacesHttp,
+).pipe(Layer.provideMerge(SpaceContextModule));
 
 const ApiRoutes = HttpApiBuilder.layer(Api, {
   openapiPath: "/openapi.json",
-}).pipe(
-  Layer.provide([
-    SystemHttp,
-    CategoriesHttp,
-    BudgetsHttp,
-    ExpensesHttp,
-    RecurringHttp,
-    TransferHttp,
-  ]),
-  Layer.provide(Modules),
-  Layer.provide(DbLive),
-);
+}).pipe(Layer.provide(Handlers), Layer.provide(Modules), Layer.provide(DbLive));
 
 const Server = Layer.unwrap(
   AppConfig.pipe(

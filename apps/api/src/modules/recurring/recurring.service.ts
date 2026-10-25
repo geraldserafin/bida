@@ -2,7 +2,7 @@ import {
   type ApplyResult,
   CategoryNotFound,
   type Currency,
-  DEFAULT_CURRENCY,
+  CurrentSpace,
   type EnvelopePlan,
   type PeriodId,
   type PeriodNotFound,
@@ -13,6 +13,7 @@ import {
 } from "@bida/api-contract";
 import { Context, DateTime, Effect, Layer, Option } from "effect";
 import { SqlClient } from "effect/sql";
+import type { InSpace } from "../../platform/space.ts";
 import { BudgetsService } from "../budgets/budgets.module.ts";
 import { CategoriesService } from "../categories/categories.module.ts";
 import { ExpensesService } from "../expenses/expenses.module.ts";
@@ -22,22 +23,16 @@ import { RecurringRepository } from "./recurring.repository.ts";
 export class RecurringService extends Context.Service<
   RecurringService,
   {
-    list: Effect.Effect<ReadonlyArray<RecurringRule>>;
-    create(
-      input: SaveRecurringRule,
-    ): Effect.Effect<RecurringRule, CategoryNotFound>;
+    list: InSpace<ReadonlyArray<RecurringRule>>;
+    create(input: SaveRecurringRule): InSpace<RecurringRule, CategoryNotFound>;
     update(
       id: RecurringRuleId,
       input: SaveRecurringRule,
-    ): Effect.Effect<RecurringRule, RecurringRuleNotFound | CategoryNotFound>;
-    remove(id: RecurringRuleId): Effect.Effect<void, RecurringRuleNotFound>;
+    ): InSpace<RecurringRule, RecurringRuleNotFound | CategoryNotFound>;
+    remove(id: RecurringRuleId): InSpace<void, RecurringRuleNotFound>;
     /** Sum of the active rules per category. */
-    suggestedPlan(
-      currency?: Currency,
-    ): Effect.Effect<ReadonlyArray<EnvelopePlan>>;
-    applyToPeriod(
-      periodId: PeriodId,
-    ): Effect.Effect<ApplyResult, PeriodNotFound>;
+    suggestedPlan(currency?: Currency): InSpace<ReadonlyArray<EnvelopePlan>>;
+    applyToPeriod(periodId: PeriodId): InSpace<ApplyResult, PeriodNotFound>;
   }
 >()("bida/recurring/RecurringService") {
   static readonly layer = Layer.effect(
@@ -65,7 +60,7 @@ export class RecurringService extends Context.Service<
         const row = yield* RecurringRule.insert
           .makeEffect({
             ...input,
-            currency: input.currency ?? DEFAULT_CURRENCY,
+            currency: input.currency ?? (yield* CurrentSpace).defaultCurrency,
           })
           .pipe(Effect.orDie);
         return yield* repo.insert(row);
@@ -78,7 +73,7 @@ export class RecurringService extends Context.Service<
         yield* requireCategory(input);
         const updated = yield* repo.update(id, {
           ...input,
-          currency: input.currency ?? DEFAULT_CURRENCY,
+          currency: input.currency ?? (yield* CurrentSpace).defaultCurrency,
         });
         return yield* Option.match(updated, {
           onNone: () => Effect.fail(new RecurringRuleNotFound({ id })),
@@ -94,10 +89,11 @@ export class RecurringService extends Context.Service<
       });
 
       const suggestedPlan = Effect.fn("RecurringService.suggestedPlan")(
-        function* (currency: Currency = DEFAULT_CURRENCY) {
+        function* (currency?: Currency) {
+          const wanted = currency ?? (yield* CurrentSpace).defaultCurrency;
           const totals = new Map<EnvelopePlan["categoryId"], number>();
           for (const rule of yield* repo.list) {
-            if (!rule.active || rule.currency !== currency) continue;
+            if (!rule.active || rule.currency !== wanted) continue;
             totals.set(
               rule.categoryId,
               (totals.get(rule.categoryId) ?? 0) + rule.amountMinor,

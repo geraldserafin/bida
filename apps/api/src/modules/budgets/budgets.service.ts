@@ -1,7 +1,7 @@
 import {
   CategoryNotFound,
   type CreatePeriod,
-  DEFAULT_CURRENCY,
+  CurrentSpace,
   Envelope,
   EnvelopeAlreadyExists,
   type EnvelopeId,
@@ -17,6 +17,7 @@ import {
 } from "@bida/api-contract";
 import { Context, Effect, Layer, Option } from "effect";
 import { SqlClient } from "effect/sql";
+import type { InSpace } from "../../platform/space.ts";
 import { CategoriesService } from "../categories/categories.module.ts";
 import { BudgetsRepository, type EnvelopeInUse } from "./budgets.repository.ts";
 
@@ -24,25 +25,25 @@ import { BudgetsRepository, type EnvelopeInUse } from "./budgets.repository.ts";
 export class BudgetsService extends Context.Service<
   BudgetsService,
   {
-    listPeriods: Effect.Effect<ReadonlyArray<Period>>;
-    currentPeriod: Effect.Effect<PeriodDetail, NoPeriods>;
-    getPeriod(id: PeriodId): Effect.Effect<PeriodDetail, PeriodNotFound>;
+    listPeriods: InSpace<ReadonlyArray<Period>>;
+    currentPeriod: InSpace<PeriodDetail, NoPeriods>;
+    getPeriod(id: PeriodId): InSpace<PeriodDetail, PeriodNotFound>;
     createPeriod(
       input: CreatePeriod,
-    ): Effect.Effect<PeriodDetail, InvalidPeriodRange | CategoryNotFound>;
+    ): InSpace<PeriodDetail, InvalidPeriodRange | CategoryNotFound>;
     setPlan(
       id: PeriodId,
       input: SetPlan,
-    ): Effect.Effect<PeriodDetail, PeriodNotFound | CategoryNotFound>;
+    ): InSpace<PeriodDetail, PeriodNotFound | CategoryNotFound>;
     addEnvelope(
       id: PeriodId,
       input: EnvelopePlan,
-    ): Effect.Effect<
+    ): InSpace<
       Envelope,
       PeriodNotFound | CategoryNotFound | EnvelopeAlreadyExists
     >;
-    getEnvelope(id: EnvelopeId): Effect.Effect<Envelope, EnvelopeNotFound>;
-    deletePeriod(id: PeriodId): Effect.Effect<void, PeriodNotFound>;
+    getEnvelope(id: EnvelopeId): InSpace<Envelope, EnvelopeNotFound>;
+    deletePeriod(id: PeriodId): InSpace<void, PeriodNotFound>;
   }
 >()("bida/budgets/BudgetsService") {
   static readonly layer = Layer.effect(
@@ -133,7 +134,7 @@ export class BudgetsService extends Context.Service<
               startDate: input.startDate,
               endDate: input.endDate,
               incomeMinor: input.incomeMinor,
-              currency: input.currency ?? DEFAULT_CURRENCY,
+              currency: input.currency ?? (yield* CurrentSpace).defaultCurrency,
             })
             .pipe(Effect.orDie);
           const period = yield* repo.insertPeriod(row);

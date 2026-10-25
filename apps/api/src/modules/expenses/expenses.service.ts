@@ -14,6 +14,7 @@ import {
   type UpdateExpense,
 } from "@bida/api-contract";
 import { Context, type DateTime, Effect, Layer, Option } from "effect";
+import type { InSpace } from "../../platform/space.ts";
 import { BudgetsService } from "../budgets/budgets.module.ts";
 import { ExpensesRepository } from "./expenses.repository.ts";
 
@@ -32,26 +33,26 @@ const DEFAULT_LIMIT = 50;
 export class ExpensesService extends Context.Service<
   ExpensesService,
   {
-    create(input: CreateExpense): Effect.Effect<Expense, EnvelopeNotFound>;
+    create(input: CreateExpense): InSpace<Expense, EnvelopeNotFound>;
     /** Adds the expense a recurring rule produces. */
     createFromRule(
       input: CreateExpense & { readonly recurringId: RecurringRuleId },
-    ): Effect.Effect<Expense, EnvelopeNotFound>;
+    ): InSpace<Expense, EnvelopeNotFound>;
     /** Rules that already produced an expense in the period. */
     appliedRecurringIds(
       periodId: PeriodId,
-    ): Effect.Effect<ReadonlySet<RecurringRuleId>>;
-    get(id: ExpenseId): Effect.Effect<Expense, ExpenseNotFound>;
+    ): InSpace<ReadonlySet<RecurringRuleId>>;
+    get(id: ExpenseId): InSpace<Expense, ExpenseNotFound>;
     update(
       id: ExpenseId,
       input: UpdateExpense,
-    ): Effect.Effect<Expense, ExpenseNotFound | EnvelopeNotFound>;
-    remove(id: ExpenseId): Effect.Effect<void, ExpenseNotFound>;
+    ): InSpace<Expense, ExpenseNotFound | EnvelopeNotFound>;
+    remove(id: ExpenseId): InSpace<void, ExpenseNotFound>;
     listForPeriod(
       periodId: PeriodId,
       filter: ListExpenses,
-    ): Effect.Effect<ReadonlyArray<Expense>, PeriodNotFound>;
-    progress(periodId: PeriodId): Effect.Effect<PeriodProgress, PeriodNotFound>;
+    ): InSpace<ReadonlyArray<Expense>, PeriodNotFound>;
+    progress(periodId: PeriodId): InSpace<PeriodProgress, PeriodNotFound>;
   }
 >()("bida/expenses/ExpensesService") {
   static readonly layer = Layer.effect(

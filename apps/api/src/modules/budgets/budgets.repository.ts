@@ -1,5 +1,6 @@
 import {
   type CategoryId,
+  CurrentSpace,
   Envelope,
   type EnvelopeId,
   Period,
@@ -7,6 +8,7 @@ import {
 } from "@bida/api-contract";
 import { Context, Effect, Layer, type Option, Schema } from "effect";
 import { SqlClient, SqlSchema } from "effect/sql";
+import type { InSpace } from "../../platform/space.ts";
 
 /** The envelope is referenced by other rows (e.g. expenses) and cannot go. */
 export class EnvelopeInUse extends Schema.TaggedError<EnvelopeInUse>()(
@@ -18,30 +20,30 @@ export class EnvelopeInUse extends Schema.TaggedError<EnvelopeInUse>()(
 export class BudgetsRepository extends Context.Service<
   BudgetsRepository,
   {
-    listPeriods: Effect.Effect<ReadonlyArray<Period>>;
+    listPeriods: InSpace<ReadonlyArray<Period>>;
     /** The period with the latest start date. */
-    latestPeriod: Effect.Effect<Option.Option<Period>>;
-    findPeriod(id: PeriodId): Effect.Effect<Option.Option<Period>>;
-    insertPeriod(input: typeof Period.insert.Type): Effect.Effect<Period>;
+    latestPeriod: InSpace<Option.Option<Period>>;
+    findPeriod(id: PeriodId): InSpace<Option.Option<Period>>;
+    insertPeriod(input: typeof Period.insert.Type): InSpace<Period>;
     setIncome(
       id: PeriodId,
       incomeMinor: number,
-    ): Effect.Effect<Option.Option<Period>>;
+    ): InSpace<Option.Option<Period>>;
     /** Returns false when there was nothing to delete. */
-    deletePeriod(id: PeriodId): Effect.Effect<boolean>;
+    deletePeriod(id: PeriodId): InSpace<boolean>;
 
-    listEnvelopes(periodId: PeriodId): Effect.Effect<ReadonlyArray<Envelope>>;
-    findEnvelopeById(id: EnvelopeId): Effect.Effect<Option.Option<Envelope>>;
+    listEnvelopes(periodId: PeriodId): InSpace<ReadonlyArray<Envelope>>;
+    findEnvelopeById(id: EnvelopeId): InSpace<Option.Option<Envelope>>;
     findEnvelope(
       periodId: PeriodId,
       categoryId: CategoryId,
-    ): Effect.Effect<Option.Option<Envelope>>;
-    insertEnvelope(input: typeof Envelope.insert.Type): Effect.Effect<Envelope>;
+    ): InSpace<Option.Option<Envelope>>;
+    insertEnvelope(input: typeof Envelope.insert.Type): InSpace<Envelope>;
     setPlanned(
       id: EnvelopeId,
       plannedMinor: number,
-    ): Effect.Effect<Option.Option<Envelope>>;
-    removeEnvelope(id: EnvelopeId): Effect.Effect<void, EnvelopeInUse>;
+    ): InSpace<Option.Option<Envelope>>;
+    removeEnvelope(id: EnvelopeId): InSpace<void, EnvelopeInUse>;
   }
 >()("bida/budgets/BudgetsRepository") {
   static readonly layer = Layer.effect(
@@ -58,57 +60,91 @@ export class BudgetsRepository extends Context.Service<
         planned_minor::float8 AS planned_minor,
         created_at, updated_at`;
 
+      // every query runs in the space of the current request
+      const inSpace = <A, E>(run: (spaceId: string) => Effect.Effect<A, E>) =>
+        Effect.flatMap(CurrentSpace, (space) => run(space.id));
+
       const listPeriods = SqlSchema.findAll({
         Request: Schema.Void,
         Result: Period,
         execute: () =>
-          sql`SELECT ${periodColumns} FROM periods
-            ORDER BY start_date DESC, created_at DESC`,
+          inSpace(
+            (spaceId) =>
+              sql`SELECT ${periodColumns} FROM periods WHERE space_id = ${spaceId}
+                ORDER BY start_date DESC, created_at DESC`,
+          ),
       });
       const latestPeriod = SqlSchema.findOneOption({
         Request: Schema.Void,
         Result: Period,
         execute: () =>
-          sql`SELECT ${periodColumns} FROM periods
-            ORDER BY start_date DESC, created_at DESC LIMIT 1`,
+          inSpace(
+            (spaceId) =>
+              sql`SELECT ${periodColumns} FROM periods WHERE space_id = ${spaceId}
+                ORDER BY start_date DESC, created_at DESC LIMIT 1`,
+          ),
       });
       const findPeriod = SqlSchema.findOneOption({
         Request: Schema.String,
         Result: Period,
         execute: (id) =>
-          sql`SELECT ${periodColumns} FROM periods WHERE id = ${id}`,
+          inSpace(
+            (spaceId) =>
+              sql`SELECT ${periodColumns} FROM periods
+                WHERE id = ${id} AND space_id = ${spaceId}`,
+          ),
       });
       const insertPeriod = SqlSchema.findOne({
         Request: Period.insert,
         Result: Period,
         execute: (request) =>
-          sql`INSERT INTO periods ${sql.insert(request)} RETURNING ${periodColumns}`,
+          inSpace(
+            (spaceId) =>
+              sql`INSERT INTO periods ${sql.insert({ ...request, spaceId })}
+                RETURNING ${periodColumns}`,
+          ),
       });
       const updateIncome = SqlSchema.findOneOption({
         Request: Schema.Struct({ id: Schema.String, incomeMinor: Schema.Int }),
         Result: Period,
         execute: ({ id, incomeMinor }) =>
-          sql`UPDATE periods SET income_minor = ${incomeMinor}, updated_at = now()
-            WHERE id = ${id} RETURNING ${periodColumns}`,
+          inSpace(
+            (spaceId) =>
+              sql`UPDATE periods SET income_minor = ${incomeMinor}, updated_at = now()
+                WHERE id = ${id} AND space_id = ${spaceId} RETURNING ${periodColumns}`,
+          ),
       });
       const deletePeriod = SqlSchema.findAll({
         Request: Schema.String,
         Result: Schema.Struct({ id: Schema.String }),
-        execute: (id) => sql`DELETE FROM periods WHERE id = ${id} RETURNING id`,
+        execute: (id) =>
+          inSpace(
+            (spaceId) =>
+              sql`DELETE FROM periods WHERE id = ${id} AND space_id = ${spaceId}
+                RETURNING id`,
+          ),
       });
 
       const listEnvelopes = SqlSchema.findAll({
         Request: Schema.String,
         Result: Envelope,
         execute: (periodId) =>
-          sql`SELECT ${envelopeColumns} FROM envelopes
-            WHERE period_id = ${periodId} ORDER BY created_at, id`,
+          inSpace(
+            (spaceId) =>
+              sql`SELECT ${envelopeColumns} FROM envelopes
+                WHERE period_id = ${periodId} AND space_id = ${spaceId}
+                ORDER BY created_at, id`,
+          ),
       });
       const findEnvelopeById = SqlSchema.findOneOption({
         Request: Schema.String,
         Result: Envelope,
         execute: (id) =>
-          sql`SELECT ${envelopeColumns} FROM envelopes WHERE id = ${id}`,
+          inSpace(
+            (spaceId) =>
+              sql`SELECT ${envelopeColumns} FROM envelopes
+                WHERE id = ${id} AND space_id = ${spaceId}`,
+          ),
       });
       const findEnvelope = SqlSchema.findOneOption({
         Request: Schema.Struct({
@@ -117,25 +153,40 @@ export class BudgetsRepository extends Context.Service<
         }),
         Result: Envelope,
         execute: ({ periodId, categoryId }) =>
-          sql`SELECT ${envelopeColumns} FROM envelopes
-            WHERE period_id = ${periodId} AND category_id = ${categoryId}`,
+          inSpace(
+            (spaceId) =>
+              sql`SELECT ${envelopeColumns} FROM envelopes
+                WHERE period_id = ${periodId} AND category_id = ${categoryId}
+                  AND space_id = ${spaceId}`,
+          ),
       });
       const insertEnvelope = SqlSchema.findOne({
         Request: Envelope.insert,
         Result: Envelope,
         execute: (request) =>
-          sql`INSERT INTO envelopes ${sql.insert(request)} RETURNING ${envelopeColumns}`,
+          inSpace(
+            (spaceId) =>
+              sql`INSERT INTO envelopes ${sql.insert({ ...request, spaceId })}
+                RETURNING ${envelopeColumns}`,
+          ),
       });
       const updatePlanned = SqlSchema.findOneOption({
         Request: Schema.Struct({ id: Schema.String, plannedMinor: Schema.Int }),
         Result: Envelope,
         execute: ({ id, plannedMinor }) =>
-          sql`UPDATE envelopes SET planned_minor = ${plannedMinor}, updated_at = now()
-            WHERE id = ${id} RETURNING ${envelopeColumns}`,
+          inSpace(
+            (spaceId) =>
+              sql`UPDATE envelopes SET planned_minor = ${plannedMinor}, updated_at = now()
+                WHERE id = ${id} AND space_id = ${spaceId} RETURNING ${envelopeColumns}`,
+          ),
       });
       const deleteEnvelope = SqlSchema.void({
         Request: Schema.String,
-        execute: (id) => sql`DELETE FROM envelopes WHERE id = ${id}`,
+        execute: (id) =>
+          inSpace(
+            (spaceId) =>
+              sql`DELETE FROM envelopes WHERE id = ${id} AND space_id = ${spaceId}`,
+          ),
       });
 
       return BudgetsRepository.of({
