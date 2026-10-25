@@ -148,6 +148,20 @@ Runner: `vitest` z `@effect/vitest`.
 - **Eksport, import i CSV** działają na przestrzeni żądania. Import zastępuje dane tylko tej przestrzeni.
 - Testy uruchamiają się jako żądania w przestrzeni domyślnej (`TestSpace`, `TestSpaceContext`), a izolację między przestrzeniami sprawdza `spaces.test.ts`.
 
+## Walidacja i konwencje API
+
+Zasada: zły input kończy się na brzegu odpowiedzią 400, a nie błędem bazy (500). Dlatego kontrakt sprawdza więcej, niż wymaga sam typ.
+
+- **ID to UUID** (`Uuid` z `uuid.ts`, `Schema.isUUID`). Dotyczy ścieżek, query, body i nagłówka `X-Space-Id` (nagłówek, który nie jest UUID-em, to po prostu nieznana przestrzeń, 404).
+- **Daty kalendarzowe muszą istnieć** (`IsoDate` w `text.ts`): `2026-02-31` jest odrzucone.
+- **Limity:** nazwy ≤ 200 znaków, notatki ≤ 1000, ikona ≤ 50 (`text.ts`), kwoty od 0 (albo od 1 dla wydatków) do `MAX_MINOR` = 10^12 w jednostkach mniejszych (`currency/money.ts`), tablice w payloadach mają maksimum (np. 500 kopert w jednym okresie). Ciało żądania jest ucinane przy 8 MiB (`platform/http.ts`, przetestowane na prawdziwym serwerze).
+- **Tworzenie zwraca 201** (`HttpApiSchema.status(201)`), usuwanie 204, błędy domenowe 404/409/422 z ciałem `{ _tag, ... }`. Zły input i nieoczekiwane awarie mają puste ciało (400 i 500), więc nic z wnętrza nie wycieka.
+- **Edycja to `PUT`** z pełnym obiektem (nie `PATCH`, bo nie przyjmujemy częściowych zmian).
+- **Nazwy w specu.** Schematy odpowiedzi mają `identifier`, a klasy błędów są nazywane przez `wire()` (`errors.ts`), żeby w OpenAPI nie pojawiało się `...Encoded`. `wire` zwraca ten sam schemat dla tej samej klasy, bo inaczej OpenAPI numeruje duplikaty (`CategoryNotFound_3`).
+- **Równoległe `apply`** reguł cyklicznych jest serializowane blokadą doradczą Postgresa (`pg_advisory_xact_lock`) na okres, więc drugie wywołanie czeka i nie dodaje nic.
+
+Znane luki, celowo odłożone do kont i deploymentu: brak uwierzytelniania (każdy, kto zna UUID przestrzeni, ma dostęp), `GET /spaces` pokazuje wszystkie przestrzenie, brak CORS i limitu żądań na minutę, listy bez paginacji (poza wydatkami), `X-Space-Id` poza parametrami w specu.
+
 ## Klient Dart
 
 Z `Api` generujemy klienta Dart, żeby aplikacje w monorepo nie pisały zapytań ręcznie.
@@ -181,7 +195,7 @@ Wnioski ze spike'u na `swagger_parser` i OpenAPI 3.1 wygenerowanym przez Effect 
 - Brandowane ID są w specu zwykłym `string`, więc w Dart są `String`.
 - Daty (`createdAt`, `updatedAt`) są w Dart na razie `String`, bo spec nie niesie informacji o formacie `date-time`.
 - Nazwy metod pochodzą z `operationId` (`grupa.endpoint`), więc klient ma `api.categories.categoriesList()`. Powtórzenie nazwy grupy jest kosmetyczne.
-- Błędy deklarowane w `error` trafiają do klas modeli (`CategoryNotFoundEncoded`), ale klient zgłasza je jako `DioException` z kodem statusu i ciałem.
+- Błędy deklarowane w `error` trafiają do klas modeli (np. `CategoryNotFound`), ale klient zgłasza je jako `DioException` z kodem statusu i ciałem.
 - Klasa `Category` z klienta koliduje nazwą z modelem w aplikacji mobilnej, więc tam importujemy ją z prefiksem.
 
 ## Jak dodać nową domenę
