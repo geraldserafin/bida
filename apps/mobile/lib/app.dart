@@ -2,7 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'data/legacy_migrator.dart';
 import 'data/planner_repository.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/dashboard/dashboard_screen.dart';
@@ -18,12 +17,14 @@ class MoneyPlannerApp extends StatefulWidget {
     super.key,
     required this.settings,
     required this.repository,
-    required this.migrator,
+    this.beforeLoad,
   });
 
   final AppSettings settings;
   final PlannerRepository repository;
-  final LegacyMigrator migrator;
+
+  /// Runs before the first load, e.g. to move data from an older version.
+  final Future<void> Function()? beforeLoad;
 
   @override
   State<MoneyPlannerApp> createState() => _MoneyPlannerAppState();
@@ -49,7 +50,7 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
         ChangeNotifierProvider(
           create: (_) => PlannerState(
             repository: widget.repository,
-            beforeLoad: widget.migrator.migrateIfNeeded,
+            beforeLoad: widget.beforeLoad,
           )..load(),
         ),
         ChangeNotifierProvider.value(value: widget.settings),

@@ -1,10 +1,6 @@
-import 'dart:io';
-
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/planner_repository.dart';
@@ -14,6 +10,7 @@ import '../../services/auth_service.dart';
 import '../../state/app_settings.dart';
 import '../../state/planner_state.dart';
 import '../../util/api_errors.dart';
+import '../../util/csv_save.dart';
 import '../categories/categories_screen.dart';
 
 /// App settings: general, appearance, security, data.
@@ -103,28 +100,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (!fetched) return;
 
-    final path = await _saveCsv(csv!);
+    final path = await saveCsv(csv!);
     if (path == null) return; // user cancelled the dialog
     messenger.showSnackBar(SnackBar(content: Text(l10n.csvExported(path))));
-  }
-
-  /// Writes the file where the user says, or to the documents folder on
-  /// platforms without a save dialog (e.g. Android). Null when cancelled.
-  Future<String?> _saveCsv(String csv) async {
-    String path;
-    try {
-      final location = await getSaveLocation(
-        suggestedName: 'plning_export.csv',
-        acceptedTypeGroups: const [_csvTypeGroup],
-      );
-      if (location == null) return null;
-      path = location.path;
-    } on UnimplementedError {
-      final documents = await getApplicationDocumentsDirectory();
-      path = p.join(documents.path, 'money_planner_export.csv');
-    }
-    await File(path).writeAsString(csv);
-    return path;
   }
 
   Future<void> _importCsv() async {

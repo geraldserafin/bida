@@ -3,7 +3,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'app.dart';
 import 'data/api_client.dart';
-import 'data/legacy_migrator.dart';
+import 'data/legacy_migration.dart';
 import 'data/planner_repository.dart';
 import 'state/app_settings.dart';
 
@@ -23,7 +23,7 @@ Future<void> main() async {
       settings: settings,
       repository: repository,
       // Data kept on the device by the offline version moves to the server.
-      migrator: LegacyMigrator(repository),
+      beforeLoad: legacyMigration(repository),
     ),
   );
 }
