@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/api_exception.dart';
+import '../../data/google_sign_in.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/auth_state.dart';
 import '../../util/api_errors.dart';
+import 'google_button.dart';
 
 final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
@@ -81,6 +83,11 @@ class _LoginScreenState extends State<LoginScreen> {
     await _run(() => auth.signInWithCode(email, code));
   }
 
+  Future<void> _signInWithGoogle(String idToken) async {
+    final auth = context.read<AuthState>();
+    await _run(() => auth.signInWithGoogle(idToken));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -108,7 +115,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  if (sentTo == null) _emailForm(l10n) else _codeForm(l10n),
+                  if (sentTo == null) ...[
+                    if (googleSignInConfigured) ...[
+                      GoogleSignInButton(
+                        onIdToken: _signInWithGoogle,
+                        enabled: !_busy,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(l10n.orSeparator),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    _emailForm(l10n),
+                  ] else
+                    _codeForm(l10n),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
                     Text(

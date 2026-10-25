@@ -151,5 +151,8 @@
   "account": "Konto",
   "signedInAs": "Zalogowano jako {email}",
   "signOut": "Wyloguj",
-  "signOutConfirm": "Wylogować z tego urządzenia?"
+  "signOutConfirm": "Wylogować z tego urządzenia?",
+  "signInWithGoogle": "Zaloguj przez Google",
+  "googleSignInFailed": "Logowanie przez Google nie udało się. Spróbuj ponownie albo użyj kodu z e-maila.",
+  "orSeparator": "lub"
 }

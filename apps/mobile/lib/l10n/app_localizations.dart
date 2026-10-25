@@ -1009,6 +1009,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign out of this device?'**
   String get signOutConfirm;
+
+  /// No description provided for @signInWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get signInWithGoogle;
+
+  /// No description provided for @googleSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in did not work. Try again or use the e-mail code.'**
+  String get googleSignInFailed;
+
+  /// No description provided for @orSeparator.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get orSeparator;
 }
 
 class _AppLocalizationsDelegate

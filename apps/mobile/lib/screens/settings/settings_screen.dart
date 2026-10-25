@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/google_sign_in.dart';
 import '../../data/planner_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
@@ -127,7 +128,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
     // the app closes this screen once the user is signed out
-    if (confirmed == true) await auth.signOut();
+    if (confirmed == true) {
+      await signOutOfGoogle();
+      await auth.signOut();
+    }
   }
 
   Future<void> _importCsv() async {

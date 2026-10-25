@@ -30,6 +30,14 @@ class AuthRepository {
     return _keep(result);
   });
 
+  /// Signs in with the ID token the app got from Google sign-in.
+  Future<String> signInWithGoogle(String idToken) => guard(() async {
+    final result = await _api.auth.authGoogleSignIn(
+      body: api.GoogleSignIn(idToken: idToken, transport: _transport),
+    );
+    return _keep(result);
+  });
+
   /// Signs in with the token of the link from the e-mail.
   Future<String> signInWithLinkToken(String token) => guard(() async {
     final result = await _api.auth.authVerifyToken(
