@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import 'screens/lock/lock_gate.dart';
 import 'state/app_settings.dart';
 import 'state/planner_state.dart';
 import 'theme/app_theme.dart';
+import 'widgets/phone_frame.dart';
 
 /// Root widget: provides app-wide state and wires up theming, localization
 /// (Polish by default) and the home screen.
@@ -65,6 +67,9 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
             theme: AppTheme.light,
             darkTheme: AppTheme.dark,
             themeMode: settings.themeMode,
+            builder: kIsWeb
+                ? (context, child) => PhoneFrame(child: child!)
+                : null,
             locale: const Locale('pl'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
