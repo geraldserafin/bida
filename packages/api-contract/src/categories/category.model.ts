@@ -18,3 +18,13 @@ export class Category extends Model.Class<Category>("Category")({
   createdAt: Model.DateTimeInsertFromDate,
   updatedAt: Model.DateTimeUpdateFromDate,
 }) {}
+
+// Named schemas show up as reusable components in the OpenAPI spec, which
+// keeps generated clients free of per-endpoint duplicates.
+export const CategoryJson = Category.json.annotate({ identifier: "Category" });
+export const CreateCategory = Category.jsonCreate.annotate({
+  identifier: "CreateCategory",
+});
+export const UpdateCategory = Category.jsonUpdate.annotate({
+  identifier: "UpdateCategory",
+});

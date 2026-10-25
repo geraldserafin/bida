@@ -3,8 +3,8 @@ import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 
 export const Health = Schema.Struct({
   status: Schema.Literal("ok"),
-  uptimeSeconds: Schema.Number,
-});
+  uptimeSeconds: Schema.Int,
+}).annotate({ identifier: "Health" });
 
 export class SystemApi extends HttpApiGroup.make("system")
   .add(

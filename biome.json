@@ -7,7 +7,8 @@
       "!apps/mobile",
       "!pnpm-lock.yaml",
       "!**/dist",
-      "!**/*.md"
+      "!**/*.md",
+      "!**/openapi.json"
     ]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 80 },
