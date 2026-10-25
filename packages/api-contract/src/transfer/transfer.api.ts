@@ -7,7 +7,6 @@ import {
 } from "effect/http-api";
 import { Authenticated } from "../auth/authenticated.ts";
 import { wire } from "../errors.ts";
-import { SpaceContext } from "../spaces/space-context.ts";
 import { InvalidCsv, InvalidImport } from "./transfer.errors.ts";
 import {
   Counts,
@@ -68,7 +67,7 @@ export class TransferApi extends HttpApiGroup.make("transfer")
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Export expenses as CSV",
-        description: "Columns: Period, Category, Amount, Date, Note.",
+        description: "Columns: Envelope, Subenvelope, Amount, Date, Note.",
       }),
     ),
     HttpApiEndpoint.post("importCsv", "/import/csv", {
@@ -79,10 +78,9 @@ export class TransferApi extends HttpApiGroup.make("transfer")
       OpenApi.annotations({
         summary: "Import expenses from CSV",
         description:
-          "Creates missing periods and categories by name and skips rows that already exist.",
+          "Creates missing envelopes by name and skips rows that already exist.",
       }),
     ),
   )
-  .middleware(SpaceContext)
   .middleware(Authenticated)
   .annotateMerge(OpenApi.annotations({ title: "Transfer" })) {}

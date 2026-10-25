@@ -1,28 +1,33 @@
+import { randomUUID } from "node:crypto";
 import {
+  Allocation,
+  type AllocationId,
   type Counts,
   type CsvImportResult,
-  CurrentSpace,
-  DEFAULT_CURRENCY,
+  Envelope,
   type EnvelopeId,
+  Expense,
+  type ExpenseId,
   type ExportDocument,
-  exponentOf,
   type ImportLegacy,
   type ImportPreview,
+  Income,
+  type IncomeId,
   InvalidCsv,
   InvalidImport,
-  type PeriodId,
+  RecurringRule,
+  type RecurringRuleId,
+  type UserId,
 } from "@bida/api-contract";
 import { Context, DateTime, Effect, Layer } from "effect";
 import { SqlClient } from "effect/sql";
-import type { InSpace } from "../../platform/space.ts";
-import { BudgetsService } from "../budgets/budgets.module.ts";
-import { CategoriesService } from "../categories/categories.module.ts";
+import { EnvelopesService } from "../envelopes/envelopes.module.ts";
 import { ExpensesService } from "../expenses/expenses.module.ts";
 import { type CsvRow, formatCsv, parseAmount, parseCsv } from "./csv.ts";
 import { convertLegacy } from "./legacy.ts";
 import { type Snapshot, TransferRepository } from "./transfer.repository.ts";
 
-/** Same palette as the mobile app's category picker. */
+/** Same palette as the mobile app's envelope picker. */
 const PALETTE = [
   "#22C55E",
   "#EC4899",
@@ -41,47 +46,41 @@ const PALETTE = [
 const PAGE = 200;
 
 const countsOf = (snapshot: Snapshot): Counts => ({
-  categories: snapshot.categories.length,
-  periods: snapshot.periods.length,
   envelopes: snapshot.envelopes.length,
+  allocations: snapshot.allocations.length,
+  incomes: snapshot.incomes.length,
   expenses: snapshot.expenses.length,
   recurringRules: snapshot.recurringRules.length,
 });
 
 /** Checks that every reference in a snapshot points at something in it. */
 const checkIntegrity = (snapshot: Snapshot): string | undefined => {
-  const categoryIds = new Set(snapshot.categories.map((c) => c.id));
-  const periodIds = new Set(snapshot.periods.map((p) => p.id));
+  const envelopes = new Map(snapshot.envelopes.map((e) => [e.id, e]));
   const ruleIds = new Set(snapshot.recurringRules.map((r) => r.id));
-  const envelopePeriod = new Map(
-    snapshot.envelopes.map((e) => [e.id, e.periodId]),
-  );
 
-  for (const rule of snapshot.recurringRules) {
-    if (!categoryIds.has(rule.categoryId)) {
-      return `recurring rule ${rule.id} points at an unknown category`;
+  for (const envelope of snapshot.envelopes) {
+    if (envelope.parentId === null) continue;
+    const parent = envelopes.get(envelope.parentId);
+    if (parent === undefined) {
+      return `envelope ${envelope.id} points at an unknown parent`;
+    }
+    if (parent.parentId !== null) {
+      return `envelope ${envelope.id} is deeper than a sub-envelope`;
     }
   }
-  const seen = new Set<string>();
-  for (const envelope of snapshot.envelopes) {
-    if (!periodIds.has(envelope.periodId)) {
-      return `envelope ${envelope.id} points at an unknown period`;
+  for (const rule of snapshot.recurringRules) {
+    if (!envelopes.has(rule.envelopeId)) {
+      return `recurring rule ${rule.id} points at an unknown envelope`;
     }
-    if (!categoryIds.has(envelope.categoryId)) {
-      return `envelope ${envelope.id} points at an unknown category`;
+  }
+  for (const allocation of snapshot.allocations) {
+    if (!envelopes.has(allocation.envelopeId)) {
+      return `allocation ${allocation.id} points at an unknown envelope`;
     }
-    const key = `${envelope.periodId}/${envelope.categoryId}`;
-    if (seen.has(key))
-      return `period ${envelope.periodId} has two envelopes for category ${envelope.categoryId}`;
-    seen.add(key);
   }
   for (const expense of snapshot.expenses) {
-    const period = envelopePeriod.get(expense.envelopeId);
-    if (period === undefined) {
+    if (!envelopes.has(expense.envelopeId)) {
       return `expense ${expense.id} points at an unknown envelope`;
-    }
-    if (period !== expense.periodId) {
-      return `expense ${expense.id} has a different period than its envelope`;
     }
     if (expense.recurringId !== null && !ruleIds.has(expense.recurringId)) {
       return `expense ${expense.id} points at an unknown recurring rule`;
@@ -90,59 +89,137 @@ const checkIntegrity = (snapshot: Snapshot): string | undefined => {
   return undefined;
 };
 
-const snapshotOf = (doc: Omit<ExportDocument, "exportedAt">): Snapshot => doc;
+/**
+ * The document as the data of `userId`: every row gets a new id (ids are
+ * global, so a document may come from anyone, or be loaded twice) and the
+ * user as its owner.
+ */
+const adopt = (
+  doc: Omit<ExportDocument, "exportedAt" | "version">,
+  userId: UserId,
+): Snapshot => {
+  const owner = userId as UserId;
+  const fresh = new Map<string, string>();
+  const idOf = <Id extends string>(old: Id): Id => {
+    let id = fresh.get(old);
+    if (id === undefined) {
+      id = randomUUID();
+      fresh.set(old, id);
+    }
+    return id as Id;
+  };
+  return {
+    envelopes: doc.envelopes.map(
+      (e) =>
+        new Envelope({
+          ...e,
+          id: idOf(e.id),
+          ownerId: owner,
+          parentId: e.parentId === null ? null : idOf(e.parentId),
+        }),
+    ),
+    allocations: doc.allocations.map(
+      (a) =>
+        new Allocation({
+          ...a,
+          id: idOf<AllocationId>(a.id),
+          envelopeId: idOf<EnvelopeId>(a.envelopeId),
+          userId: owner,
+        }),
+    ),
+    incomes: doc.incomes.map(
+      (i) => new Income({ ...i, id: idOf<IncomeId>(i.id), userId: owner }),
+    ),
+    expenses: doc.expenses.map(
+      (x) =>
+        new Expense({
+          ...x,
+          id: idOf<ExpenseId>(x.id),
+          envelopeId: idOf<EnvelopeId>(x.envelopeId),
+          createdBy: owner,
+          recurringId:
+            x.recurringId === null
+              ? null
+              : idOf<RecurringRuleId>(x.recurringId),
+        }),
+    ),
+    recurringRules: doc.recurringRules.map(
+      (r) =>
+        new RecurringRule({
+          ...r,
+          id: idOf<RecurringRuleId>(r.id),
+          envelopeId: idOf<EnvelopeId>(r.envelopeId),
+          userId: owner,
+        }),
+    ),
+  };
+};
 
 const day = (date: DateTime.Utc): string =>
   DateTime.formatIso(date).slice(0, 10);
 
-/** Backup, restore and CSV exchange of the whole data set. */
+/** Backup, restore and CSV exchange of the data of the signed-in user. */
 export class TransferService extends Context.Service<
   TransferService,
   {
-    export: InSpace<ExportDocument>;
-    previewImport(doc: ExportDocument): InSpace<ImportPreview>;
-    /** Replaces all data with the document. */
-    importDocument(doc: ExportDocument): InSpace<Counts, InvalidImport>;
-    /** Replaces all data with a converted backup of the offline app. */
-    importLegacy(input: ImportLegacy): InSpace<Counts, InvalidImport>;
-    exportCsv: InSpace<string>;
-    importCsv(text: string): InSpace<CsvImportResult, InvalidCsv>;
+    export(userId: UserId): Effect.Effect<ExportDocument>;
+    previewImport(
+      userId: UserId,
+      doc: ExportDocument,
+    ): Effect.Effect<ImportPreview>;
+    /** Replaces the user's data with the document. */
+    importDocument(
+      userId: UserId,
+      doc: ExportDocument,
+    ): Effect.Effect<Counts, InvalidImport>;
+    /** Replaces the user's data with a converted backup of the offline app. */
+    importLegacy(
+      userId: UserId,
+      input: ImportLegacy,
+    ): Effect.Effect<Counts, InvalidImport>;
+    exportCsv(userId: UserId): Effect.Effect<string>;
+    importCsv(
+      userId: UserId,
+      text: string,
+    ): Effect.Effect<CsvImportResult, InvalidCsv>;
   }
 >()("bida/transfer/TransferService") {
   static readonly layer = Layer.effect(
     TransferService,
     Effect.gen(function* () {
       const repo = yield* TransferRepository;
-      const categories = yield* CategoriesService;
-      const budgets = yield* BudgetsService;
+      const envelopes = yield* EnvelopesService;
       const expenses = yield* ExpensesService;
       const sql = yield* SqlClient.SqlClient;
 
-      const exportDocument = Effect.gen(function* () {
+      const exportDocument = Effect.fn("TransferService.export")(function* (
+        userId: UserId,
+      ) {
         return {
-          version: 1 as const,
+          version: 2 as const,
           exportedAt: yield* DateTime.now,
-          ...(yield* repo.snapshot),
+          ...(yield* repo.snapshot(userId)),
         };
-      }).pipe(Effect.withSpan("TransferService.export"));
+      });
 
       const previewImport = Effect.fn("TransferService.previewImport")(
-        function* (doc: ExportDocument) {
+        function* (userId: UserId, doc: ExportDocument) {
           return {
-            incoming: countsOf(snapshotOf(doc)),
-            current: yield* repo.counts,
+            incoming: countsOf(doc),
+            current: yield* repo.counts(userId),
           };
         },
       );
 
       // all or nothing: the transaction rolls back when anything is refused
       const restore = Effect.fn("TransferService.restore")(function* (
+        userId: UserId,
         snapshot: Snapshot,
       ) {
         const problem = checkIntegrity(snapshot);
         if (problem !== undefined)
           return yield* new InvalidImport({ reason: problem });
-        yield* repo.replaceAll(snapshot).pipe(
+        yield* repo.replaceAll(userId, snapshot).pipe(
           sql.withTransaction,
           Effect.catchTag("SqlError", (error) =>
             error.reason._tag === "ConstraintError" ||
@@ -158,12 +235,18 @@ export class TransferService extends Context.Service<
         return countsOf(snapshot);
       });
 
-      const importDocument = (doc: ExportDocument) => restore(snapshotOf(doc));
+      const importDocument = (userId: UserId, doc: ExportDocument) =>
+        restore(userId, adopt(doc, userId));
 
       const importLegacy = Effect.fn("TransferService.importLegacy")(function* (
+        userId: UserId,
         input: ImportLegacy,
       ) {
-        const converted = yield* convertLegacy(input, yield* DateTime.now).pipe(
+        const converted = yield* convertLegacy(
+          input,
+          userId,
+          yield* DateTime.now,
+        ).pipe(
           // the model classes refuse values the API would not accept either
           Effect.catchDefect(() =>
             Effect.fail(
@@ -173,50 +256,44 @@ export class TransferService extends Context.Service<
             ),
           ),
         );
-        return yield* restore(snapshotOf(converted));
+        return yield* restore(userId, converted);
       });
 
-      const exportCsv = Effect.gen(function* () {
-        const snapshot = yield* repo.snapshot;
-        const periodName = new Map(snapshot.periods.map((p) => [p.id, p.name]));
-        const periodCurrency = new Map(
-          snapshot.periods.map((p) => [p.id, p.currency]),
-        );
-        const categoryName = new Map(
-          snapshot.categories.map((c) => [c.id, c.name]),
-        );
-        const envelopeCategory = new Map(
-          snapshot.envelopes.map((e) => [e.id, e.categoryId]),
-        );
+      const exportCsv = Effect.fn("TransferService.exportCsv")(function* (
+        userId: UserId,
+      ) {
+        const snapshot = yield* repo.snapshot(userId);
+        const byId = new Map(snapshot.envelopes.map((e) => [e.id, e]));
         const rows = [...snapshot.expenses]
           .sort(
             (a, b) => b.spentAt.epochMilliseconds - a.spentAt.epochMilliseconds,
           )
-          .map((expense) => ({
-            period: periodName.get(expense.periodId) ?? "",
-            category:
-              categoryName.get(
-                envelopeCategory.get(expense.envelopeId) ?? ("" as never),
-              ) ?? "",
-            amountMinor: expense.amountMinor,
-            currency: periodCurrency.get(expense.periodId) ?? DEFAULT_CURRENCY,
-            date: day(expense.spentAt),
-            note: expense.note,
-          }));
+          .map((expense) => {
+            const envelope = byId.get(expense.envelopeId);
+            const parent =
+              envelope?.parentId == null
+                ? undefined
+                : byId.get(envelope.parentId);
+            return {
+              envelope: (parent ?? envelope)?.name ?? "",
+              subenvelope: parent === undefined ? "" : (envelope?.name ?? ""),
+              amountMinor: expense.amountMinor,
+              date: day(expense.spentAt),
+              note: expense.note,
+            };
+          });
         return formatCsv(rows);
-      }).pipe(Effect.withSpan("TransferService.exportCsv"));
+      });
 
       // Existing expenses of an envelope as "amount|day|note" fingerprints
       const fingerprints = Effect.fn("TransferService.fingerprints")(function* (
-        periodId: PeriodId,
-        envelopeId: NonNullable<
-          Parameters<typeof expenses.listForPeriod>[1]["envelopeId"]
-        >,
+        userId: UserId,
+        envelopeId: EnvelopeId,
       ) {
         const seen = new Set<string>();
         for (let offset = 0; ; offset += PAGE) {
           const page = yield* expenses
-            .listForPeriod(periodId, { envelopeId, limit: PAGE, offset })
+            .list(userId, { envelopeId, limit: PAGE, offset })
             .pipe(Effect.orDie);
           for (const e of page)
             seen.add(`${e.amountMinor}|${day(e.spentAt)}|${e.note ?? ""}`);
@@ -224,116 +301,67 @@ export class TransferService extends Context.Service<
         }
       });
 
-      const monthOf = (date: string) => {
-        const [y, m] = date.split("-").map(Number) as [number, number];
-        const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
-        const mm = String(m).padStart(2, "0");
-        return {
-          startDate: `${y}-${mm}-01`,
-          endDate: `${y}-${mm}-${String(last).padStart(2, "0")}`,
-        };
-      };
-
       const importCsv = Effect.fn("TransferService.importCsv")(function* (
+        userId: UserId,
         text: string,
       ) {
         const rows: ReadonlyArray<CsvRow> = yield* parseCsv(text);
-        const space = yield* CurrentSpace;
 
         // Everything that can be wrong with the file is found here, before
-        // anything is written: amounts depend on the currency of the period.
-        const existing = new Map(
-          (yield* budgets.listPeriods).map(
-            (p) => [p.name, p.currency] as const,
-          ),
-        );
-        const currencyOf = new Map(existing);
+        // anything is written.
         const prepared: Array<{ row: CsvRow; amountMinor: number }> = [];
         for (const row of rows) {
-          const currency =
-            currencyOf.get(row.period) ?? row.currency ?? space.defaultCurrency;
-          currencyOf.set(row.period, currency);
-          if (row.currency !== undefined && row.currency !== currency) {
-            return yield* new InvalidCsv({
-              line: row.line,
-              reason: `period "${row.period}" is in ${currency}, not ${row.currency}`,
-            });
-          }
-          const amountMinor = parseAmount(row.amount, exponentOf(currency));
+          const amountMinor = parseAmount(row.amount);
           if (amountMinor === undefined) {
             return yield* new InvalidCsv({
               line: row.line,
-              reason: `amount "${row.amount}" is not positive in ${currency}`,
+              reason: `amount "${row.amount}" is not positive`,
             });
           }
           prepared.push({ row, amountMinor });
         }
 
         return yield* Effect.gen(function* () {
-          const periods = new Map(
-            (yield* budgets.listPeriods).map((p) => [p.name, p] as const),
+          const known = new Map<string, Envelope>(
+            (yield* envelopes.list(userId)).map((e) => [
+              `${e.parentId ?? ""}/${e.name.toLowerCase()}`,
+              e,
+            ]),
           );
-          const knownCategories = new Map(
-            (yield* categories.list).map(
-              (c) => [c.name.toLowerCase(), c] as const,
-            ),
-          );
-          const envelopes = new Map<string, EnvelopeId>();
           const seenByEnvelope = new Map<string, Set<string>>();
           let imported = 0;
           let skipped = 0;
 
-          for (const { row, amountMinor } of prepared) {
-            let period = periods.get(row.period);
-            if (period === undefined) {
-              const created = yield* budgets
-                .createPeriod({
-                  name: row.period,
-                  ...monthOf(row.date),
-                  incomeMinor: 0,
-                  currency: currencyOf.get(row.period) ?? space.defaultCurrency,
-                  envelopes: [],
+          // finds the envelope by name, or creates it
+          const envelopeNamed = Effect.fn("TransferService.envelopeNamed")(
+            function* (name: string, parentId: EnvelopeId | null) {
+              const key = `${parentId ?? ""}/${name.toLowerCase()}`;
+              const found = known.get(key);
+              if (found !== undefined) return found;
+              const created = yield* envelopes
+                .create(userId, {
+                  parentId,
+                  name,
+                  color: PALETTE[known.size % PALETTE.length] ?? "#22C55E",
+                  icon: null,
                 })
                 .pipe(Effect.orDie);
-              period = created.period;
-              periods.set(row.period, period);
-            }
-            let category = knownCategories.get(row.category.toLowerCase());
-            if (category === undefined) {
-              category = yield* categories.create({
-                name: row.category,
-                color:
-                  PALETTE[knownCategories.size % PALETTE.length] ?? "#22C55E",
-                icon: null,
-              });
-              knownCategories.set(row.category.toLowerCase(), category);
-            }
+              known.set(key, created);
+              return created;
+            },
+          );
 
-            const envelopeKey = `${period.id}/${category.id}`;
-            let envelopeId = envelopes.get(envelopeKey);
-            if (envelopeId === undefined) {
-              const detail = yield* budgets
-                .getPeriod(period.id)
-                .pipe(Effect.orDie);
-              const found = detail.envelopes.find(
-                (e) => e.categoryId === category.id,
-              );
-              envelopeId = (
-                found ??
-                (yield* budgets
-                  .addEnvelope(period.id, {
-                    categoryId: category.id,
-                    plannedMinor: 0,
-                  })
-                  .pipe(Effect.orDie))
-              ).id;
-              envelopes.set(envelopeKey, envelopeId);
-            }
+          for (const { row, amountMinor } of prepared) {
+            const top = yield* envelopeNamed(row.envelope, null);
+            const target =
+              row.subenvelope === ""
+                ? top
+                : yield* envelopeNamed(row.subenvelope, top.id);
 
-            let seen = seenByEnvelope.get(envelopeKey);
+            let seen = seenByEnvelope.get(target.id);
             if (seen === undefined) {
-              seen = yield* fingerprints(period.id, envelopeId);
-              seenByEnvelope.set(envelopeKey, seen);
+              seen = yield* fingerprints(userId, target.id);
+              seenByEnvelope.set(target.id, seen);
             }
             const fingerprint = `${amountMinor}|${row.date}|${row.note}`;
             if (seen.has(fingerprint)) {
@@ -343,8 +371,8 @@ export class TransferService extends Context.Service<
             seen.add(fingerprint);
 
             yield* expenses
-              .create({
-                envelopeId,
+              .create(userId, {
+                envelopeId: target.id,
                 amountMinor,
                 spentAt: DateTime.makeUnsafe(`${row.date}T00:00:00Z`),
                 note: row.note === "" ? null : row.note,

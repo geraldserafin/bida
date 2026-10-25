@@ -4,8 +4,6 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'original_amount.dart';
-
 part 'update_expense.g.dart';
 
 @JsonSerializable()
@@ -15,7 +13,6 @@ class UpdateExpense {
     required this.amountMinor,
     required this.spentAt,
     required this.note,
-    this.original,
   });
 
   factory UpdateExpense.fromJson(Map<String, Object?> json) =>
@@ -26,8 +23,6 @@ class UpdateExpense {
   final String spentAt;
   @JsonKey(includeIfNull: true)
   final String? note;
-  @JsonKey(includeIfNull: false)
-  final OriginalAmount? original;
 
   Map<String, Object?> toJson() => _$UpdateExpenseToJson(this);
 }

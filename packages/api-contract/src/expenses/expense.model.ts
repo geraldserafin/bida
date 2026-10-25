@@ -1,9 +1,8 @@
 import { Schema } from "effect";
 import { Model } from "effect/schema";
-import { EnvelopeId, PeriodId, PeriodJson } from "../budgets/index.ts";
-import { CategoryId } from "../categories/index.ts";
-import { Currency } from "../currency/index.ts";
-import { Money, PositiveMoney } from "../currency/money.ts";
+import { UserId } from "../auth/user.model.ts";
+import { EnvelopeId } from "../envelopes/envelope.model.ts";
+import { PositiveMoney } from "../money.ts";
 import { RecurringRuleId } from "../recurring/recurring.model.ts";
 import { Note } from "../text.ts";
 import { Uuid } from "../uuid.ts";
@@ -25,16 +24,14 @@ const SpentAt = Model.Field({
 export class Expense extends Model.Class<Expense>("Expense")({
   id: Model.UuidV4Insert(ExpenseId),
   envelopeId: EnvelopeId,
-  /** The period of the envelope, kept on the expense for fast queries. */
-  periodId: PeriodId,
-  /** In the currency of the period, this is what counts against the envelope. */
+  /** Who recorded it. */
+  createdBy: Model.Field({
+    select: UserId,
+    insert: UserId,
+    update: UserId,
+    json: UserId,
+  }),
   amountMinor: PositiveMoney,
-  /**
-   * What was actually paid when it was in another currency than the period's.
-   * Both are null for an ordinary expense.
-   */
-  originalAmountMinor: Schema.NullOr(PositiveMoney),
-  originalCurrency: Schema.NullOr(Currency),
   spentAt: SpentAt,
   note: Schema.NullOr(Note),
   /** Set when the expense was generated from a recurring rule. */
@@ -45,60 +42,19 @@ export class Expense extends Model.Class<Expense>("Expense")({
 
 export const ExpenseJson = Expense.json.annotate({ identifier: "Expense" });
 
-/** What was actually paid, when it was not in the currency of the period. */
-export const OriginalAmount = Schema.Struct({
-  amountMinor: PositiveMoney,
-  currency: Currency,
-}).annotate({ identifier: "OriginalAmount" });
-export type OriginalAmount = typeof OriginalAmount.Type;
-
 export const CreateExpense = Schema.Struct({
   envelopeId: EnvelopeId,
-  /** In the currency of the period. */
   amountMinor: PositiveMoney,
   spentAt: Schema.DateTimeUtcFromString,
   note: Schema.NullOr(Note),
-  /** Set to record a payment in another currency. Ignored when it is the period's currency. */
-  original: Schema.optional(OriginalAmount),
 }).annotate({ identifier: "CreateExpense" });
 export type CreateExpense = typeof CreateExpense.Type;
 
-/** Replaces the editable fields. The new envelope must be in the same period. */
+/** Replaces the editable fields. */
 export const UpdateExpense = Schema.Struct({
   envelopeId: EnvelopeId,
   amountMinor: PositiveMoney,
   spentAt: Schema.DateTimeUtcFromString,
   note: Schema.NullOr(Note),
-  original: Schema.optional(OriginalAmount),
 }).annotate({ identifier: "UpdateExpense" });
 export type UpdateExpense = typeof UpdateExpense.Type;
-
-/** Planned versus spent for one envelope. `remainingMinor` can be negative. */
-export const EnvelopeProgress = Schema.Struct({
-  envelopeId: EnvelopeId,
-  categoryId: CategoryId,
-  plannedMinor: Money,
-  spentMinor: Money,
-  remainingMinor: Schema.Int,
-}).annotate({ identifier: "EnvelopeProgress" });
-
-export const PeriodProgress = Schema.Struct({
-  periodId: PeriodId,
-  incomeMinor: Money,
-  plannedMinor: Money,
-  spentMinor: Money,
-  /** Planned minus spent. */
-  remainingMinor: Schema.Int,
-  /** Income minus planned. Negative when over-allocated. */
-  unallocatedMinor: Schema.Int,
-  envelopes: Schema.Array(EnvelopeProgress),
-}).annotate({ identifier: "PeriodProgress" });
-export type PeriodProgress = typeof PeriodProgress.Type;
-
-/** A period with how much of it is planned and spent, for the list of periods. */
-export const PeriodSummary = Schema.Struct({
-  period: PeriodJson,
-  plannedMinor: Money,
-  spentMinor: Money,
-}).annotate({ identifier: "PeriodSummary" });
-export type PeriodSummary = typeof PeriodSummary.Type;

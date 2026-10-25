@@ -4,11 +4,11 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'category.dart';
+import 'allocation.dart';
 import 'envelope.dart';
 import 'expense.dart';
 import 'export_document_version.dart';
-import 'period.dart';
+import 'income.dart';
 import 'recurring_rule.dart';
 
 part 'export_document.g.dart';
@@ -18,9 +18,9 @@ class ExportDocument {
   const ExportDocument({
     required this.version,
     required this.exportedAt,
-    required this.categories,
-    required this.periods,
     required this.envelopes,
+    required this.allocations,
+    required this.incomes,
     required this.expenses,
     required this.recurringRules,
   });
@@ -30,9 +30,9 @@ class ExportDocument {
 
   final ExportDocumentVersion version;
   final String exportedAt;
-  final List<Category> categories;
-  final List<Period> periods;
   final List<Envelope> envelopes;
+  final List<Allocation> allocations;
+  final List<Income> incomes;
   final List<Expense> expenses;
   final List<RecurringRule> recurringRules;
 

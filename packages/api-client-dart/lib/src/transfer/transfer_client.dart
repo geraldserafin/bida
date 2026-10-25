@@ -45,13 +45,13 @@ abstract class TransferClient {
 
   /// Export expenses as CSV.
   ///
-  /// Columns: Period, Category, Amount, Date, Note.
+  /// Columns: Envelope, Subenvelope, Amount, Date, Note.
   @GET('/export.csv')
   Future<String> transferExportCsv();
 
   /// Import expenses from CSV.
   ///
-  /// Creates missing periods and categories by name and skips rows that already exist.
+  /// Creates missing envelopes by name and skips rows that already exist.
   @POST('/import/csv')
   Future<CsvImportResult> transferImportCsv({@Body() required String body});
 }

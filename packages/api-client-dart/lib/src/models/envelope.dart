@@ -10,9 +10,11 @@ part 'envelope.g.dart';
 class Envelope {
   const Envelope({
     required this.id,
-    required this.periodId,
-    required this.categoryId,
-    required this.plannedMinor,
+    required this.ownerId,
+    required this.parentId,
+    required this.name,
+    required this.color,
+    required this.icon,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -21,9 +23,13 @@ class Envelope {
       _$EnvelopeFromJson(json);
 
   final String id;
-  final String periodId;
-  final String categoryId;
-  final int plannedMinor;
+  final String ownerId;
+  @JsonKey(includeIfNull: true)
+  final String? parentId;
+  final String name;
+  final String color;
+  @JsonKey(includeIfNull: true)
+  final String? icon;
   final String createdAt;
   final String updatedAt;
 

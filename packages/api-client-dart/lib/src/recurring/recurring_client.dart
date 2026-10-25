@@ -5,9 +5,8 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../models/apply_recurring.dart';
 import '../models/apply_result.dart';
-import '../models/currency.dart';
-import '../models/envelope_plan.dart';
 import '../models/recurring_rule.dart';
 import '../models/save_recurring_rule.dart';
 
@@ -19,7 +18,7 @@ abstract class RecurringClient {
 
   /// List recurring rules.
   ///
-  /// Newest first.
+  /// The user's own, newest first.
   @GET('/recurring-rules')
   Future<List<RecurringRule>> recurringList();
 
@@ -44,19 +43,9 @@ abstract class RecurringClient {
   @DELETE('/recurring-rules/{id}')
   Future<void> recurringDelete({@Path('id') required String id});
 
-  /// Suggested envelope amounts.
+  /// Apply the recurring rules to a stretch of time.
   ///
-  /// Sum of the active rules in one currency per category, to prefill a new period's plan.
-  @GET('/recurring-rules/suggested-plan')
-  Future<List<EnvelopePlan>> recurringSuggestedPlan({
-    @Query('currency') Currency? currency,
-  });
-
-  /// Apply recurring rules to a period.
-  ///
-  /// Adds one expense for every active rule not applied in this period yet, creating a missing envelope with the rule's amount as its plan. Safe to call repeatedly.
-  @POST('/periods/{periodId}/recurring/apply')
-  Future<ApplyResult> recurringApply({
-    @Path('periodId') required String periodId,
-  });
+  /// Adds one expense for every active rule not applied for this `from` yet (dated today when today is in the stretch, else `from`). Safe to call repeatedly.
+  @POST('/recurring-rules/apply')
+  Future<ApplyResult> recurringApply({@Body() required ApplyRecurring body});
 }

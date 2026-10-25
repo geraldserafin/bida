@@ -130,48 +130,17 @@ class _RecurringClient implements RecurringClient {
   }
 
   @override
-  Future<List<EnvelopePlan>> recurringSuggestedPlan({
-    Currency? currency,
-  }) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'currency': currency};
-    queryParameters.removeWhere((k, v) => v == null);
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<EnvelopePlan>>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/recurring-rules/suggested-plan',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<EnvelopePlan> _value;
-    try {
-      _value = _result.data!
-          .map((dynamic i) => EnvelopePlan.fromJson(i as Map<String, dynamic>))
-          .toList();
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, response: _result);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<ApplyResult> recurringApply({required String periodId}) async {
+  Future<ApplyResult> recurringApply({required ApplyRecurring body}) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    final _data = <String, dynamic>{};
+    _data.addAll(body.toJson());
     final _options = _setStreamType<ApplyResult>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/periods/${periodId}/recurring/apply',
+            '/recurring-rules/apply',
             queryParameters: queryParameters,
             data: _data,
           )

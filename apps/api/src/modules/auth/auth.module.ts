@@ -1,5 +1,4 @@
 import { Layer } from "effect";
-import { SpacesModule } from "../spaces/spaces.module.ts";
 import { AuthRepository } from "./auth.repository.ts";
 import { AuthService } from "./auth.service.ts";
 import { AuthenticatedLive } from "./authenticated.ts";
@@ -9,12 +8,11 @@ export { AuthService } from "./auth.service.ts";
 export { GoogleVerifier } from "./google.ts";
 
 /**
- * Public surface of the module: exposes `AuthService`. Depends on spaces and
- * requires `SqlClient`, `Mailer` and `GoogleVerifier`.
+ * Public surface of the module: exposes `AuthService`. Requires `SqlClient`,
+ * `Mailer` and `GoogleVerifier`.
  */
 export const AuthModule = AuthService.layer.pipe(
   Layer.provide(AuthRepository.layer),
-  Layer.provide(SpacesModule),
 );
 
 /**

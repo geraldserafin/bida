@@ -1,45 +1,42 @@
-import { Currency, exponentOf, InvalidCsv } from "@bida/api-contract";
-import { Effect, Schema } from "effect";
+import { InvalidCsv } from "@bida/api-contract";
+import { Effect } from "effect";
 
 export interface CsvRow {
   /** 1-based line in the file, for error messages. */
   readonly line: number;
-  readonly period: string;
-  readonly category: string;
+  readonly envelope: string;
+  /** Empty when the expense is on the top-level envelope itself. */
+  readonly subenvelope: string;
   /** The amount as written, e.g. `12.34`. Turn it into minor units with {@link parseAmount}. */
   readonly amount: string;
   /** `YYYY-MM-DD`. */
   readonly date: string;
   readonly note: string;
-  /** From the optional sixth column. */
-  readonly currency: Currency | undefined;
 }
 
 export interface CsvExportRow {
-  readonly period: string;
-  readonly category: string;
+  readonly envelope: string;
+  readonly subenvelope: string;
   readonly amountMinor: number;
-  readonly currency: Currency;
   readonly date: string;
   readonly note: string | null;
 }
 
-export const HEADER = "Period,Category,Amount,Date,Note,Currency";
+export const HEADER = "Envelope,Subenvelope,Amount,Date,Note";
 
 const field = (value: string): string =>
   /[",\n\r]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
 
-/** 123456 with 2 decimals -> "1234.56" */
-export const formatAmount = (minor: number, exponent = 2): string =>
-  (minor / 10 ** exponent).toFixed(exponent);
+/** 123456 -> "1234.56" */
+export const formatAmount = (minor: number): string => (minor / 100).toFixed(2);
 
 const AMOUNT = /^\d+([.,]\d+)?$/;
 
-/** "12.34" or "12,34" -> 1234 (with 2 decimals). `undefined` unless positive. */
-export const parseAmount = (text: string, exponent = 2): number | undefined => {
+/** "12.34" or "12,34" -> 1234. `undefined` unless positive. */
+export const parseAmount = (text: string): number | undefined => {
   const normalized = text.trim().replace(",", ".");
   if (!AMOUNT.test(text.trim())) return undefined;
-  const minor = Math.round(Number(normalized) * 10 ** exponent);
+  const minor = Math.round(Number(normalized) * 100);
   return minor > 0 ? minor : undefined;
 };
 
@@ -48,12 +45,11 @@ export const formatCsv = (rows: ReadonlyArray<CsvExportRow>): string =>
     HEADER,
     ...rows.map((row) =>
       [
-        field(row.period),
-        field(row.category),
-        formatAmount(row.amountMinor, exponentOf(row.currency)),
+        field(row.envelope),
+        field(row.subenvelope),
+        formatAmount(row.amountMinor),
         row.date,
         field(row.note ?? ""),
-        row.currency,
       ].join(","),
     ),
   ].join("\n")}\n`;
@@ -101,8 +97,6 @@ const validDate = (text: string): string | undefined => {
     : undefined;
 };
 
-const isCurrency = Schema.is(Currency);
-
 /** Parses the whole file before anything is written, so errors are atomic. */
 export const parseCsv = (
   text: string,
@@ -123,20 +117,19 @@ export const parseCsv = (
         });
       }
       const [
-        period = "",
-        category = "",
+        envelope = "",
+        subenvelope = "",
         amount = "",
         date = "",
         note = "",
-        currency = "",
       ] = columns;
-      if (period.trim() === "" || category.trim() === "") {
+      if (envelope.trim() === "") {
         return yield* new InvalidCsv({
           line,
-          reason: "period and category are required",
+          reason: "the envelope is required",
         });
       }
-      if (parseAmount(amount, 6) === undefined) {
+      if (parseAmount(amount) === undefined) {
         return yield* new InvalidCsv({
           line,
           reason: `invalid amount "${amount}"`,
@@ -149,21 +142,13 @@ export const parseCsv = (
           reason: `invalid date "${date}"`,
         });
       }
-      const code = currency.trim().toUpperCase();
-      if (code !== "" && !isCurrency(code)) {
-        return yield* new InvalidCsv({
-          line,
-          reason: `unsupported currency "${currency}"`,
-        });
-      }
       rows.push({
         line,
-        period: period.trim(),
-        category: category.trim(),
+        envelope: envelope.trim(),
+        subenvelope: subenvelope.trim(),
         amount: amount.trim(),
         date: day,
         note: note.trim(),
-        currency: code === "" ? undefined : (code as Currency),
       });
     }
     return rows;

@@ -1,22 +1,24 @@
 import {
-  CategoryId,
-  CategoryNotFound,
+  CreateAllocation,
+  CreateEnvelope,
   CreateExpense,
-  CreatePeriod,
+  EnvelopeId,
+  EnvelopeNotFound,
+  ExportDocument,
   ImportLegacy,
   IsoDate,
   MAX_MINOR,
   Money,
   Name,
+  NonZeroMoney,
   PositiveMoney,
-  SaveSpace,
   wire,
 } from "@bida/api-contract";
 import { assert, it } from "@effect/vitest";
 import { Schema } from "effect";
 
 it("ids must be uuids", () => {
-  const isId = Schema.is(CategoryId);
+  const isId = Schema.is(EnvelopeId);
   assert.isTrue(isId("019845e1-682f-4b02-a706-3b2422d13aec"));
   assert.isFalse(isId("x"));
   assert.isFalse(isId("not-a-uuid"));
@@ -40,6 +42,10 @@ it("money has bounds", () => {
   assert.isFalse(Schema.is(Money)(MAX_MINOR + 1));
   assert.isFalse(Schema.is(Money)(1.5));
   assert.isFalse(Schema.is(PositiveMoney)(0));
+  // a negative allocation takes money back, zero is no change
+  assert.isTrue(Schema.is(NonZeroMoney)(-5));
+  assert.isFalse(Schema.is(NonZeroMoney)(0));
+  assert.isFalse(Schema.is(NonZeroMoney)(MAX_MINOR + 1));
   assert.isTrue(Schema.is(PositiveMoney)(1));
 });
 
@@ -47,27 +53,47 @@ it("names and notes are bounded", () => {
   assert.isTrue(Schema.is(Name)("a".repeat(200)));
   assert.isFalse(Schema.is(Name)("a".repeat(201)));
   assert.isFalse(Schema.is(Name)(""));
-  const space = Schema.is(SaveSpace);
-  assert.isFalse(space({ name: "a".repeat(20_000), defaultCurrency: "PLN" }));
-  assert.isFalse(space({ name: "Home", defaultCurrency: "XXX" }));
-  assert.isTrue(space({ name: "Home", defaultCurrency: "EUR" }));
+  const envelope = Schema.is(CreateEnvelope);
+  const look = { parentId: null, color: "#112233", icon: null };
+  assert.isFalse(envelope({ ...look, name: "a".repeat(20_000) }));
+  assert.isFalse(envelope({ ...look, name: "Home", color: "red" }));
+  assert.isTrue(envelope({ ...look, name: "Home" }));
 });
 
-it("payload arrays are bounded", () => {
-  const entry = {
-    categoryId: "019845e1-682f-4b02-a706-3b2422d13aec",
-    plannedMinor: 1,
+it("an allocation needs a real amount and day", () => {
+  const allocation = Schema.is(CreateAllocation);
+  const ok = {
+    envelopeId: "019845e1-682f-4b02-a706-3b2422d13aec",
+    amountMinor: 100,
+    madeOn: "2026-07-01",
+    note: null,
   };
-  const period = (count: number) =>
-    Schema.is(CreatePeriod)({
-      name: "x",
-      startDate: "2026-07-01",
-      endDate: "2026-07-31",
-      incomeMinor: 1,
-      envelopes: Array.from({ length: count }, () => entry),
-    });
-  assert.isTrue(period(500));
-  assert.isFalse(period(501));
+  assert.isTrue(allocation(ok));
+  assert.isTrue(allocation({ ...ok, amountMinor: -100 }));
+  assert.isFalse(allocation({ ...ok, amountMinor: 0 }));
+  assert.isFalse(allocation({ ...ok, madeOn: "2026-02-31" }));
+});
+
+it("the documents of an import are bounded", () => {
+  const empty = {
+    version: 2,
+    exportedAt: "2026-07-01T00:00:00Z",
+    envelopes: [],
+    allocations: [],
+    incomes: [],
+    expenses: [],
+    recurringRules: [],
+  };
+  const decodes = (value: unknown) => {
+    try {
+      Schema.decodeUnknownSync(ExportDocument)(value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  assert.isTrue(decodes(empty));
+  assert.isFalse(decodes({ ...empty, version: 1 }));
 });
 
 it("an expense note is bounded", () => {
@@ -90,10 +116,10 @@ it("an expense note is bounded", () => {
 });
 
 it("wire() names the response schema after the error class", () => {
-  const annotated = wire(CategoryNotFound);
+  const annotated = wire(EnvelopeNotFound);
   assert.strictEqual(
     Schema.toEncoded(annotated).ast.annotations?.identifier,
-    "CategoryNotFound",
+    "EnvelopeNotFound",
   );
 });
 

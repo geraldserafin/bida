@@ -1,21 +1,21 @@
 import { randomUUID } from "node:crypto";
 import {
-  Category,
-  type CategoryId,
-  DEFAULT_CURRENCY,
+  Allocation,
+  type AllocationId,
   Envelope,
   type EnvelopeId,
   Expense,
   type ExpenseId,
-  type ExportDocument,
   type ImportLegacy,
+  Income,
+  type IncomeId,
   InvalidImport,
-  Period,
-  type PeriodId,
   RecurringRule,
   type RecurringRuleId,
+  type UserId,
 } from "@bida/api-contract";
 import { DateTime, Effect } from "effect";
+import type { Snapshot } from "./transfer.repository.ts";
 
 const DEFAULT_TIME_ZONE = "Europe/Warsaw";
 
@@ -25,34 +25,32 @@ const toMinor = (amount: number): number => Math.round(amount * 100);
 const invalid = (reason: string) => new InvalidImport({ reason });
 
 /**
- * Turns a backup of the offline app into a snapshot of the new data model.
- * Integer ids become uuids, `splits` become envelopes, amounts become grosze
+ * Turns a backup of the offline app into a snapshot of the current data
+ * model. Integer ids become uuids, a category becomes a top-level envelope, the
+ * income of a period an income and what it planned for a category an
+ * allocation (both dated at the start of the period), amounts become grosze
  * and the app's local timestamps are read in `timeZone`.
  */
 export const convertLegacy = (
   input: ImportLegacy,
+  userId: string,
   now: DateTime.Utc,
-): Effect.Effect<Omit<ExportDocument, "exportedAt">, InvalidImport> =>
+): Effect.Effect<Snapshot, InvalidImport> =>
   Effect.gen(function* () {
     const { data } = input.backup;
     const timeZone = input.timeZone ?? DEFAULT_TIME_ZONE;
     if (DateTime.zoneMakeNamed(timeZone) === undefined) {
       return yield* invalid(`unknown time zone "${timeZone}"`);
     }
+    const owner = userId as UserId;
 
     const ids = <A extends { id: number }, Id>(rows: ReadonlyArray<A>) =>
       new Map(rows.map((row) => [row.id, randomUUID() as Id] as const));
-    const categoryIds = ids<(typeof data.categories)[number], CategoryId>(
+    const envelopeIds = ids<(typeof data.categories)[number], EnvelopeId>(
       data.categories,
-    );
-    const periodIds = ids<(typeof data.periods)[number], PeriodId>(
-      data.periods,
     );
     const ruleIds = ids<(typeof data.recurring_rules)[number], RecurringRuleId>(
       data.recurring_rules,
-    );
-    const envelopeIds = ids<(typeof data.splits)[number], EnvelopeId>(
-      data.splits,
     );
 
     const lookup = <Id>(map: Map<number, Id>, id: number, what: string) => {
@@ -62,10 +60,12 @@ export const convertLegacy = (
         : Effect.succeed(found);
     };
 
-    const categories = data.categories.map(
+    const envelopes = data.categories.map(
       (row) =>
-        new Category({
-          id: categoryIds.get(row.id) as CategoryId,
+        new Envelope({
+          id: envelopeIds.get(row.id) as EnvelopeId,
+          ownerId: owner,
+          parentId: null,
           name: row.name,
           color: row.color,
           icon: row.icon,
@@ -74,19 +74,26 @@ export const convertLegacy = (
         }),
     );
 
-    const periods = data.periods.map(
-      (row) =>
-        new Period({
-          id: periodIds.get(row.id) as PeriodId,
-          name: row.name,
-          startDate: row.start_date.slice(0, 10),
-          endDate: row.end_date.slice(0, 10),
-          incomeMinor: toMinor(row.income),
-          currency: DEFAULT_CURRENCY,
-          createdAt: now,
-          updatedAt: now,
-        }),
-    );
+    const periodStart = new Map<number, string>();
+    const incomes: Array<Income> = [];
+    for (const row of data.periods) {
+      const start = row.start_date.slice(0, 10);
+      periodStart.set(row.id, start);
+      const amountMinor = toMinor(row.income);
+      if (amountMinor > 0) {
+        incomes.push(
+          new Income({
+            id: randomUUID() as IncomeId,
+            userId: owner,
+            amountMinor,
+            receivedOn: start,
+            note: row.name,
+            createdAt: now,
+            updatedAt: now,
+          }),
+        );
+      }
+    }
 
     const recurringRules: Array<RecurringRule> = [];
     for (const row of data.recurring_rules) {
@@ -98,9 +105,9 @@ export const convertLegacy = (
       recurringRules.push(
         new RecurringRule({
           id: ruleIds.get(row.id) as RecurringRuleId,
-          categoryId: yield* lookup(categoryIds, row.category_id, "category"),
+          userId: owner,
+          envelopeId: yield* lookup(envelopeIds, row.category_id, "category"),
           amountMinor: toMinor(row.amount),
-          currency: DEFAULT_CURRENCY,
           frequency: row.frequency,
           note: row.note,
           active: row.active === 1,
@@ -110,21 +117,35 @@ export const convertLegacy = (
       );
     }
 
-    const envelopes: Array<Envelope> = [];
-    const periodOfEnvelope = new Map<number, PeriodId>();
+    // a split is what a period planned for a category
+    const allocations: Array<Allocation> = [];
+    const envelopeOfSplit = new Map<number, EnvelopeId>();
     for (const row of data.splits) {
-      const periodId = yield* lookup(periodIds, row.period_id, "period");
-      periodOfEnvelope.set(row.id, periodId);
-      envelopes.push(
-        new Envelope({
-          id: envelopeIds.get(row.id) as EnvelopeId,
-          periodId,
-          categoryId: yield* lookup(categoryIds, row.category_id, "category"),
-          plannedMinor: toMinor(row.planned_amount),
-          createdAt: now,
-          updatedAt: now,
-        }),
+      const envelopeId = yield* lookup(
+        envelopeIds,
+        row.category_id,
+        "category",
       );
+      envelopeOfSplit.set(row.id, envelopeId);
+      const start = periodStart.get(row.period_id);
+      if (start === undefined) {
+        return yield* invalid(`period ${row.period_id} does not exist`);
+      }
+      const amountMinor = toMinor(row.planned_amount);
+      if (amountMinor > 0) {
+        allocations.push(
+          new Allocation({
+            id: randomUUID() as AllocationId,
+            envelopeId,
+            userId: owner,
+            amountMinor,
+            madeOn: start,
+            note: null,
+            createdAt: now,
+            updatedAt: now,
+          }),
+        );
+      }
     }
 
     const expenses: Array<Expense> = [];
@@ -145,11 +166,9 @@ export const convertLegacy = (
       expenses.push(
         new Expense({
           id: randomUUID() as ExpenseId,
-          envelopeId: yield* lookup(envelopeIds, row.split_id, "split"),
-          periodId: periodOfEnvelope.get(row.split_id) as PeriodId,
+          envelopeId: yield* lookup(envelopeOfSplit, row.split_id, "split"),
+          createdBy: owner,
           amountMinor,
-          originalAmountMinor: null,
-          originalCurrency: null,
           spentAt: DateTime.toUtc(zoned),
           note: row.note,
           recurringId:
@@ -162,12 +181,5 @@ export const convertLegacy = (
       );
     }
 
-    return {
-      version: 1 as const,
-      categories,
-      periods,
-      envelopes,
-      expenses,
-      recurringRules,
-    };
+    return { envelopes, allocations, incomes, expenses, recurringRules };
   });

@@ -6,8 +6,8 @@ import 'package:json_annotation/json_annotation.dart';
 
 @JsonEnum()
 enum ExportDocumentVersion {
-  @JsonValue(1)
-  value1(1),
+  @JsonValue(2)
+  value2(2),
 
   /// Default value for all unparsed values, allows backward compatibility when adding new values on the backend.
   $unknown(null);

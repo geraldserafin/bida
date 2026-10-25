@@ -6,16 +6,17 @@ import 'package:dio/dio.dart';
 
 import 'system/system_client.dart';
 import 'auth/auth_client.dart';
-import 'spaces/spaces_client.dart';
-import 'categories/categories_client.dart';
-import 'periods/periods_client.dart';
+import 'envelopes/envelopes_client.dart';
+import 'allocations/allocations_client.dart';
+import 'incomes/incomes_client.dart';
 import 'expenses/expenses_client.dart';
 import 'recurring/recurring_client.dart';
+import 'overview/overview_client.dart';
 import 'transfer/transfer_client.dart';
 
 /// Money Planner API `v0.0.0`.
 ///
-/// Everything except `/health` and `/auth` needs a signed-in user: send the session token as `Authorization: Bearer`, or let the browser send the session cookie. Most endpoints work inside a space: pick it with the `X-Space-Id` header (a space the user belongs to); without the header it is the first space of the user. Amounts are integers in the minor unit of their currency (12.34 PLN is 1234).
+/// Everything except `/health` and `/auth` needs a signed-in user: send the session token as `Authorization: Bearer`, or let the browser send the session cookie. Amounts are integers in grosze (12.34 PLN is 1234).
 class BidaApi {
   BidaApi(Dio dio, {String? baseUrl}) : _dio = dio, _baseUrl = baseUrl;
 
@@ -26,30 +27,35 @@ class BidaApi {
 
   SystemClient? _system;
   AuthClient? _auth;
-  SpacesClient? _spaces;
-  CategoriesClient? _categories;
-  PeriodsClient? _periods;
+  EnvelopesClient? _envelopes;
+  AllocationsClient? _allocations;
+  IncomesClient? _incomes;
   ExpensesClient? _expenses;
   RecurringClient? _recurring;
+  OverviewClient? _overview;
   TransferClient? _transfer;
 
   SystemClient get system => _system ??= SystemClient(_dio, baseUrl: _baseUrl);
 
   AuthClient get auth => _auth ??= AuthClient(_dio, baseUrl: _baseUrl);
 
-  SpacesClient get spaces => _spaces ??= SpacesClient(_dio, baseUrl: _baseUrl);
+  EnvelopesClient get envelopes =>
+      _envelopes ??= EnvelopesClient(_dio, baseUrl: _baseUrl);
 
-  CategoriesClient get categories =>
-      _categories ??= CategoriesClient(_dio, baseUrl: _baseUrl);
+  AllocationsClient get allocations =>
+      _allocations ??= AllocationsClient(_dio, baseUrl: _baseUrl);
 
-  PeriodsClient get periods =>
-      _periods ??= PeriodsClient(_dio, baseUrl: _baseUrl);
+  IncomesClient get incomes =>
+      _incomes ??= IncomesClient(_dio, baseUrl: _baseUrl);
 
   ExpensesClient get expenses =>
       _expenses ??= ExpensesClient(_dio, baseUrl: _baseUrl);
 
   RecurringClient get recurring =>
       _recurring ??= RecurringClient(_dio, baseUrl: _baseUrl);
+
+  OverviewClient get overview =>
+      _overview ??= OverviewClient(_dio, baseUrl: _baseUrl);
 
   TransferClient get transfer =>
       _transfer ??= TransferClient(_dio, baseUrl: _baseUrl);

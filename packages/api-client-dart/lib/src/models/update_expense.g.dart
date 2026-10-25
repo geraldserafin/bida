@@ -12,9 +12,6 @@ UpdateExpense _$UpdateExpenseFromJson(Map<String, dynamic> json) =>
       amountMinor: (json['amountMinor'] as num).toInt(),
       spentAt: json['spentAt'] as String,
       note: json['note'] as String?,
-      original: json['original'] == null
-          ? null
-          : OriginalAmount.fromJson(json['original'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$UpdateExpenseToJson(UpdateExpense instance) =>
@@ -23,5 +20,4 @@ Map<String, dynamic> _$UpdateExpenseToJson(UpdateExpense instance) =>
       'amountMinor': instance.amountMinor,
       'spentAt': instance.spentAt,
       'note': instance.note,
-      'original': ?instance.original,
     };
