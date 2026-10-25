@@ -49,6 +49,9 @@ dependencies:
   provider: ^6.1.5+1
   intl: ^0.20.2
   file_selector: ^1.0.3
+  bida_api_client:
+    path: ../../packages/api-client-dart
+  dio: ^5.11.1
 
 dev_dependencies:
   flutter_test:
