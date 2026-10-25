@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'data/api_client.dart';
 import 'data/auth_repository.dart';
+import 'data/google_sign_in.dart';
 import 'data/legacy_migration.dart';
 import 'data/planner_repository.dart';
 import 'data/session_store.dart';
@@ -17,6 +18,8 @@ Future<void> main() async {
 
   final settings = AppSettings();
   await settings.load();
+
+  await initGoogleSignIn();
 
   final session = SessionStore();
   final dio = createDio(session: session);

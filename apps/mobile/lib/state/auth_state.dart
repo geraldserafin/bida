@@ -70,6 +70,13 @@ class AuthState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Throws [ApiException].
+  Future<void> signInWithGoogle(String idToken) async {
+    _email = await _repo.signInWithGoogle(idToken);
+    _status = AuthStatus.signedIn;
+    notifyListeners();
+  }
+
   Future<void> signOut() async {
     await _repo.signOut();
     _signedOut();

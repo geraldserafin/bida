@@ -527,4 +527,14 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Wylogować z tego urządzenia?';
+
+  @override
+  String get signInWithGoogle => 'Zaloguj przez Google';
+
+  @override
+  String get googleSignInFailed =>
+      'Logowanie przez Google nie udało się. Spróbuj ponownie albo użyj kodu z e-maila.';
+
+  @override
+  String get orSeparator => 'lub';
 }

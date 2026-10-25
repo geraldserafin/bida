@@ -94,6 +94,18 @@ void main() {
     expect(await session.token(), isNull);
   });
 
+  test('a Google ID token signs in', () async {
+    backend.on(
+      'POST /auth/google',
+      (_) => Reply({'user': userJson('ann@example.com'), 'token': 'secret'}),
+    );
+
+    await auth.signInWithGoogle('g' * 30);
+
+    expect(auth.isSignedIn, isTrue);
+    expect(auth.email, 'ann@example.com');
+  });
+
   test('a wrong code throws and stays signed out', () async {
     backend.on(
       'POST /auth/magic-link/code',

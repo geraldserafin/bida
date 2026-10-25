@@ -47,6 +47,22 @@ void main() {
     });
   });
 
+  test('a Google ID token signs in and the token is kept', () async {
+    backend.on(
+      'POST /auth/google',
+      (_) => Reply({'user': userJson('ann@example.com'), 'token': 'secret'}),
+    );
+
+    final email = await repository.signInWithGoogle('g' * 30);
+
+    expect(email, 'ann@example.com');
+    expect(await session.token(), 'secret');
+    expect(backend.sent('POST /auth/google').single.body, {
+      'idToken': 'g' * 30,
+      'transport': 'token',
+    });
+  });
+
   test('a wrong code is a failed sign-in with its tag', () async {
     backend.on(
       'POST /auth/magic-link/code',

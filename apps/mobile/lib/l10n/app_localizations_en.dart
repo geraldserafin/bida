@@ -521,4 +521,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signOutConfirm => 'Sign out of this device?';
+
+  @override
+  String get signInWithGoogle => 'Sign in with Google';
+
+  @override
+  String get googleSignInFailed =>
+      'Google sign-in did not work. Try again or use the e-mail code.';
+
+  @override
+  String get orSeparator => 'or';
 }

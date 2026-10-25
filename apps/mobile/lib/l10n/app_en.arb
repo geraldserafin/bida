@@ -252,5 +252,8 @@
     }
   },
   "signOut": "Sign out",
-  "signOutConfirm": "Sign out of this device?"
+  "signOutConfirm": "Sign out of this device?",
+  "signInWithGoogle": "Sign in with Google",
+  "googleSignInFailed": "Google sign-in did not work. Try again or use the e-mail code.",
+  "orSeparator": "or"
 }
