@@ -5,6 +5,7 @@ import {
   HttpApiSchema,
   OpenApi,
 } from "effect/http-api";
+import { Authenticated } from "../auth/authenticated.ts";
 import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
 import { CategoryInUse, CategoryNotFound } from "./categories.errors.ts";
@@ -48,4 +49,5 @@ export class CategoriesApi extends HttpApiGroup.make("categories")
   )
   .prefix("/categories")
   .middleware(SpaceContext)
+  .middleware(Authenticated)
   .annotateMerge(OpenApi.annotations({ title: "Categories" })) {}

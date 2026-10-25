@@ -9,7 +9,7 @@ import {
   SpaceNotFound,
 } from "@bida/api-contract";
 import { assert, layer } from "@effect/vitest";
-import { DateTime, Effect, Layer } from "effect";
+import { DateTime, Effect, Layer, Option } from "effect";
 import {
   BudgetsModule,
   BudgetsService,
@@ -32,7 +32,7 @@ import {
   TransferService,
 } from "./modules/transfer/transfer.module.ts";
 import { DbLive } from "./platform/db.ts";
-import { resetDb, TestSpace } from "./platform/testing.ts";
+import { insertUser, resetDb, TestSpace } from "./platform/testing.ts";
 
 // Every space is a separate budget: what is created in one is invisible in
 // another. Tested across modules on the real database.
@@ -54,7 +54,8 @@ const newSpace = Effect.fn("newSpace")(function* (
   defaultCurrency: "PLN" | "EUR" = "PLN",
 ) {
   const spaces = yield* SpacesService;
-  return yield* spaces.create({ name, defaultCurrency });
+  const owner = yield* insertUser();
+  return yield* spaces.createFor(owner.id, { name, defaultCurrency });
 });
 
 /** A category, a period with an envelope and an expense. */
@@ -84,45 +85,83 @@ const fill = Effect.fn("fill")(function* (name: string) {
 });
 
 layer(TestLayer)("spaces", (it) => {
-  it.effect("creates, lists, edits and resolves spaces", () =>
+  it.effect("creates, lists, edits and resolves spaces of a user", () =>
     Effect.gen(function* () {
       yield* resetDb;
       const spaces = yield* SpacesService;
+      const me = yield* insertUser();
+      const other = yield* insertUser();
 
-      const initial = yield* spaces.list;
+      assert.deepStrictEqual(yield* spaces.listFor(me.id), []);
+
+      const home = yield* spaces.createFor(me.id, {
+        name: "Home",
+        defaultCurrency: "EUR",
+      });
+      assert.strictEqual(home.defaultCurrency, "EUR");
+      const work = yield* spaces.createFor(me.id, {
+        name: "Work",
+        defaultCurrency: "PLN",
+      });
       assert.deepStrictEqual(
-        initial.map((s) => s.id),
-        [DEFAULT_SPACE_ID],
+        (yield* spaces.listFor(me.id)).map((s) => s.id),
+        [home.id, work.id],
       );
 
-      const home = yield* newSpace("Home", "EUR");
-      assert.strictEqual(home.defaultCurrency, "EUR");
-      assert.strictEqual((yield* spaces.list).length, 2);
-
-      const renamed = yield* spaces.update(home.id, {
+      const renamed = yield* spaces.updateFor(me.id, home.id, {
         name: "Flat",
         defaultCurrency: "PLN",
       });
       assert.strictEqual(renamed.name, "Flat");
       assert.strictEqual(renamed.defaultCurrency, "PLN");
 
-      // no id means the default space
+      // no id means the first space of the user
       assert.strictEqual(
-        (yield* spaces.resolve(undefined)).id,
+        (yield* spaces.resolveFor(me.id, undefined)).id,
+        home.id,
+      );
+      assert.strictEqual(
+        (yield* spaces.resolveFor(me.id, work.id)).id,
+        work.id,
+      );
+
+      // somebody else's space, or one that does not exist, is not found
+      const unknown = SpaceId.make("019845e1-682f-4b02-a706-3b2422d13aec");
+      for (const id of [unknown, home.id]) {
+        assert.instanceOf(
+          yield* spaces.resolveFor(other.id, id).pipe(Effect.flip),
+          SpaceNotFound,
+        );
+        assert.instanceOf(
+          yield* spaces
+            .updateFor(other.id, id, { name: "x", defaultCurrency: "PLN" })
+            .pipe(Effect.flip),
+          SpaceNotFound,
+        );
+      }
+      assert.instanceOf(
+        yield* spaces.resolveFor(other.id, undefined).pipe(Effect.flip),
+        SpaceNotFound,
+      );
+      assert.deepStrictEqual(yield* spaces.listFor(other.id), []);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect("the first one to claim the default space gets it", () =>
+    Effect.gen(function* () {
+      yield* resetDb;
+      const spaces = yield* SpacesService;
+      const first = yield* insertUser();
+      const second = yield* insertUser();
+
+      const claimed = yield* spaces.claimDefault(first.id);
+      assert.strictEqual(Option.getOrThrow(claimed).id, DEFAULT_SPACE_ID);
+      assert.strictEqual(
+        (yield* spaces.resolveFor(first.id, undefined)).id,
         DEFAULT_SPACE_ID,
       );
-      assert.strictEqual((yield* spaces.resolve(home.id)).id, home.id);
-      const unknown = SpaceId.make("019845e1-682f-4b02-a706-3b2422d13aec");
-      assert.instanceOf(
-        yield* spaces.resolve(unknown).pipe(Effect.flip),
-        SpaceNotFound,
-      );
-      assert.instanceOf(
-        yield* spaces
-          .update(unknown, { name: "x", defaultCurrency: "PLN" })
-          .pipe(Effect.flip),
-        SpaceNotFound,
-      );
+      assert.isTrue(Option.isNone(yield* spaces.claimDefault(second.id)));
+      assert.deepStrictEqual(yield* spaces.listFor(second.id), []);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -336,7 +375,8 @@ layer(TestLayer)("request hardening", (it) => {
   it.effect("a header that is not a uuid is just an unknown space", () =>
     Effect.gen(function* () {
       const spaces = yield* SpacesService;
-      const error = yield* spaces.resolve("abc").pipe(Effect.flip);
+      const me = yield* insertUser();
+      const error = yield* spaces.resolveFor(me.id, "abc").pipe(Effect.flip);
       assert.instanceOf(error, SpaceNotFound);
       assert.strictEqual(error.id, "abc");
     }).pipe(Effect.provide(TestLayer)),

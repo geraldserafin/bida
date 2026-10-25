@@ -1,11 +1,16 @@
 import {
+  Authenticated,
   CurrentSpace,
+  CurrentUser,
   DEFAULT_SPACE_ID,
   Space,
   SpaceContext,
+  User,
+  UserId,
 } from "@bida/api-contract";
 import { DateTime, Effect, Layer } from "effect";
 import { SqlClient } from "effect/sql";
+import { type Mail, Mailer } from "./mailer.ts";
 
 /**
  * Empties every application table of the test database and keeps the schema
@@ -49,3 +54,51 @@ export const TestSpaceContext = (space: Space = defaultSpace) =>
       Effect.provideService(httpEffect, CurrentSpace, space),
     ),
   );
+
+const user = new User({
+  id: UserId.make("00000000-0000-4000-8000-0000000000aa"),
+  email: "tester@example.com",
+  name: null,
+  createdAt: epoch,
+});
+
+/** The user that `TestAuthenticated` signs every request in as. */
+export const testUser = user;
+
+/** An `Authenticated` middleware that signs every request in as `testUser`. */
+export const TestAuthenticated = (signedIn: User = testUser) => {
+  const current = { user: signedIn, sessionId: "test-session" };
+  return Layer.succeed(
+    Authenticated,
+    Authenticated.of({
+      bearer: (httpEffect) =>
+        Effect.provideService(httpEffect, CurrentUser, current),
+      cookie: (httpEffect) =>
+        Effect.provideService(httpEffect, CurrentUser, current),
+    }),
+  );
+};
+
+/** A user row, so a space can have somebody to belong to. */
+export const insertUser = Effect.fn("insertUser")(function* (
+  email = `${crypto.randomUUID()}@example.com`,
+) {
+  const sql = yield* SqlClient.SqlClient;
+  const id = crypto.randomUUID();
+  yield* sql`INSERT INTO users (id, email, created_at) VALUES (${id}, ${email}, now())`;
+  return { id, email };
+});
+
+/** E-mails sent through `TestMailer`, oldest first. Empty it between tests. */
+export const outbox: Array<Mail> = [];
+
+/** A `Mailer` that keeps the e-mails in `outbox` instead of sending them. */
+export const TestMailer = Layer.succeed(
+  Mailer,
+  Mailer.of({
+    send: (mail) =>
+      Effect.sync(() => {
+        outbox.push(mail);
+      }),
+  }),
+);

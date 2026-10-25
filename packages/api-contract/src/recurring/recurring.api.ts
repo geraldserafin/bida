@@ -5,6 +5,7 @@ import {
   HttpApiSchema,
   OpenApi,
 } from "effect/http-api";
+import { Authenticated } from "../auth/authenticated.ts";
 import { EnvelopePlan, PeriodId, PeriodNotFound } from "../budgets/index.ts";
 import { CategoryNotFound } from "../categories/index.ts";
 import { Currency } from "../currency/index.ts";
@@ -78,4 +79,5 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
     ),
   )
   .middleware(SpaceContext)
+  .middleware(Authenticated)
   .annotateMerge(OpenApi.annotations({ title: "Recurring" })) {}
