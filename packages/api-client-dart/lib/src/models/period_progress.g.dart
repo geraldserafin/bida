@@ -14,6 +14,7 @@ PeriodProgress _$PeriodProgressFromJson(Map<String, dynamic> json) =>
       spentMinor: (json['spentMinor'] as num).toInt(),
       remainingMinor: (json['remainingMinor'] as num).toInt(),
       unallocatedMinor: (json['unallocatedMinor'] as num).toInt(),
+      contributedMinor: (json['contributedMinor'] as num).toInt(),
       envelopes: (json['envelopes'] as List<dynamic>)
           .map((e) => EnvelopeProgress.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -27,5 +28,6 @@ Map<String, dynamic> _$PeriodProgressToJson(PeriodProgress instance) =>
       'spentMinor': instance.spentMinor,
       'remainingMinor': instance.remainingMinor,
       'unallocatedMinor': instance.unallocatedMinor,
+      'contributedMinor': instance.contributedMinor,
       'envelopes': instance.envelopes,
     };

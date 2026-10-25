@@ -3055,6 +3055,227 @@
         "summary": "Planned versus spent"
       }
     },
+    "/periods/{id}/contributions": {
+      "get": {
+        "tags": [
+          "Contributions"
+        ],
+        "operationId": "contributions.list",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Contribution"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PeriodNotFound | SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Newest first.",
+        "summary": "List what was paid into a period"
+      },
+      "post": {
+        "tags": [
+          "Contributions"
+        ],
+        "operationId": "contributions.add",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Contribution",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contribution"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PeriodNotFound | SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "In the name of the signed-in user, or of nobody with `external`. The planned income of the period is a separate number.",
+        "summary": "Record money paid into a period",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddContribution"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/contributions/{id}": {
+      "delete": {
+        "tags": [
+          "Contributions"
+        ],
+        "operationId": "contributions.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ContributionNotFound | SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ContributionNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Whoever recorded it, or an owner of the space. Money from outside has no author, so only an owner deletes it.",
+        "summary": "Delete a contribution"
+      }
+    },
     "/recurring-rules": {
       "get": {
         "tags": [
@@ -4839,6 +5060,125 @@
         ],
         "additionalProperties": false
       },
+      "ContributionNotFound": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "ContributionNotFound"
+            ]
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "Contribution": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "periodId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "userId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 1000000000000,
+            "exclusiveMinimum": 0
+          },
+          "contributedAt": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "periodId",
+          "userId",
+          "amountMinor",
+          "contributedAt",
+          "note",
+          "createdAt"
+        ],
+        "additionalProperties": false,
+        "title": "Contribution.json"
+      },
+      "AddContribution": {
+        "type": "object",
+        "properties": {
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 1000000000000,
+            "exclusiveMinimum": 0
+          },
+          "contributedAt": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "external": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "amountMinor",
+          "contributedAt",
+          "note"
+        ],
+        "additionalProperties": false
+      },
       "PeriodProgress": {
         "type": "object",
         "properties": {
@@ -4872,6 +5212,11 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
           },
+          "contributedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000000000
+          },
           "envelopes": {
             "type": "array",
             "items": {
@@ -4886,6 +5231,7 @@
           "spentMinor",
           "remainingMinor",
           "unallocatedMinor",
+          "contributedMinor",
           "envelopes"
         ],
         "additionalProperties": false
@@ -4943,12 +5289,18 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 1000000000000
+          },
+          "contributedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000000000
           }
         },
         "required": [
           "period",
           "plannedMinor",
-          "spentMinor"
+          "spentMinor",
+          "contributedMinor"
         ],
         "additionalProperties": false
       },
@@ -6037,6 +6389,9 @@
     },
     {
       "name": "Expenses"
+    },
+    {
+      "name": "Contributions"
     },
     {
       "name": "Recurring"

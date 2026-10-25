@@ -18,6 +18,7 @@ import {
 import { Context, type DateTime, Effect, Layer, Option } from "effect";
 import type { InSpace } from "../../platform/space.ts";
 import { BudgetsService } from "../budgets/budgets.module.ts";
+import { ContributionsService } from "../contributions/contributions.module.ts";
 import { ExpensesRepository } from "./expenses.repository.ts";
 
 export interface ListExpenses {
@@ -69,6 +70,7 @@ export class ExpensesService extends Context.Service<
     Effect.gen(function* () {
       const repo = yield* ExpensesRepository;
       const budgets = yield* BudgetsService;
+      const contributions = yield* ContributionsService;
 
       // Records what was paid in another currency. A payment in the currency
       // of the period is just an ordinary expense, so it stays null.
@@ -190,6 +192,7 @@ export class ExpensesService extends Context.Service<
       ) {
         const detail = yield* budgets.getPeriod(periodId);
         const spent = yield* repo.spentByEnvelope(periodId);
+        const contributed = yield* contributions.totalByPeriod;
 
         const envelopes = detail.envelopes.map((envelope) => {
           const spentMinor = spent.get(envelope.id) ?? 0;
@@ -209,6 +212,7 @@ export class ExpensesService extends Context.Service<
           spentMinor,
           remainingMinor: detail.plannedMinor - spentMinor,
           unallocatedMinor: detail.unallocatedMinor,
+          contributedMinor: contributed.get(periodId) ?? 0,
           envelopes,
         };
       });
@@ -217,10 +221,12 @@ export class ExpensesService extends Context.Service<
         const periods = yield* budgets.listPeriods;
         const planned = yield* budgets.plannedByPeriod;
         const spent = yield* repo.spentByPeriod;
+        const contributed = yield* contributions.totalByPeriod;
         return periods.map((period) => ({
           period,
           plannedMinor: planned.get(period.id) ?? 0,
           spentMinor: spent.get(period.id) ?? 0,
+          contributedMinor: contributed.get(period.id) ?? 0,
         }));
       }).pipe(Effect.withSpan("ExpensesService.periodSummaries"));
 

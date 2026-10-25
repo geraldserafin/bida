@@ -11,6 +11,7 @@ PeriodSummary _$PeriodSummaryFromJson(Map<String, dynamic> json) =>
       period: Period.fromJson(json['period'] as Map<String, dynamic>),
       plannedMinor: (json['plannedMinor'] as num).toInt(),
       spentMinor: (json['spentMinor'] as num).toInt(),
+      contributedMinor: (json['contributedMinor'] as num).toInt(),
     );
 
 Map<String, dynamic> _$PeriodSummaryToJson(PeriodSummary instance) =>
@@ -18,4 +19,5 @@ Map<String, dynamic> _$PeriodSummaryToJson(PeriodSummary instance) =>
       'period': instance.period,
       'plannedMinor': instance.plannedMinor,
       'spentMinor': instance.spentMinor,
+      'contributedMinor': instance.contributedMinor,
     };

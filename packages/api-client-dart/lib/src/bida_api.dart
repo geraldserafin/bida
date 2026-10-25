@@ -11,6 +11,7 @@ import 'invitations/invitations_client.dart';
 import 'categories/categories_client.dart';
 import 'periods/periods_client.dart';
 import 'expenses/expenses_client.dart';
+import 'contributions/contributions_client.dart';
 import 'recurring/recurring_client.dart';
 import 'transfer/transfer_client.dart';
 
@@ -32,6 +33,7 @@ class BidaApi {
   CategoriesClient? _categories;
   PeriodsClient? _periods;
   ExpensesClient? _expenses;
+  ContributionsClient? _contributions;
   RecurringClient? _recurring;
   TransferClient? _transfer;
 
@@ -52,6 +54,9 @@ class BidaApi {
 
   ExpensesClient get expenses =>
       _expenses ??= ExpensesClient(_dio, baseUrl: _baseUrl);
+
+  ContributionsClient get contributions =>
+      _contributions ??= ContributionsClient(_dio, baseUrl: _baseUrl);
 
   RecurringClient get recurring =>
       _recurring ??= RecurringClient(_dio, baseUrl: _baseUrl);

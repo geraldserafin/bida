@@ -97,6 +97,8 @@ export const PeriodProgress = Schema.Struct({
   remainingMinor: Schema.Int,
   /** Income minus planned. Negative when over-allocated. */
   unallocatedMinor: Schema.Int,
+  /** What was actually paid into the period (see contributions), next to the planned `incomeMinor`. */
+  contributedMinor: Money,
   envelopes: Schema.Array(EnvelopeProgress),
 }).annotate({ identifier: "PeriodProgress" });
 export type PeriodProgress = typeof PeriodProgress.Type;
@@ -106,5 +108,6 @@ export const PeriodSummary = Schema.Struct({
   period: PeriodJson,
   plannedMinor: Money,
   spentMinor: Money,
+  contributedMinor: Money,
 }).annotate({ identifier: "PeriodSummary" });
 export type PeriodSummary = typeof PeriodSummary.Type;

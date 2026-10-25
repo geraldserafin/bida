@@ -2,6 +2,7 @@ import { HttpApi, OpenApi } from "effect/http-api";
 import { AuthApi } from "./auth/index.ts";
 import { PeriodsApi } from "./budgets/index.ts";
 import { CategoriesApi } from "./categories/index.ts";
+import { ContributionsApi } from "./contributions/index.ts";
 import { ExpensesApi } from "./expenses/index.ts";
 import { InvitationsApi } from "./invitations/index.ts";
 import { RecurringApi } from "./recurring/index.ts";
@@ -17,6 +18,7 @@ export class Api extends HttpApi.make("bida")
   .add(CategoriesApi)
   .add(PeriodsApi)
   .add(ExpensesApi)
+  .add(ContributionsApi)
   .add(RecurringApi)
   .add(TransferApi)
   .annotateMerge(

@@ -2,6 +2,7 @@ export { Api } from "./Api.ts";
 export * from "./auth/index.ts";
 export * from "./budgets/index.ts";
 export * from "./categories/index.ts";
+export * from "./contributions/index.ts";
 export * from "./currency/index.ts";
 export * from "./errors.ts";
 export * from "./expenses/index.ts";

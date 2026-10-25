@@ -14,6 +14,7 @@ class PeriodSummary {
     required this.period,
     required this.plannedMinor,
     required this.spentMinor,
+    required this.contributedMinor,
   });
 
   factory PeriodSummary.fromJson(Map<String, Object?> json) =>
@@ -22,6 +23,7 @@ class PeriodSummary {
   final Period period;
   final int plannedMinor;
   final int spentMinor;
+  final int contributedMinor;
 
   Map<String, Object?> toJson() => _$PeriodSummaryToJson(this);
 }

@@ -17,6 +17,7 @@ class PeriodProgress {
     required this.spentMinor,
     required this.remainingMinor,
     required this.unallocatedMinor,
+    required this.contributedMinor,
     required this.envelopes,
   });
 
@@ -29,6 +30,7 @@ class PeriodProgress {
   final int spentMinor;
   final int remainingMinor;
   final int unallocatedMinor;
+  final int contributedMinor;
   final List<EnvelopeProgress> envelopes;
 
   Map<String, Object?> toJson() => _$PeriodProgressToJson(this);
