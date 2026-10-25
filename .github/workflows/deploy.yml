@@ -57,7 +57,10 @@ jobs:
           cache: true
       - run: flutter pub get
         working-directory: apps/mobile
-      - run: flutter build web --release --dart-define=API_URL=${{ env.API_URL }}
+      - run: >-
+          flutter build web --release
+          --dart-define=API_URL=${{ env.API_URL }}
+          --dart-define=GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
         working-directory: apps/mobile
       - uses: actions/upload-artifact@v4
         with:
