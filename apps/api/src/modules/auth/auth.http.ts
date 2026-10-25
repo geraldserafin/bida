@@ -76,6 +76,11 @@ export const AuthHttp = HttpApiBuilder.group(
         ),
       )
       .handle("me", () => Effect.map(CurrentUser, ({ user }) => user))
+      .handle("rename", ({ payload }) =>
+        Effect.flatMap(CurrentUser, ({ user }) =>
+          auth.rename(user.id, payload.name),
+        ),
+      )
       .handle("logout", () =>
         Effect.gen(function* () {
           const { sessionId } = yield* CurrentUser;

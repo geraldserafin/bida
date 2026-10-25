@@ -9,6 +9,7 @@ import '../models/auth_result.dart';
 import '../models/google_access_token.dart';
 import '../models/google_sign_in.dart';
 import '../models/request_link.dart';
+import '../models/save_profile.dart';
 import '../models/user.dart';
 import '../models/verify_code.dart';
 import '../models/verify_token.dart';
@@ -52,6 +53,10 @@ abstract class AuthClient {
   /// The signed-in user
   @GET('/auth/me')
   Future<User> authMe();
+
+  /// Set the name other members see
+  @PUT('/auth/me')
+  Future<User> authRename({@Body() required SaveProfile body});
 
   /// End this session.
   ///

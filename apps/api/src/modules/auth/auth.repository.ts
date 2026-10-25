@@ -30,6 +30,8 @@ export class AuthRepository extends Context.Service<
       userId: string,
     ): Effect.Effect<void>;
 
+    rename(id: string, name: string): Effect.Effect<Option.Option<User>>;
+
     /** How many e-mails were sent to the address since `seconds` ago. */
     countCodesSince(email: string, seconds: number): Effect.Effect<number>;
     insertCode(input: {
@@ -89,6 +91,13 @@ export class AuthRepository extends Context.Service<
           sql`INSERT INTO users ${sql.insert(request)}
             ON CONFLICT (email) DO NOTHING RETURNING ${userColumns}`,
       });
+      const rename = SqlSchema.findOneOption({
+        Request: Schema.Struct({ id: Schema.String, name: Schema.String }),
+        Result: User,
+        execute: ({ id, name }) =>
+          sql`UPDATE users SET name = ${name} WHERE id = ${id}
+            RETURNING ${userColumns}`,
+      });
       const latestOpenCode = SqlSchema.findOneOption({
         Request: Schema.String,
         Result: OpenCode,
@@ -112,6 +121,7 @@ export class AuthRepository extends Context.Service<
         findUserByEmail: (email) => findUserByEmail(email).pipe(Effect.orDie),
         findUserById: (id) => findUserById(id).pipe(Effect.orDie),
         insertUser: (input) => insertUser(input).pipe(Effect.orDie),
+        rename: (id, name) => rename({ id, name }).pipe(Effect.orDie),
 
         findIdentity: (provider, subject) =>
           rows(

@@ -55,7 +55,11 @@ const newSpace = Effect.fn("newSpace")(function* (
 ) {
   const spaces = yield* SpacesService;
   const owner = yield* insertUser();
-  return yield* spaces.createFor(owner.id, { name, defaultCurrency });
+  const { space } = yield* spaces.createFor(owner.id, {
+    name,
+    defaultCurrency,
+  });
+  return space;
 });
 
 /** A category, a period with an envelope and an expense. */
@@ -94,17 +98,17 @@ layer(TestLayer)("spaces", (it) => {
 
       assert.deepStrictEqual(yield* spaces.listFor(me.id), []);
 
-      const home = yield* spaces.createFor(me.id, {
+      const { space: home } = yield* spaces.createFor(me.id, {
         name: "Home",
         defaultCurrency: "EUR",
       });
       assert.strictEqual(home.defaultCurrency, "EUR");
-      const work = yield* spaces.createFor(me.id, {
+      const { space: work } = yield* spaces.createFor(me.id, {
         name: "Work",
         defaultCurrency: "PLN",
       });
       assert.deepStrictEqual(
-        (yield* spaces.listFor(me.id)).map((s) => s.id),
+        (yield* spaces.listFor(me.id)).map((m) => m.space.id),
         [home.id, work.id],
       );
 
@@ -112,16 +116,16 @@ layer(TestLayer)("spaces", (it) => {
         name: "Flat",
         defaultCurrency: "PLN",
       });
-      assert.strictEqual(renamed.name, "Flat");
-      assert.strictEqual(renamed.defaultCurrency, "PLN");
+      assert.strictEqual(renamed.space.name, "Flat");
+      assert.strictEqual(renamed.space.defaultCurrency, "PLN");
 
       // no id means the first space of the user
       assert.strictEqual(
-        (yield* spaces.resolveFor(me.id, undefined)).id,
+        (yield* spaces.resolveFor(me.id, undefined)).space.id,
         home.id,
       );
       assert.strictEqual(
-        (yield* spaces.resolveFor(me.id, work.id)).id,
+        (yield* spaces.resolveFor(me.id, work.id)).space.id,
         work.id,
       );
 
@@ -157,7 +161,7 @@ layer(TestLayer)("spaces", (it) => {
       const claimed = yield* spaces.claimDefault(first.id);
       assert.strictEqual(Option.getOrThrow(claimed).id, DEFAULT_SPACE_ID);
       assert.strictEqual(
-        (yield* spaces.resolveFor(first.id, undefined)).id,
+        (yield* spaces.resolveFor(first.id, undefined)).space.id,
         DEFAULT_SPACE_ID,
       );
       assert.isTrue(Option.isNone(yield* spaces.claimDefault(second.id)));

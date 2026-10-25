@@ -54,6 +54,8 @@ export class AuthService extends Context.Service<
       accessToken: string,
       userAgent: string | null,
     ): Effect.Effect<SignedIn, InvalidLogin>;
+    /** Sets the name other members see. */
+    rename(userId: string, name: string): Effect.Effect<User>;
     /** The user and session behind a session token. */
     authenticate(
       token: string,
@@ -122,7 +124,7 @@ export class AuthService extends Context.Service<
         const claimed =
           email === claim ? yield* spaces.claimDefault(user.id) : Option.none();
         if (Option.isNone(claimed)) {
-          yield* spaces.createFor(user.id, {
+          yield* spaces.createPersonalFor(user.id, {
             name: "Mój budżet",
             defaultCurrency: "PLN",
           });
@@ -227,6 +229,15 @@ export class AuthService extends Context.Service<
         signInWithGoogle,
         signInWithGoogleAccessToken,
         authenticate,
+        rename: (userId, name) =>
+          repo.rename(userId, name).pipe(
+            Effect.flatMap(
+              Option.match({
+                onNone: () => Effect.die("user vanished"),
+                onSome: Effect.succeed,
+              }),
+            ),
+          ),
         logout: repo.deleteSession,
       });
     }),

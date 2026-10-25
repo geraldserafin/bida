@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 import { wire } from "../errors.ts";
+import { Name } from "../text.ts";
 import { InvalidLogin, TooManyRequests } from "./auth.errors.ts";
 import { Authenticated, Transport } from "./authenticated.ts";
 import { Email, UserJson } from "./user.model.ts";
@@ -101,6 +102,18 @@ export class AuthApi extends HttpApiGroup.make("auth")
     })
       .middleware(Authenticated)
       .annotateMerge(OpenApi.annotations({ summary: "The signed-in user" })),
+    HttpApiEndpoint.put("rename", "/me", {
+      payload: Schema.Struct({ name: Name }).annotate({
+        identifier: "SaveProfile",
+      }),
+      success: UserJson,
+    })
+      .middleware(Authenticated)
+      .annotateMerge(
+        OpenApi.annotations({
+          summary: "Set the name other members see",
+        }),
+      ),
     HttpApiEndpoint.post("logout", "/logout", {})
       .middleware(Authenticated)
       .annotateMerge(

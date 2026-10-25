@@ -10,6 +10,7 @@ Space _$SpaceFromJson(Map<String, dynamic> json) => Space(
   id: json['id'] as String,
   name: json['name'] as String,
   defaultCurrency: Currency.fromJson(json['defaultCurrency'] as String),
+  kind: SpaceKind.fromJson(json['kind'] as String),
   createdAt: json['createdAt'] as String,
   updatedAt: json['updatedAt'] as String,
 );
@@ -18,6 +19,7 @@ Map<String, dynamic> _$SpaceToJson(Space instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
   'defaultCurrency': _$CurrencyEnumMap[instance.defaultCurrency]!,
+  'kind': _$SpaceKindEnumMap[instance.kind]!,
   'createdAt': instance.createdAt,
   'updatedAt': instance.updatedAt,
 };
@@ -35,4 +37,10 @@ const _$CurrencyEnumMap = {
   Currency.huf: 'HUF',
   Currency.jpy: 'JPY',
   Currency.$unknown: r'$unknown',
+};
+
+const _$SpaceKindEnumMap = {
+  SpaceKind.personal: 'personal',
+  SpaceKind.shared: 'shared',
+  SpaceKind.$unknown: r'$unknown',
 };

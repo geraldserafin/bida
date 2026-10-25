@@ -5,6 +5,7 @@
 import 'package:json_annotation/json_annotation.dart';
 
 import 'currency.dart';
+import 'space_kind.dart';
 
 part 'space.g.dart';
 
@@ -14,6 +15,7 @@ class Space {
     required this.id,
     required this.name,
     required this.defaultCurrency,
+    required this.kind,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -23,6 +25,7 @@ class Space {
   final String id;
   final String name;
   final Currency defaultCurrency;
+  final SpaceKind kind;
   final String createdAt;
   final String updatedAt;
 

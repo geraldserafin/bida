@@ -346,12 +346,13 @@ layer(ClaimLayer)("the first sign-in of the claim address", (it) => {
       );
 
       assert.deepStrictEqual(
-        (yield* spaces.listFor(owner.user.id)).map((s) => s.id),
+        (yield* spaces.listFor(owner.user.id)).map((m) => m.space.id),
         [DEFAULT_SPACE_ID],
       );
       const others = yield* spaces.listFor(someone.user.id);
       assert.strictEqual(others.length, 1);
-      assert.notStrictEqual(others[0]?.id, DEFAULT_SPACE_ID);
+      assert.notStrictEqual(others[0]?.space.id, DEFAULT_SPACE_ID);
+      assert.strictEqual(others[0]?.space.kind, "personal");
     }),
   );
 });

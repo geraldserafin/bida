@@ -280,6 +280,54 @@
           }
         },
         "summary": "The signed-in user"
+      },
+      "put": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "auth.rename",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Set the name other members see",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveProfile"
+              }
+            }
+          },
+          "required": true
+        }
       }
     },
     "/auth/logout": {
@@ -339,7 +387,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Space"
+                    "$ref": "#/components/schemas/MySpace"
                   }
                 }
               }
@@ -356,7 +404,8 @@
             }
           }
         },
-        "summary": "List spaces"
+        "description": "The personal space first, then the shared ones in the order the user joined them.",
+        "summary": "List my spaces"
       },
       "post": {
         "tags": [
@@ -374,11 +423,11 @@
         ],
         "responses": {
           "201": {
-            "description": "Space",
+            "description": "MySpace",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Space"
+                  "$ref": "#/components/schemas/MySpace"
                 }
               }
             }
@@ -392,9 +441,20 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "LimitReached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LimitReached"
+                }
+              }
+            }
           }
         },
-        "summary": "Create a space",
+        "description": "The user becomes its owner.",
+        "summary": "Create a shared space",
         "requestBody": {
           "content": {
             "application/json": {
@@ -424,11 +484,11 @@
         ],
         "responses": {
           "200": {
-            "description": "Space",
+            "description": "MySpace",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Space"
+                  "$ref": "#/components/schemas/MySpace"
                 }
               }
             }
@@ -454,7 +514,7 @@
             }
           }
         },
-        "description": "Chosen by the `X-Space-Id` header, the default space when it is missing.",
+        "description": "Chosen by the `X-Space-Id` header, the user's personal space when it is missing.",
         "summary": "Get the space of this request"
       }
     },
@@ -486,11 +546,176 @@
         ],
         "responses": {
           "200": {
-            "description": "Space",
+            "description": "MySpace",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Space"
+                  "$ref": "#/components/schemas/MySpace"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only. The default currency only applies to what is created afterwards.",
+        "summary": "Edit a space",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveSpace"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Spaces"
+        ],
+        "operationId": "spaces.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PersonalSpace | SpaceNotEmpty",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PersonalSpace"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotEmpty"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only, and only when nobody else is a member: remove the others first.",
+        "summary": "Delete a shared space with all its data"
+      }
+    },
+    "/spaces/{id}/members": {
+      "get": {
+        "tags": [
+          "Spaces"
+        ],
+        "operationId": "spaces.members",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Member"
+                  }
                 }
               }
             }
@@ -516,18 +741,292 @@
             }
           }
         },
-        "description": "The default currency only applies to what is created afterwards.",
-        "summary": "Edit a space",
+        "summary": "List the members"
+      }
+    },
+    "/spaces/{id}/members/{userId}": {
+      "put": {
+        "tags": [
+          "Spaces"
+        ],
+        "operationId": "spaces.setRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound | MemberNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MemberNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "LastOwner | PersonalSpace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LastOwner"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PersonalSpace"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only. A space keeps at least one owner.",
+        "summary": "Change the role of a member",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SaveSpace"
+                "$ref": "#/components/schemas/SetRole"
               }
             }
           },
           "required": true
         }
+      },
+      "delete": {
+        "tags": [
+          "Spaces"
+        ],
+        "operationId": "spaces.removeMember",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound | MemberNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MemberNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "LastOwner | PersonalSpace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LastOwner"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PersonalSpace"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only. What the member added stays, marked as by a former member.",
+        "summary": "Remove a member"
+      }
+    },
+    "/spaces/{id}/leave": {
+      "post": {
+        "tags": [
+          "Spaces"
+        ],
+        "operationId": "spaces.leave",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "LastOwner | PersonalSpace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/LastOwner"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PersonalSpace"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "The last owner has to hand over the role first.",
+        "summary": "Leave a shared space"
       }
     },
     "/categories": {
@@ -4255,6 +4754,170 @@
         "additionalProperties": false,
         "title": "Category.jsonCreate"
       },
+      "PersonalSpace": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "PersonalSpace"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "LastOwner": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "LastOwner"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "Forbidden": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "Forbidden"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "MemberNotFound": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "MemberNotFound"
+            ]
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "userId"
+        ],
+        "additionalProperties": false
+      },
+      "Member": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "joinedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "email",
+          "name",
+          "role",
+          "joinedAt"
+        ],
+        "additionalProperties": false
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "member"
+        ],
+        "description": "`owner` manages the space and its members; `member` works with the budget."
+      },
+      "Email": {
+        "type": "string",
+        "maxLength": 254
+      },
+      "SetRole": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "SpaceNotEmpty": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "SpaceNotEmpty"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "MySpace": {
+        "type": "object",
+        "properties": {
+          "space": {
+            "$ref": "#/components/schemas/Space"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "memberCount": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "space",
+          "role",
+          "memberCount"
+        ],
+        "additionalProperties": false
+      },
       "Space": {
         "type": "object",
         "properties": {
@@ -4271,6 +4934,9 @@
           "defaultCurrency": {
             "$ref": "#/components/schemas/Currency"
           },
+          "kind": {
+            "$ref": "#/components/schemas/SpaceKind"
+          },
           "createdAt": {
             "type": "string"
           },
@@ -4282,11 +4948,19 @@
           "id",
           "name",
           "defaultCurrency",
+          "kind",
           "createdAt",
           "updatedAt"
         ],
         "additionalProperties": false,
         "title": "Space.json"
+      },
+      "SpaceKind": {
+        "type": "string",
+        "enum": [
+          "personal",
+          "shared"
+        ]
       },
       "SaveSpace": {
         "type": "object",
@@ -4303,6 +4977,27 @@
         "required": [
           "name",
           "defaultCurrency"
+        ],
+        "additionalProperties": false
+      },
+      "LimitReached": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "LimitReached"
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "_tag",
+          "limit"
         ],
         "additionalProperties": false
       },
@@ -4342,9 +5037,19 @@
         "additionalProperties": false,
         "title": "User.json"
       },
-      "Email": {
-        "type": "string",
-        "maxLength": 254
+      "SaveProfile": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
       },
       "InvalidLogin": {
         "type": "object",

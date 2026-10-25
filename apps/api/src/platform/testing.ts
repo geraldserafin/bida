@@ -1,8 +1,10 @@
 import {
   Authenticated,
+  CurrentMember,
   CurrentSpace,
   CurrentUser,
   DEFAULT_SPACE_ID,
+  type Role,
   Space,
   SpaceContext,
   User,
@@ -28,6 +30,12 @@ export const resetDb = Effect.gen(function* () {
     const names = tables.map((t) => `"${t.tablename}"`).join(", ");
     yield* sql.unsafe(`TRUNCATE ${names} CASCADE`);
   }
+  // truncating users takes the spaces with it (they point at their user), and
+  // the default space has to stay
+  yield* sql`
+    INSERT INTO spaces (id, name, default_currency, kind, created_at, updated_at)
+    VALUES (${DEFAULT_SPACE_ID}, 'Default', 'PLN', 'personal', now(), now())
+    ON CONFLICT (id) DO NOTHING`;
   yield* sql`DELETE FROM spaces WHERE id <> ${DEFAULT_SPACE_ID}`;
 });
 
@@ -38,6 +46,7 @@ export const defaultSpace = new Space({
   id: DEFAULT_SPACE_ID,
   name: "Default",
   defaultCurrency: "PLN",
+  kind: "personal",
   createdAt: epoch,
   updatedAt: epoch,
 });
@@ -47,11 +56,20 @@ export const TestSpace = (space: Space = defaultSpace) =>
   Layer.succeed(CurrentSpace, space);
 
 /** A `SpaceContext` middleware that always puts requests in the given space. */
-export const TestSpaceContext = (space: Space = defaultSpace) =>
+export const TestSpaceContext = (
+  space: Space = defaultSpace,
+  role: Role = "owner",
+) =>
   Layer.succeed(
     SpaceContext,
     SpaceContext.of((httpEffect) =>
-      Effect.provideService(httpEffect, CurrentSpace, space),
+      httpEffect.pipe(
+        Effect.provideService(CurrentSpace, space),
+        Effect.provideService(CurrentMember, {
+          userId: "00000000-0000-4000-8000-0000000000aa",
+          role,
+        }),
+      ),
     ),
   );
 
