@@ -6,9 +6,8 @@ import '../../../state/spaces_state.dart';
 import '../../../widgets/space_chooser.dart';
 import '../../spaces/spaces_screen.dart';
 
-/// Which budget the app is in, with a way to switch, and a nudge when
-/// somebody invited the user to theirs. Hidden for a user with one budget and
-/// no invitations.
+/// Which budget the app is in, with a way to switch (and to start a shared
+/// one), and a nudge when somebody invited the user to theirs.
 class BudgetHeader extends StatelessWidget {
   const BudgetHeader({super.key});
 
@@ -30,8 +29,7 @@ class BudgetHeader extends StatelessWidget {
       });
     }
 
-    final show = spaces.spaces.length > 1 || spaces.invitations.isNotEmpty;
-    if (current == null || !show) return const SizedBox.shrink();
+    if (current == null) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),

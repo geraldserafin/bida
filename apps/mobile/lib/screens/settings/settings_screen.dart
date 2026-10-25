@@ -12,6 +12,7 @@ import '../../state/app_settings.dart';
 import '../../state/auth_state.dart';
 import '../../state/spaces_state.dart';
 import '../../widgets/dialogs.dart';
+import '../spaces/spaces_screen.dart';
 import '../../state/planner_state.dart';
 import '../../util/api_errors.dart';
 import '../../util/csv_save.dart';
@@ -244,6 +245,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SectionHeader(l10n.account),
           _Group(
             children: [
+              ListTile(
+                leading: const Icon(Icons.groups_outlined),
+                title: Text(l10n.budgets),
+                subtitle: Text(
+                  context.watch<SpacesState>().current?.name ?? '',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const SpacesScreen()),
+                ),
+              ),
+              const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.person_outline),
                 title: Text(
