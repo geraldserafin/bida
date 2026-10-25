@@ -7,7 +7,7 @@ import 'package:dio/dio.dart';
 import 'system/system_client.dart';
 import 'spaces/spaces_client.dart';
 import 'categories/categories_client.dart';
-import 'budgets/budgets_client.dart';
+import 'periods/periods_client.dart';
 import 'expenses/expenses_client.dart';
 import 'recurring/recurring_client.dart';
 import 'transfer/transfer_client.dart';
@@ -26,7 +26,7 @@ class BidaApi {
   SystemClient? _system;
   SpacesClient? _spaces;
   CategoriesClient? _categories;
-  BudgetsClient? _budgets;
+  PeriodsClient? _periods;
   ExpensesClient? _expenses;
   RecurringClient? _recurring;
   TransferClient? _transfer;
@@ -38,8 +38,8 @@ class BidaApi {
   CategoriesClient get categories =>
       _categories ??= CategoriesClient(_dio, baseUrl: _baseUrl);
 
-  BudgetsClient get budgets =>
-      _budgets ??= BudgetsClient(_dio, baseUrl: _baseUrl);
+  PeriodsClient get periods =>
+      _periods ??= PeriodsClient(_dio, baseUrl: _baseUrl);
 
   ExpensesClient get expenses =>
       _expenses ??= ExpensesClient(_dio, baseUrl: _baseUrl);

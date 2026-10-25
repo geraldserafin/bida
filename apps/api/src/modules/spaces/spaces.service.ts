@@ -5,7 +5,7 @@ import {
   SpaceId,
   SpaceNotFound,
 } from "@bida/api-contract";
-import { Context, Effect, Layer, Option } from "effect";
+import { Context, Effect, Layer, Option, Schema } from "effect";
 import { SpacesRepository } from "./spaces.repository.ts";
 
 /** Business rules for spaces. */
@@ -30,7 +30,11 @@ export class SpacesService extends Context.Service<
       const resolve = Effect.fn("SpacesService.resolve")(function* (
         id: string | undefined,
       ) {
-        const spaceId = SpaceId.make(id ?? DEFAULT_SPACE_ID);
+        const raw = id ?? DEFAULT_SPACE_ID;
+        // a header that is not even a uuid cannot name a space
+        if (!Schema.is(SpaceId)(raw))
+          return yield* new SpaceNotFound({ id: raw });
+        const spaceId = raw;
         const found = yield* repo.findById(spaceId);
         return yield* Option.match(found, {
           onNone: () => Effect.fail(new SpaceNotFound({ id: spaceId })),

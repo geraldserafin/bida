@@ -1,5 +1,11 @@
 import { Schema } from "effect";
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
+import {
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiSchema,
+  OpenApi,
+} from "effect/http-api";
+import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
 import { CategoryInUse, CategoryNotFound } from "./categories.errors.ts";
 import {
@@ -17,21 +23,21 @@ export class CategoriesApi extends HttpApiGroup.make("categories")
     HttpApiEndpoint.get("get", "/:id", {
       params: { id: CategoryId },
       success: CategoryJson,
-      error: CategoryNotFound,
+      error: wire(CategoryNotFound),
     }).annotateMerge(OpenApi.annotations({ summary: "Get a category" })),
     HttpApiEndpoint.post("create", "/", {
       payload: CreateCategory,
-      success: CategoryJson,
+      success: CategoryJson.pipe(HttpApiSchema.status(201)),
     }).annotateMerge(OpenApi.annotations({ summary: "Create a category" })),
-    HttpApiEndpoint.patch("update", "/:id", {
+    HttpApiEndpoint.put("update", "/:id", {
       params: { id: CategoryId },
       payload: UpdateCategory,
       success: CategoryJson,
-      error: CategoryNotFound,
+      error: wire(CategoryNotFound),
     }).annotateMerge(OpenApi.annotations({ summary: "Update a category" })),
     HttpApiEndpoint.delete("delete", "/:id", {
       params: { id: CategoryId },
-      error: [CategoryNotFound, CategoryInUse],
+      error: [wire(CategoryNotFound), wire(CategoryInUse)],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Delete a category",

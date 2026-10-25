@@ -1,7 +1,9 @@
 import { Schema } from "effect";
 import { Model } from "effect/schema";
+import { IconKey, Name } from "../text.ts";
+import { Uuid } from "../uuid.ts";
 
-export const CategoryId = Schema.String.pipe(Schema.brand("CategoryId"));
+export const CategoryId = Uuid.pipe(Schema.brand("CategoryId"));
 export type CategoryId = typeof CategoryId.Type;
 
 const HexColor = Schema.String.check(Schema.isPattern(/^#[0-9a-fA-F]{6}$/));
@@ -12,9 +14,9 @@ const HexColor = Schema.String.check(Schema.isPattern(/^#[0-9a-fA-F]{6}$/));
  */
 export class Category extends Model.Class<Category>("Category")({
   id: Model.UuidV4Insert(CategoryId),
-  name: Schema.NonEmptyString,
+  name: Name,
   color: HexColor,
-  icon: Schema.NullOr(Schema.String),
+  icon: Schema.NullOr(IconKey),
   createdAt: Model.DateTimeInsertFromDate,
   updatedAt: Model.DateTimeUpdateFromDate,
 }) {}

@@ -1,6 +1,12 @@
 import { Schema } from "effect";
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
+import {
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiSchema,
+  OpenApi,
+} from "effect/http-api";
 import { CategoryNotFound } from "../categories/index.ts";
+import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
 import {
   EnvelopeAlreadyExists,
@@ -16,9 +22,10 @@ import {
   PeriodId,
   PeriodJson,
   SetPlan,
+  UpdatePeriod,
 } from "./budgets.model.ts";
 
-export class BudgetsApi extends HttpApiGroup.make("budgets")
+export class PeriodsApi extends HttpApiGroup.make("periods")
   .add(
     HttpApiEndpoint.get("list", "/", {
       success: Schema.Array(PeriodJson),
@@ -30,7 +37,7 @@ export class BudgetsApi extends HttpApiGroup.make("budgets")
     ),
     HttpApiEndpoint.get("current", "/current", {
       success: PeriodDetail,
-      error: NoPeriods,
+      error: wire(NoPeriods),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Get the current period",
@@ -39,8 +46,8 @@ export class BudgetsApi extends HttpApiGroup.make("budgets")
     ),
     HttpApiEndpoint.post("create", "/", {
       payload: CreatePeriod,
-      success: PeriodDetail,
-      error: [InvalidPeriodRange, CategoryNotFound],
+      success: PeriodDetail.pipe(HttpApiSchema.status(201)),
+      error: [wire(InvalidPeriodRange), wire(CategoryNotFound)],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Create a period",
@@ -50,13 +57,25 @@ export class BudgetsApi extends HttpApiGroup.make("budgets")
     HttpApiEndpoint.get("get", "/:id", {
       params: { id: PeriodId },
       success: PeriodDetail,
-      error: PeriodNotFound,
+      error: wire(PeriodNotFound),
     }).annotateMerge(OpenApi.annotations({ summary: "Get a period" })),
+    HttpApiEndpoint.put("update", "/:id", {
+      params: { id: PeriodId },
+      payload: UpdatePeriod,
+      success: PeriodDetail,
+      error: [wire(PeriodNotFound), wire(InvalidPeriodRange)],
+    }).annotateMerge(
+      OpenApi.annotations({
+        summary: "Edit a period",
+        description:
+          "Changes the name and dates. Use the plan endpoint for money.",
+      }),
+    ),
     HttpApiEndpoint.put("setPlan", "/:id/plan", {
       params: { id: PeriodId },
       payload: SetPlan,
       success: PeriodDetail,
-      error: [PeriodNotFound, CategoryNotFound],
+      error: [wire(PeriodNotFound), wire(CategoryNotFound)],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Set income and envelope amounts",
@@ -67,14 +86,18 @@ export class BudgetsApi extends HttpApiGroup.make("budgets")
     HttpApiEndpoint.post("addEnvelope", "/:id/envelopes", {
       params: { id: PeriodId },
       payload: EnvelopePlan,
-      success: EnvelopeJson,
-      error: [PeriodNotFound, CategoryNotFound, EnvelopeAlreadyExists],
+      success: EnvelopeJson.pipe(HttpApiSchema.status(201)),
+      error: [
+        wire(PeriodNotFound),
+        wire(CategoryNotFound),
+        wire(EnvelopeAlreadyExists),
+      ],
     }).annotateMerge(
       OpenApi.annotations({ summary: "Add an envelope to a period" }),
     ),
     HttpApiEndpoint.delete("delete", "/:id", {
       params: { id: PeriodId },
-      error: PeriodNotFound,
+      error: wire(PeriodNotFound),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Delete a period",
@@ -84,4 +107,4 @@ export class BudgetsApi extends HttpApiGroup.make("budgets")
   )
   .prefix("/periods")
   .middleware(SpaceContext)
-  .annotateMerge(OpenApi.annotations({ title: "Budgets" })) {}
+  .annotateMerge(OpenApi.annotations({ title: "Periods" })) {}

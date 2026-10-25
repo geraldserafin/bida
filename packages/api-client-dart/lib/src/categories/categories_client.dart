@@ -28,7 +28,7 @@ abstract class CategoriesClient {
   Future<Category> categoriesGet({@Path('id') required String id});
 
   /// Update a category
-  @PATCH('/categories/{id}')
+  @PUT('/categories/{id}')
   Future<Category> categoriesUpdate({
     @Path('id') required String id,
     @Body() required UpdateCategory body,

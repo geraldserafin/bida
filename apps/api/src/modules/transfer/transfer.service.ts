@@ -163,7 +163,16 @@ export class TransferService extends Context.Service<
       const importLegacy = Effect.fn("TransferService.importLegacy")(function* (
         input: ImportLegacy,
       ) {
-        const converted = yield* convertLegacy(input, yield* DateTime.now);
+        const converted = yield* convertLegacy(input, yield* DateTime.now).pipe(
+          // the model classes refuse values the API would not accept either
+          Effect.catchDefect(() =>
+            Effect.fail(
+              new InvalidImport({
+                reason: "the backup contains values this API does not accept",
+              }),
+            ),
+          ),
+        );
         return yield* restore(snapshotOf(converted));
       });
 

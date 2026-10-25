@@ -5,6 +5,7 @@ import {
   HttpApiSchema,
   OpenApi,
 } from "effect/http-api";
+import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
 import { InvalidCsv, InvalidImport } from "./transfer.errors.ts";
 import {
@@ -42,7 +43,7 @@ export class TransferApi extends HttpApiGroup.make("transfer")
     HttpApiEndpoint.post("import", "/import", {
       payload: ExportDocument,
       success: Counts,
-      error: InvalidImport,
+      error: wire(InvalidImport),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Import a snapshot",
@@ -53,7 +54,7 @@ export class TransferApi extends HttpApiGroup.make("transfer")
     HttpApiEndpoint.post("importLegacy", "/import/legacy", {
       payload: ImportLegacy,
       success: Counts,
-      error: InvalidImport,
+      error: wire(InvalidImport),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Import a backup of the offline app",
@@ -72,7 +73,7 @@ export class TransferApi extends HttpApiGroup.make("transfer")
     HttpApiEndpoint.post("importCsv", "/import/csv", {
       payload: Csv,
       success: CsvImportResult,
-      error: InvalidCsv,
+      error: wire(InvalidCsv),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Import expenses from CSV",

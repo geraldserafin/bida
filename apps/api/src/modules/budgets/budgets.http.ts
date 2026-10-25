@@ -6,7 +6,7 @@ import { BudgetsService } from "./budgets.service.ts";
 /** Thin adapter: decoded request in, service call, domain errors out. */
 export const BudgetsHttp = HttpApiBuilder.group(
   Api,
-  "budgets",
+  "periods",
   Effect.fn(function* (handlers) {
     const budgets = yield* BudgetsService;
     return handlers
@@ -14,6 +14,9 @@ export const BudgetsHttp = HttpApiBuilder.group(
       .handle("current", () => budgets.currentPeriod)
       .handle("create", ({ payload }) => budgets.createPeriod(payload))
       .handle("get", ({ params }) => budgets.getPeriod(params.id))
+      .handle("update", ({ params, payload }) =>
+        budgets.updatePeriod(params.id, payload),
+      )
       .handle("setPlan", ({ params, payload }) =>
         budgets.setPlan(params.id, payload),
       )

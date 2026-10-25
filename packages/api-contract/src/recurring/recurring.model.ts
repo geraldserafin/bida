@@ -2,10 +2,11 @@ import { Schema } from "effect";
 import { Model } from "effect/schema";
 import { CategoryId } from "../categories/index.ts";
 import { Currency } from "../currency/index.ts";
+import { PositiveMoney } from "../currency/money.ts";
+import { Note } from "../text.ts";
+import { Uuid } from "../uuid.ts";
 
-export const RecurringRuleId = Schema.String.pipe(
-  Schema.brand("RecurringRuleId"),
-);
+export const RecurringRuleId = Uuid.pipe(Schema.brand("RecurringRuleId"));
 export type RecurringRuleId = typeof RecurringRuleId.Type;
 
 export const Frequency = Schema.Literals(["weekly", "monthly"]);
@@ -16,10 +17,10 @@ export class RecurringRule extends Model.Class<RecurringRule>("RecurringRule")({
   id: Model.UuidV4Insert(RecurringRuleId),
   categoryId: CategoryId,
   /** Amount in minor units (grosze), always positive. */
-  amountMinor: Schema.Int.check(Schema.isGreaterThan(0)),
+  amountMinor: PositiveMoney,
   currency: Currency,
   frequency: Frequency,
-  note: Schema.NullOr(Schema.String),
+  note: Schema.NullOr(Note),
   active: Schema.Boolean,
   createdAt: Model.DateTimeInsertFromDate,
   updatedAt: Model.DateTimeUpdateFromDate,
@@ -31,11 +32,11 @@ export const RecurringRuleJson = RecurringRule.json.annotate({
 
 export const SaveRecurringRule = Schema.Struct({
   categoryId: CategoryId,
-  amountMinor: Schema.Int.check(Schema.isGreaterThan(0)),
+  amountMinor: PositiveMoney,
   /** Defaults to the space's default currency. */
   currency: Schema.optional(Currency),
   frequency: Frequency,
-  note: Schema.NullOr(Schema.String),
+  note: Schema.NullOr(Note),
   active: Schema.Boolean,
 }).annotate({ identifier: "SaveRecurringRule" });
 export type SaveRecurringRule = typeof SaveRecurringRule.Type;

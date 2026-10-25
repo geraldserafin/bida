@@ -1,8 +1,10 @@
 import { Context, Schema } from "effect";
 import { Model } from "effect/schema";
 import { Currency } from "../currency/index.ts";
+import { Name } from "../text.ts";
+import { Uuid } from "../uuid.ts";
 
-export const SpaceId = Schema.String.pipe(Schema.brand("SpaceId"));
+export const SpaceId = Uuid.pipe(Schema.brand("SpaceId"));
 export type SpaceId = typeof SpaceId.Type;
 
 /**
@@ -12,7 +14,7 @@ export type SpaceId = typeof SpaceId.Type;
  */
 export class Space extends Model.Class<Space>("Space")({
   id: Model.UuidV4Insert(SpaceId),
-  name: Schema.NonEmptyString,
+  name: Name,
   /** Currency of new periods and recurring rules when none is chosen. */
   defaultCurrency: Currency,
   createdAt: Model.DateTimeInsertFromDate,
@@ -22,7 +24,7 @@ export class Space extends Model.Class<Space>("Space")({
 export const SpaceJson = Space.json.annotate({ identifier: "Space" });
 
 export const SaveSpace = Schema.Struct({
-  name: Schema.NonEmptyString,
+  name: Name,
   defaultCurrency: Currency,
 }).annotate({ identifier: "SaveSpace" });
 export type SaveSpace = typeof SaveSpace.Type;

@@ -1,5 +1,11 @@
 import { Schema } from "effect";
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
+import {
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiSchema,
+  OpenApi,
+} from "effect/http-api";
+import { wire } from "../errors.ts";
 import { SaveSpace, SpaceId, SpaceJson } from "./space.model.ts";
 import { SpaceContext } from "./space-context.ts";
 import { SpaceNotFound } from "./spaces.errors.ts";
@@ -11,11 +17,11 @@ export class SpacesApi extends HttpApiGroup.make("spaces")
     }).annotateMerge(OpenApi.annotations({ summary: "List spaces" })),
     HttpApiEndpoint.post("create", "/spaces", {
       payload: SaveSpace,
-      success: SpaceJson,
+      success: SpaceJson.pipe(HttpApiSchema.status(201)),
     }).annotateMerge(OpenApi.annotations({ summary: "Create a space" })),
     HttpApiEndpoint.get("current", "/spaces/current", {
       success: SpaceJson,
-      error: SpaceNotFound,
+      error: wire(SpaceNotFound),
     })
       .middleware(SpaceContext)
       .annotateMerge(
@@ -29,7 +35,7 @@ export class SpacesApi extends HttpApiGroup.make("spaces")
       params: { id: SpaceId },
       payload: SaveSpace,
       success: SpaceJson,
-      error: SpaceNotFound,
+      error: wire(SpaceNotFound),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Edit a space",

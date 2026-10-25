@@ -1,5 +1,10 @@
 import { Schema } from "effect";
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
+import {
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiSchema,
+  OpenApi,
+} from "effect/http-api";
 import {
   EnvelopeId,
   EnvelopeNotFound,
@@ -7,6 +12,7 @@ import {
   PeriodNotFound,
 } from "../budgets/index.ts";
 import { CategoryId } from "../categories/index.ts";
+import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
 import {
   CreateExpense,
@@ -21,23 +27,23 @@ export class ExpensesApi extends HttpApiGroup.make("expenses")
   .add(
     HttpApiEndpoint.post("create", "/expenses", {
       payload: CreateExpense,
-      success: ExpenseJson,
-      error: EnvelopeNotFound,
+      success: ExpenseJson.pipe(HttpApiSchema.status(201)),
+      error: wire(EnvelopeNotFound),
     }).annotateMerge(OpenApi.annotations({ summary: "Add an expense" })),
     HttpApiEndpoint.get("get", "/expenses/:id", {
       params: { id: ExpenseId },
       success: ExpenseJson,
-      error: ExpenseNotFound,
+      error: wire(ExpenseNotFound),
     }).annotateMerge(OpenApi.annotations({ summary: "Get an expense" })),
     HttpApiEndpoint.put("update", "/expenses/:id", {
       params: { id: ExpenseId },
       payload: UpdateExpense,
       success: ExpenseJson,
-      error: [ExpenseNotFound, EnvelopeNotFound],
+      error: [wire(ExpenseNotFound), wire(EnvelopeNotFound)],
     }).annotateMerge(OpenApi.annotations({ summary: "Edit an expense" })),
     HttpApiEndpoint.delete("delete", "/expenses/:id", {
       params: { id: ExpenseId },
-      error: ExpenseNotFound,
+      error: wire(ExpenseNotFound),
     }).annotateMerge(OpenApi.annotations({ summary: "Delete an expense" })),
     HttpApiEndpoint.get("listForPeriod", "/periods/:periodId/expenses", {
       params: { periodId: PeriodId },
@@ -62,7 +68,7 @@ export class ExpensesApi extends HttpApiGroup.make("expenses")
         ),
       },
       success: Schema.Array(ExpenseJson),
-      error: PeriodNotFound,
+      error: wire(PeriodNotFound),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "List the expenses of a period",
@@ -72,7 +78,7 @@ export class ExpensesApi extends HttpApiGroup.make("expenses")
     HttpApiEndpoint.get("progress", "/periods/:periodId/progress", {
       params: { periodId: PeriodId },
       success: PeriodProgress,
-      error: PeriodNotFound,
+      error: wire(PeriodNotFound),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Planned versus spent",

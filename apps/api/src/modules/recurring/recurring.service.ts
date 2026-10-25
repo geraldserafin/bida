@@ -108,20 +108,27 @@ export class RecurringService extends Context.Service<
 
       const applyToPeriod = Effect.fn("RecurringService.applyToPeriod")(
         function* (periodId: PeriodId) {
-          const detail = yield* budgets.getPeriod(periodId);
-          const applied = yield* expenses.appliedRecurringIds(periodId);
-          const rules = (yield* repo.list)
-            .filter(
-              (rule) =>
-                rule.active &&
-                rule.currency === detail.period.currency &&
-                !applied.has(rule.id),
-            )
-            .reverse(); // oldest first
+          yield* budgets.getPeriod(periodId); // 404 before taking any lock
           const spentAt = yield* DateTime.now;
 
-          // all or nothing: a failure half way must not leave a partial apply
+          // All or nothing: a failure half way must not leave a partial apply.
           const added = yield* Effect.gen(function* () {
+            // One apply per period at a time. A second, concurrent call waits
+            // here and then finds nothing left to add, instead of failing on
+            // the unique index.
+            yield* sql`SELECT pg_advisory_xact_lock(hashtext(${periodId}))`;
+
+            const detail = yield* budgets.getPeriod(periodId);
+            const applied = yield* expenses.appliedRecurringIds(periodId);
+            const rules = (yield* repo.list)
+              .filter(
+                (rule) =>
+                  rule.active &&
+                  rule.currency === detail.period.currency &&
+                  !applied.has(rule.id),
+              )
+              .reverse(); // oldest first
+
             const envelopeByCategory = new Map(
               detail.envelopes.map((e) => [e.categoryId, e.id] as const),
             );
@@ -145,7 +152,17 @@ export class RecurringService extends Context.Service<
               });
             }
             return rules.length;
-          }).pipe(sql.withTransaction, Effect.orDie);
+          }).pipe(
+            sql.withTransaction,
+            // the categories of rules exist (foreign key) and the envelope is
+            // only added when it is missing, so these cannot happen
+            Effect.catchTags({
+              SqlError: Effect.die,
+              CategoryNotFound: Effect.die,
+              EnvelopeAlreadyExists: Effect.die,
+              EnvelopeNotFound: Effect.die,
+            }),
+          );
 
           return { added };
         },

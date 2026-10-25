@@ -1,4 +1,5 @@
 import { HttpApiMiddleware } from "effect/http-api";
+import { wire } from "../errors.ts";
 import type { CurrentSpace } from "./space.model.ts";
 import { SpaceNotFound } from "./spaces.errors.ts";
 
@@ -14,5 +15,5 @@ export class SpaceContext extends HttpApiMiddleware.Service<
     requires: never;
   }
 >()("bida/spaces/SpaceContext", {
-  error: SpaceNotFound,
+  error: wire(SpaceNotFound),
 }) {}

@@ -63,7 +63,7 @@
         "parameters": [],
         "security": [],
         "responses": {
-          "200": {
+          "201": {
             "description": "Space",
             "content": {
               "application/json": {
@@ -111,7 +111,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -132,7 +132,9 @@
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -154,7 +156,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -201,7 +203,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -217,7 +219,7 @@
         "parameters": [],
         "security": [],
         "responses": {
-          "200": {
+          "201": {
             "description": "Category",
             "content": {
               "application/json": {
@@ -232,7 +234,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -262,7 +264,9 @@
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -286,10 +290,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                      "$ref": "#/components/schemas/CategoryNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -299,7 +303,7 @@
         },
         "summary": "Get a category"
       },
-      "patch": {
+      "put": {
         "tags": [
           "Categories"
         ],
@@ -309,7 +313,9 @@
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -333,10 +339,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                      "$ref": "#/components/schemas/CategoryNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -366,7 +372,9 @@
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -383,10 +391,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                      "$ref": "#/components/schemas/CategoryNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -398,7 +406,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CategoryInUseEncoded"
+                  "$ref": "#/components/schemas/CategoryInUse"
                 }
               }
             }
@@ -411,9 +419,9 @@
     "/periods": {
       "get": {
         "tags": [
-          "Budgets"
+          "Periods"
         ],
-        "operationId": "budgets.list",
+        "operationId": "periods.list",
         "parameters": [],
         "security": [],
         "responses": {
@@ -435,7 +443,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -446,13 +454,13 @@
       },
       "post": {
         "tags": [
-          "Budgets"
+          "Periods"
         ],
-        "operationId": "budgets.create",
+        "operationId": "periods.create",
         "parameters": [],
         "security": [],
         "responses": {
-          "200": {
+          "201": {
             "description": "PeriodDetail",
             "content": {
               "application/json": {
@@ -469,10 +477,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                      "$ref": "#/components/schemas/CategoryNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -484,7 +492,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InvalidPeriodRangeEncoded"
+                  "$ref": "#/components/schemas/InvalidPeriodRange"
                 }
               }
             }
@@ -507,9 +515,9 @@
     "/periods/current": {
       "get": {
         "tags": [
-          "Budgets"
+          "Periods"
         ],
-        "operationId": "budgets.current",
+        "operationId": "periods.current",
         "parameters": [],
         "security": [],
         "responses": {
@@ -530,10 +538,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/NoPeriodsEncoded"
+                      "$ref": "#/components/schemas/NoPeriods"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -548,15 +556,17 @@
     "/periods/{id}": {
       "get": {
         "tags": [
-          "Budgets"
+          "Periods"
         ],
-        "operationId": "budgets.get",
+        "operationId": "periods.get",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -580,10 +590,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                      "$ref": "#/components/schemas/PeriodNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -593,17 +603,89 @@
         },
         "summary": "Get a period"
       },
-      "delete": {
+      "put": {
         "tags": [
-          "Budgets"
+          "Periods"
         ],
-        "operationId": "budgets.delete",
+        "operationId": "periods.update",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "PeriodDetail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PeriodNotFound | SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "InvalidPeriodRange",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidPeriodRange"
+                }
+              }
+            }
+          }
+        },
+        "description": "Changes the name and dates. Use the plan endpoint for money.",
+        "summary": "Edit a period",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePeriod"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Periods"
+        ],
+        "operationId": "periods.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -620,10 +702,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                      "$ref": "#/components/schemas/PeriodNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -638,15 +720,17 @@
     "/periods/{id}/plan": {
       "put": {
         "tags": [
-          "Budgets"
+          "Periods"
         ],
-        "operationId": "budgets.setPlan",
+        "operationId": "periods.setPlan",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -670,13 +754,13 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                      "$ref": "#/components/schemas/PeriodNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                      "$ref": "#/components/schemas/CategoryNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -701,22 +785,24 @@
     "/periods/{id}/envelopes": {
       "post": {
         "tags": [
-          "Budgets"
+          "Periods"
         ],
-        "operationId": "budgets.addEnvelope",
+        "operationId": "periods.addEnvelope",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
         ],
         "security": [],
         "responses": {
-          "200": {
+          "201": {
             "description": "Envelope",
             "content": {
               "application/json": {
@@ -733,13 +819,13 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                      "$ref": "#/components/schemas/PeriodNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                      "$ref": "#/components/schemas/CategoryNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -751,7 +837,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EnvelopeAlreadyExistsEncoded"
+                  "$ref": "#/components/schemas/EnvelopeAlreadyExists"
                 }
               }
             }
@@ -779,7 +865,7 @@
         "parameters": [],
         "security": [],
         "responses": {
-          "200": {
+          "201": {
             "description": "Expense",
             "content": {
               "application/json": {
@@ -796,10 +882,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/EnvelopeNotFoundEncoded"
+                      "$ref": "#/components/schemas/EnvelopeNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -831,7 +917,9 @@
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -855,10 +943,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                      "$ref": "#/components/schemas/ExpenseNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -878,7 +966,9 @@
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -902,13 +992,13 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                      "$ref": "#/components/schemas/ExpenseNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/EnvelopeNotFoundEncoded"
+                      "$ref": "#/components/schemas/EnvelopeNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -938,7 +1028,9 @@
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -955,10 +1047,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                      "$ref": "#/components/schemas/ExpenseNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -980,7 +1072,9 @@
             "name": "periodId",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           },
@@ -990,7 +1084,9 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                  "format": "uuid"
                 },
                 {
                   "type": "null"
@@ -1005,7 +1101,9 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                  "format": "uuid"
                 },
                 {
                   "type": "null"
@@ -1097,10 +1195,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                      "$ref": "#/components/schemas/PeriodNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -1123,7 +1221,9 @@
             "name": "periodId",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -1147,10 +1247,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                      "$ref": "#/components/schemas/PeriodNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -1189,7 +1289,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -1206,7 +1306,7 @@
         "parameters": [],
         "security": [],
         "responses": {
-          "200": {
+          "201": {
             "description": "RecurringRule",
             "content": {
               "application/json": {
@@ -1223,10 +1323,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                      "$ref": "#/components/schemas/CategoryNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -1258,7 +1358,9 @@
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -1282,13 +1384,13 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/RecurringRuleNotFoundEncoded"
+                      "$ref": "#/components/schemas/RecurringRuleNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                      "$ref": "#/components/schemas/CategoryNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -1319,7 +1421,9 @@
             "name": "id",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -1336,10 +1440,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/RecurringRuleNotFoundEncoded"
+                      "$ref": "#/components/schemas/RecurringRuleNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -1394,7 +1498,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -1415,7 +1519,9 @@
             "name": "periodId",
             "in": "path",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
             },
             "required": true
           }
@@ -1439,10 +1545,10 @@
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                      "$ref": "#/components/schemas/PeriodNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                      "$ref": "#/components/schemas/SpaceNotFound"
                     }
                   ]
                 }
@@ -1478,7 +1584,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -1512,7 +1618,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -1556,7 +1662,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -1566,7 +1672,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InvalidImportEncoded"
+                  "$ref": "#/components/schemas/InvalidImport"
                 }
               }
             }
@@ -1610,7 +1716,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -1620,7 +1726,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InvalidImportEncoded"
+                  "$ref": "#/components/schemas/InvalidImport"
                 }
               }
             }
@@ -1664,7 +1770,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -1698,7 +1804,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFoundEncoded"
+                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -1708,7 +1814,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InvalidCsvEncoded"
+                  "$ref": "#/components/schemas/InvalidCsv"
                 }
               }
             }
@@ -1731,7 +1837,7 @@
   },
   "components": {
     "schemas": {
-      "SpaceNotFoundEncoded": {
+      "SpaceNotFound": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -1750,7 +1856,7 @@
         ],
         "additionalProperties": false
       },
-      "InvalidCsvEncoded": {
+      "InvalidCsv": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -1795,7 +1901,7 @@
         ],
         "additionalProperties": false
       },
-      "InvalidImportEncoded": {
+      "InvalidImport": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -2181,31 +2287,36 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Category"
-            }
+            },
+            "maxItems": 1000
           },
           "periods": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Period"
-            }
+            },
+            "maxItems": 10000
           },
           "envelopes": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Envelope"
-            }
+            },
+            "maxItems": 100000
           },
           "expenses": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Expense"
-            }
+            },
+            "maxItems": 200000
           },
           "recurringRules": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RecurringRule"
-            }
+            },
+            "maxItems": 1000
           }
         },
         "required": [
@@ -2223,14 +2334,18 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "categoryId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "amountMinor": {
             "type": "integer",
-            "maximum": 9007199254740991,
+            "maximum": 1000000000000,
             "exclusiveMinimum": 0
           },
           "currency": {
@@ -2246,7 +2361,8 @@
           "note": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 1000
               },
               {
                 "type": "null"
@@ -2297,24 +2413,30 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "envelopeId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "periodId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "amountMinor": {
             "type": "integer",
-            "maximum": 9007199254740991,
+            "maximum": 1000000000000,
             "exclusiveMinimum": 0
           },
           "originalAmountMinor": {
             "anyOf": [
               {
                 "type": "integer",
-                "maximum": 9007199254740991,
+                "maximum": 1000000000000,
                 "exclusiveMinimum": 0
               },
               {
@@ -2338,7 +2460,8 @@
           "note": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 1000
               },
               {
                 "type": "null"
@@ -2348,7 +2471,9 @@
           "recurringId": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
               },
               {
                 "type": "null"
@@ -2382,18 +2507,24 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "periodId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "categoryId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "plannedMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "createdAt": {
             "type": "string"
@@ -2417,11 +2548,14 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "maxLength": 200
           },
           "startDate": {
             "type": "string"
@@ -2432,7 +2566,7 @@
           "incomeMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
@@ -2461,11 +2595,14 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "maxLength": 200
           },
           "color": {
             "type": "string"
@@ -2473,7 +2610,8 @@
           "icon": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 50
               },
               {
                 "type": "null"
@@ -2514,7 +2652,7 @@
         ],
         "additionalProperties": false
       },
-      "PeriodNotFoundEncoded": {
+      "PeriodNotFound": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -2524,7 +2662,9 @@
             ]
           },
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           }
         },
         "required": [
@@ -2551,12 +2691,14 @@
         "type": "object",
         "properties": {
           "categoryId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "plannedMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           }
         },
         "required": [
@@ -2565,7 +2707,7 @@
         ],
         "additionalProperties": false
       },
-      "RecurringRuleNotFoundEncoded": {
+      "RecurringRuleNotFound": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -2575,7 +2717,9 @@
             ]
           },
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           }
         },
         "required": [
@@ -2584,7 +2728,7 @@
         ],
         "additionalProperties": false
       },
-      "CategoryNotFoundEncoded": {
+      "CategoryNotFound": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -2594,7 +2738,9 @@
             ]
           },
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           }
         },
         "required": [
@@ -2607,11 +2753,13 @@
         "type": "object",
         "properties": {
           "categoryId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "amountMinor": {
             "type": "integer",
-            "maximum": 9007199254740991,
+            "maximum": 1000000000000,
             "exclusiveMinimum": 0
           },
           "currency": {
@@ -2634,7 +2782,8 @@
           "note": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 1000
               },
               {
                 "type": "null"
@@ -2658,22 +2807,24 @@
         "type": "object",
         "properties": {
           "periodId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "incomeMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "plannedMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "spentMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "remainingMinor": {
             "type": "integer",
@@ -2707,20 +2858,24 @@
         "type": "object",
         "properties": {
           "envelopeId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "categoryId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "plannedMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "spentMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "remainingMinor": {
             "type": "integer",
@@ -2737,7 +2892,7 @@
         ],
         "additionalProperties": false
       },
-      "ExpenseNotFoundEncoded": {
+      "ExpenseNotFound": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -2747,7 +2902,9 @@
             ]
           },
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           }
         },
         "required": [
@@ -2756,7 +2913,7 @@
         ],
         "additionalProperties": false
       },
-      "EnvelopeNotFoundEncoded": {
+      "EnvelopeNotFound": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -2779,11 +2936,13 @@
         "type": "object",
         "properties": {
           "envelopeId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "amountMinor": {
             "type": "integer",
-            "maximum": 9007199254740991,
+            "maximum": 1000000000000,
             "exclusiveMinimum": 0
           },
           "spentAt": {
@@ -2792,7 +2951,8 @@
           "note": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 1000
               },
               {
                 "type": "null"
@@ -2823,7 +2983,7 @@
         "properties": {
           "amountMinor": {
             "type": "integer",
-            "maximum": 9007199254740991,
+            "maximum": 1000000000000,
             "exclusiveMinimum": 0
           },
           "currency": {
@@ -2840,11 +3000,13 @@
         "type": "object",
         "properties": {
           "envelopeId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "amountMinor": {
             "type": "integer",
-            "maximum": 9007199254740991,
+            "maximum": 1000000000000,
             "exclusiveMinimum": 0
           },
           "spentAt": {
@@ -2853,7 +3015,8 @@
           "note": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 1000
               },
               {
                 "type": "null"
@@ -2879,7 +3042,7 @@
         ],
         "additionalProperties": false
       },
-      "EnvelopeAlreadyExistsEncoded": {
+      "EnvelopeAlreadyExists": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -2889,10 +3052,14 @@
             ]
           },
           "periodId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "categoryId": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           }
         },
         "required": [
@@ -2917,7 +3084,7 @@
           "plannedMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "unallocatedMinor": {
             "type": "integer",
@@ -2939,13 +3106,14 @@
           "incomeMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "envelopes": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EnvelopePlan"
-            }
+            },
+            "maxItems": 500
           }
         },
         "required": [
@@ -2954,7 +3122,7 @@
         ],
         "additionalProperties": false
       },
-      "InvalidPeriodRangeEncoded": {
+      "InvalidPeriodRange": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -2977,12 +3145,35 @@
         ],
         "additionalProperties": false
       },
+      "UpdatePeriod": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "startDate",
+          "endDate"
+        ],
+        "additionalProperties": false
+      },
       "CreatePeriod": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "maxLength": 200
           },
           "startDate": {
             "type": "string"
@@ -2993,7 +3184,7 @@
           "incomeMinor": {
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 1000000000000
           },
           "currency": {
             "anyOf": [
@@ -3009,7 +3200,8 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EnvelopePlan"
-            }
+            },
+            "maxItems": 500
           }
         },
         "required": [
@@ -3021,7 +3213,7 @@
         ],
         "additionalProperties": false
       },
-      "NoPeriodsEncoded": {
+      "NoPeriods": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -3036,7 +3228,7 @@
         ],
         "additionalProperties": false
       },
-      "CategoryInUseEncoded": {
+      "CategoryInUse": {
         "type": "object",
         "properties": {
           "_tag": {
@@ -3046,7 +3238,9 @@
             ]
           },
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           }
         },
         "required": [
@@ -3060,7 +3254,8 @@
         "properties": {
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "maxLength": 200
           },
           "color": {
             "type": "string"
@@ -3068,7 +3263,8 @@
           "icon": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 50
               },
               {
                 "type": "null"
@@ -3089,7 +3285,8 @@
         "properties": {
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "maxLength": 200
           },
           "color": {
             "type": "string"
@@ -3097,7 +3294,8 @@
           "icon": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 50
               },
               {
                 "type": "null"
@@ -3117,11 +3315,14 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           },
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "maxLength": 200
           },
           "defaultCurrency": {
             "$ref": "#/components/schemas/Currency"
@@ -3148,7 +3349,8 @@
         "properties": {
           "name": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "maxLength": 200
           },
           "defaultCurrency": {
             "$ref": "#/components/schemas/Currency"
@@ -3196,7 +3398,7 @@
       "name": "Categories"
     },
     {
-      "name": "Budgets"
+      "name": "Periods"
     },
     {
       "name": "Expenses"

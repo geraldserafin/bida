@@ -14,6 +14,7 @@ import {
   type PeriodId,
   PeriodNotFound,
   type SetPlan,
+  type UpdatePeriod,
 } from "@bida/api-contract";
 import { Context, Effect, Layer, Option } from "effect";
 import { SqlClient } from "effect/sql";
@@ -42,6 +43,10 @@ export class BudgetsService extends Context.Service<
       Envelope,
       PeriodNotFound | CategoryNotFound | EnvelopeAlreadyExists
     >;
+    updatePeriod(
+      id: PeriodId,
+      input: UpdatePeriod,
+    ): InSpace<PeriodDetail, PeriodNotFound | InvalidPeriodRange>;
     getEnvelope(id: EnvelopeId): InSpace<Envelope, EnvelopeNotFound>;
     deletePeriod(id: PeriodId): InSpace<void, PeriodNotFound>;
   }
@@ -215,6 +220,24 @@ export class BudgetsService extends Context.Service<
         });
       });
 
+      const updatePeriod = Effect.fn("BudgetsService.updatePeriod")(function* (
+        id: PeriodId,
+        input: UpdatePeriod,
+      ) {
+        if (input.endDate < input.startDate) {
+          return yield* new InvalidPeriodRange({
+            startDate: input.startDate,
+            endDate: input.endDate,
+          });
+        }
+        const updated = yield* repo.updatePeriod(id, input);
+        const period = yield* Option.match(updated, {
+          onNone: () => Effect.fail(new PeriodNotFound({ id })),
+          onSome: Effect.succeed,
+        });
+        return yield* detail(period);
+      });
+
       const deletePeriod = Effect.fn("BudgetsService.deletePeriod")(function* (
         id: PeriodId,
       ) {
@@ -229,6 +252,7 @@ export class BudgetsService extends Context.Service<
         createPeriod,
         setPlan,
         addEnvelope,
+        updatePeriod,
         getEnvelope,
         deletePeriod,
       });

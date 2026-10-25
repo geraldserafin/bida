@@ -25,6 +25,14 @@ export class BudgetsRepository extends Context.Service<
     latestPeriod: InSpace<Option.Option<Period>>;
     findPeriod(id: PeriodId): InSpace<Option.Option<Period>>;
     insertPeriod(input: typeof Period.insert.Type): InSpace<Period>;
+    updatePeriod(
+      id: PeriodId,
+      changes: {
+        readonly name: string;
+        readonly startDate: string;
+        readonly endDate: string;
+      },
+    ): InSpace<Option.Option<Period>>;
     setIncome(
       id: PeriodId,
       incomeMinor: number,
@@ -114,6 +122,22 @@ export class BudgetsRepository extends Context.Service<
                 WHERE id = ${id} AND space_id = ${spaceId} RETURNING ${periodColumns}`,
           ),
       });
+      const updatePeriodRow = SqlSchema.findOneOption({
+        Request: Schema.Struct({
+          id: Schema.String,
+          name: Schema.String,
+          startDate: Schema.String,
+          endDate: Schema.String,
+        }),
+        Result: Period,
+        execute: ({ id, name, startDate, endDate }) =>
+          inSpace(
+            (spaceId) =>
+              sql`UPDATE periods SET name = ${name}, start_date = ${startDate},
+                end_date = ${endDate}, updated_at = now()
+                WHERE id = ${id} AND space_id = ${spaceId} RETURNING ${periodColumns}`,
+          ),
+      });
       const deletePeriod = SqlSchema.findAll({
         Request: Schema.String,
         Result: Schema.Struct({ id: Schema.String }),
@@ -200,6 +224,8 @@ export class BudgetsRepository extends Context.Service<
         ),
         findPeriod: (id) => findPeriod(id).pipe(Effect.orDie),
         insertPeriod: (input) => insertPeriod(input).pipe(Effect.orDie),
+        updatePeriod: (id, changes) =>
+          updatePeriodRow({ id, ...changes }).pipe(Effect.orDie),
         setIncome: (id, incomeMinor) =>
           updateIncome({ id, incomeMinor }).pipe(Effect.orDie),
         deletePeriod: (id) =>

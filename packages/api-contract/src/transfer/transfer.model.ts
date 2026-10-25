@@ -8,11 +8,13 @@ import { RecurringRuleJson } from "../recurring/index.ts";
 export const ExportDocument = Schema.Struct({
   version: Schema.Literal(1),
   exportedAt: Schema.DateTimeUtcFromString,
-  categories: Schema.Array(CategoryJson),
-  periods: Schema.Array(PeriodJson),
-  envelopes: Schema.Array(EnvelopeJson),
-  expenses: Schema.Array(ExpenseJson),
-  recurringRules: Schema.Array(RecurringRuleJson),
+  categories: Schema.Array(CategoryJson).check(Schema.isMaxLength(1_000)),
+  periods: Schema.Array(PeriodJson).check(Schema.isMaxLength(10_000)),
+  envelopes: Schema.Array(EnvelopeJson).check(Schema.isMaxLength(100_000)),
+  expenses: Schema.Array(ExpenseJson).check(Schema.isMaxLength(200_000)),
+  recurringRules: Schema.Array(RecurringRuleJson).check(
+    Schema.isMaxLength(1_000),
+  ),
 }).annotate({ identifier: "ExportDocument" });
 export type ExportDocument = typeof ExportDocument.Type;
 

@@ -1,8 +1,14 @@
 import { Schema } from "effect";
-import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
+import {
+  HttpApiEndpoint,
+  HttpApiGroup,
+  HttpApiSchema,
+  OpenApi,
+} from "effect/http-api";
 import { EnvelopePlan, PeriodId, PeriodNotFound } from "../budgets/index.ts";
 import { CategoryNotFound } from "../categories/index.ts";
 import { Currency } from "../currency/index.ts";
+import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
 import { RecurringRuleNotFound } from "./recurring.errors.ts";
 import {
@@ -24,8 +30,8 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
     ),
     HttpApiEndpoint.post("create", "/recurring-rules", {
       payload: SaveRecurringRule,
-      success: RecurringRuleJson,
-      error: CategoryNotFound,
+      success: RecurringRuleJson.pipe(HttpApiSchema.status(201)),
+      error: wire(CategoryNotFound),
     }).annotateMerge(
       OpenApi.annotations({ summary: "Create a recurring rule" }),
     ),
@@ -33,7 +39,7 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
       params: { id: RecurringRuleId },
       payload: SaveRecurringRule,
       success: RecurringRuleJson,
-      error: [RecurringRuleNotFound, CategoryNotFound],
+      error: [wire(RecurringRuleNotFound), wire(CategoryNotFound)],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Edit a recurring rule",
@@ -42,7 +48,7 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
     ),
     HttpApiEndpoint.delete("delete", "/recurring-rules/:id", {
       params: { id: RecurringRuleId },
-      error: RecurringRuleNotFound,
+      error: wire(RecurringRuleNotFound),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Delete a recurring rule",
@@ -62,7 +68,7 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
     HttpApiEndpoint.post("apply", "/periods/:periodId/recurring/apply", {
       params: { periodId: PeriodId },
       success: ApplyResult,
-      error: PeriodNotFound,
+      error: wire(PeriodNotFound),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Apply recurring rules to a period",

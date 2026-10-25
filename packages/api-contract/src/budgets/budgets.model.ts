@@ -2,25 +2,20 @@ import { Schema } from "effect";
 import { Model } from "effect/schema";
 import { CategoryId } from "../categories/index.ts";
 import { Currency } from "../currency/index.ts";
+import { Money } from "../currency/money.ts";
+import { IsoDate, Name } from "../text.ts";
+import { Uuid } from "../uuid.ts";
 
-export const PeriodId = Schema.String.pipe(Schema.brand("PeriodId"));
+export const PeriodId = Uuid.pipe(Schema.brand("PeriodId"));
 export type PeriodId = typeof PeriodId.Type;
 
-export const EnvelopeId = Schema.String.pipe(Schema.brand("EnvelopeId"));
+export const EnvelopeId = Uuid.pipe(Schema.brand("EnvelopeId"));
 export type EnvelopeId = typeof EnvelopeId.Type;
-
-/** Calendar date, `YYYY-MM-DD`. */
-export const IsoDate = Schema.String.check(
-  Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/),
-);
-
-/** Amount of money in minor units (grosze), never negative. */
-export const Money = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
 
 /** A budgeting period, e.g. "July 2026", with the income to be distributed. */
 export class Period extends Model.Class<Period>("Period")({
   id: Model.UuidV4Insert(PeriodId),
-  name: Schema.NonEmptyString,
+  name: Name,
   startDate: IsoDate,
   endDate: IsoDate,
   incomeMinor: Money,
@@ -61,14 +56,14 @@ export const EnvelopePlan = Schema.Struct({
 export type EnvelopePlan = typeof EnvelopePlan.Type;
 
 export const CreatePeriod = Schema.Struct({
-  name: Schema.NonEmptyString,
+  name: Name,
   startDate: IsoDate,
   endDate: IsoDate,
   incomeMinor: Money,
   /** Defaults to the space's default currency. */
   currency: Schema.optional(Currency),
   /** Initial plan. Entries with a zero amount are ignored. */
-  envelopes: Schema.Array(EnvelopePlan),
+  envelopes: Schema.Array(EnvelopePlan).check(Schema.isMaxLength(500)),
 }).annotate({ identifier: "CreatePeriod" });
 export type CreatePeriod = typeof CreatePeriod.Type;
 
@@ -80,6 +75,14 @@ export type CreatePeriod = typeof CreatePeriod.Type;
  */
 export const SetPlan = Schema.Struct({
   incomeMinor: Money,
-  envelopes: Schema.Array(EnvelopePlan),
+  envelopes: Schema.Array(EnvelopePlan).check(Schema.isMaxLength(500)),
 }).annotate({ identifier: "SetPlan" });
 export type SetPlan = typeof SetPlan.Type;
+
+/** Renames a period and moves its dates. The currency and the plan stay. */
+export const UpdatePeriod = Schema.Struct({
+  name: Name,
+  startDate: IsoDate,
+  endDate: IsoDate,
+}).annotate({ identifier: "UpdatePeriod" });
+export type UpdatePeriod = typeof UpdatePeriod.Type;
