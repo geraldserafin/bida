@@ -10,6 +10,7 @@ import {
   type PeriodId,
   type PeriodNotFound,
   type PeriodProgress,
+  type PeriodSummary,
   type RecurringRuleId,
   type UpdateExpense,
 } from "@bida/api-contract";
@@ -53,6 +54,8 @@ export class ExpensesService extends Context.Service<
       filter: ListExpenses,
     ): InSpace<ReadonlyArray<Expense>, PeriodNotFound>;
     progress(periodId: PeriodId): InSpace<PeriodProgress, PeriodNotFound>;
+    /** Planned and spent for every period, newest first. */
+    periodSummaries: InSpace<ReadonlyArray<PeriodSummary>>;
   }
 >()("bida/expenses/ExpensesService") {
   static readonly layer = Layer.effect(
@@ -200,6 +203,17 @@ export class ExpensesService extends Context.Service<
         };
       });
 
+      const periodSummaries = Effect.gen(function* () {
+        const periods = yield* budgets.listPeriods;
+        const planned = yield* budgets.plannedByPeriod;
+        const spent = yield* repo.spentByPeriod;
+        return periods.map((period) => ({
+          period,
+          plannedMinor: planned.get(period.id) ?? 0,
+          spentMinor: spent.get(period.id) ?? 0,
+        }));
+      }).pipe(Effect.withSpan("ExpensesService.periodSummaries"));
+
       return ExpensesService.of({
         create,
         createFromRule,
@@ -209,6 +223,7 @@ export class ExpensesService extends Context.Service<
         remove,
         listForPeriod,
         progress,
+        periodSummaries,
       });
     }),
   );

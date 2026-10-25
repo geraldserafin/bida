@@ -8,6 +8,7 @@ import 'package:retrofit/retrofit.dart';
 import '../models/create_expense.dart';
 import '../models/expense.dart';
 import '../models/period_progress.dart';
+import '../models/period_summary.dart';
 import '../models/update_expense.dart';
 
 part 'expenses_client.g.dart';
@@ -48,6 +49,12 @@ abstract class ExpensesClient {
     @Query('limit') String? limit,
     @Query('offset') String? offset,
   });
+
+  /// Planned and spent for every period.
+  ///
+  /// Newest first. One call instead of one per period.
+  @GET('/periods/summaries')
+  Future<List<PeriodSummary>> expensesPeriodSummaries();
 
   /// Planned versus spent.
   ///

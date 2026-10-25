@@ -21,6 +21,8 @@ export class BudgetsRepository extends Context.Service<
   BudgetsRepository,
   {
     listPeriods: InSpace<ReadonlyArray<Period>>;
+    /** Total planned per period; periods without envelopes are absent. */
+    plannedByPeriod: InSpace<ReadonlyMap<PeriodId, number>>;
     /** The period with the latest start date. */
     latestPeriod: InSpace<Option.Option<Period>>;
     findPeriod(id: PeriodId): InSpace<Option.Option<Period>>;
@@ -80,6 +82,19 @@ export class BudgetsRepository extends Context.Service<
             (spaceId) =>
               sql`SELECT ${periodColumns} FROM periods WHERE space_id = ${spaceId}
                 ORDER BY start_date DESC, created_at DESC`,
+          ),
+      });
+      const plannedByPeriod = SqlSchema.findAll({
+        Request: Schema.Void,
+        Result: Schema.Struct({
+          periodId: Schema.String,
+          plannedMinor: Schema.Number,
+        }),
+        execute: () =>
+          inSpace(
+            (spaceId) =>
+              sql`SELECT period_id, SUM(planned_minor)::float8 AS planned_minor
+                FROM envelopes WHERE space_id = ${spaceId} GROUP BY period_id`,
           ),
       });
       const latestPeriod = SqlSchema.findOneOption({
@@ -217,6 +232,15 @@ export class BudgetsRepository extends Context.Service<
         listPeriods: listPeriods().pipe(
           Effect.orDie,
           Effect.withSpan("BudgetsRepository.listPeriods"),
+        ),
+        plannedByPeriod: plannedByPeriod().pipe(
+          Effect.map(
+            (rows) =>
+              new Map(
+                rows.map((row) => [row.periodId as PeriodId, row.plannedMinor]),
+              ),
+          ),
+          Effect.orDie,
         ),
         latestPeriod: latestPeriod().pipe(
           Effect.orDie,

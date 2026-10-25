@@ -27,6 +27,8 @@ export class BudgetsService extends Context.Service<
   BudgetsService,
   {
     listPeriods: InSpace<ReadonlyArray<Period>>;
+    /** Total planned per period; periods without envelopes are absent. */
+    plannedByPeriod: InSpace<ReadonlyMap<PeriodId, number>>;
     currentPeriod: InSpace<PeriodDetail, NoPeriods>;
     getPeriod(id: PeriodId): InSpace<PeriodDetail, PeriodNotFound>;
     createPeriod(
@@ -247,6 +249,7 @@ export class BudgetsService extends Context.Service<
 
       return BudgetsService.of({
         listPeriods,
+        plannedByPeriod: repo.plannedByPeriod,
         currentPeriod: currentPeriod(),
         getPeriod,
         createPeriod,

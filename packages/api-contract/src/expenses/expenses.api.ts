@@ -19,6 +19,7 @@ import {
   ExpenseId,
   ExpenseJson,
   PeriodProgress,
+  PeriodSummary,
   UpdateExpense,
 } from "./expense.model.ts";
 import { ExpenseNotFound } from "./expenses.errors.ts";
@@ -73,6 +74,14 @@ export class ExpensesApi extends HttpApiGroup.make("expenses")
       OpenApi.annotations({
         summary: "List the expenses of a period",
         description: "Newest first. Defaults to 50 rows, at most 200.",
+      }),
+    ),
+    HttpApiEndpoint.get("periodSummaries", "/periods/summaries", {
+      success: Schema.Array(PeriodSummary),
+    }).annotateMerge(
+      OpenApi.annotations({
+        summary: "Planned and spent for every period",
+        description: "Newest first. One call instead of one per period.",
       }),
     ),
     HttpApiEndpoint.get("progress", "/periods/:periodId/progress", {

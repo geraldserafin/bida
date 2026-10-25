@@ -55,6 +55,8 @@ export class ExpensesRepository extends Context.Service<
     appliedRecurringIds(
       periodId: PeriodId,
     ): InSpace<ReadonlySet<RecurringRuleId>>;
+    /** Total spent per period; periods without expenses are absent. */
+    spentByPeriod: InSpace<ReadonlyMap<PeriodId, number>>;
     /** Total spent per envelope of the period; envelopes without expenses are absent. */
     spentByEnvelope(
       periodId: PeriodId,
@@ -181,6 +183,19 @@ export class ExpensesRepository extends Context.Service<
                   AND recurring_id IS NOT NULL`,
           ),
       });
+      const spentByPeriod = SqlSchema.findAll({
+        Request: Schema.Void,
+        Result: Schema.Struct({
+          periodId: Schema.String,
+          spentMinor: Schema.Number,
+        }),
+        execute: () =>
+          inSpace(
+            (spaceId) =>
+              sql`SELECT period_id, SUM(amount_minor)::float8 AS spent_minor
+                FROM expenses WHERE space_id = ${spaceId} GROUP BY period_id`,
+          ),
+      });
       const spentByEnvelope = SqlSchema.findAll({
         Request: Schema.String,
         Result: Schema.Struct({
@@ -214,6 +229,15 @@ export class ExpensesRepository extends Context.Service<
             ),
             Effect.orDie,
           ),
+        spentByPeriod: spentByPeriod().pipe(
+          Effect.map(
+            (rows) =>
+              new Map(
+                rows.map((row) => [row.periodId as PeriodId, row.spentMinor]),
+              ),
+          ),
+          Effect.orDie,
+        ),
         spentByEnvelope: (periodId) =>
           spentByEnvelope(periodId).pipe(
             Effect.map(

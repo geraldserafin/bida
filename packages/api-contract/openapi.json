@@ -1210,6 +1210,43 @@
         "summary": "List the expenses of a period"
       }
     },
+    "/periods/summaries": {
+      "get": {
+        "tags": [
+          "Expenses"
+        ],
+        "operationId": "expenses.periodSummaries",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PeriodSummary"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Newest first. One call instead of one per period.",
+        "summary": "Planned and spent for every period"
+      }
+    },
     "/periods/{periodId}/progress": {
       "get": {
         "tags": [
@@ -2889,6 +2926,30 @@
           "plannedMinor",
           "spentMinor",
           "remainingMinor"
+        ],
+        "additionalProperties": false
+      },
+      "PeriodSummary": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "plannedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000000000
+          },
+          "spentMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000000000
+          }
+        },
+        "required": [
+          "period",
+          "plannedMinor",
+          "spentMinor"
         ],
         "additionalProperties": false
       },

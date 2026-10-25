@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 import { Model } from "effect/schema";
-import { EnvelopeId, PeriodId } from "../budgets/index.ts";
+import { EnvelopeId, PeriodId, PeriodJson } from "../budgets/index.ts";
 import { CategoryId } from "../categories/index.ts";
 import { Currency } from "../currency/index.ts";
 import { Money, PositiveMoney } from "../currency/money.ts";
@@ -94,3 +94,11 @@ export const PeriodProgress = Schema.Struct({
   envelopes: Schema.Array(EnvelopeProgress),
 }).annotate({ identifier: "PeriodProgress" });
 export type PeriodProgress = typeof PeriodProgress.Type;
+
+/** A period with how much of it is planned and spent, for the list of periods. */
+export const PeriodSummary = Schema.Struct({
+  period: PeriodJson,
+  plannedMinor: Money,
+  spentMinor: Money,
+}).annotate({ identifier: "PeriodSummary" });
+export type PeriodSummary = typeof PeriodSummary.Type;

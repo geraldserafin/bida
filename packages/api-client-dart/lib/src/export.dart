@@ -34,6 +34,7 @@ export 'models/category_not_found.dart';
 export 'models/save_recurring_rule.dart';
 export 'models/period_progress.dart';
 export 'models/envelope_progress.dart';
+export 'models/period_summary.dart';
 export 'models/expense_not_found.dart';
 export 'models/envelope_not_found.dart';
 export 'models/update_expense.dart';

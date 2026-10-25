@@ -19,6 +19,7 @@ export const ExpensesHttp = HttpApiBuilder.group(
       .handle("listForPeriod", ({ params, query }) =>
         expenses.listForPeriod(params.periodId, query),
       )
-      .handle("progress", ({ params }) => expenses.progress(params.periodId));
+      .handle("progress", ({ params }) => expenses.progress(params.periodId))
+      .handle("periodSummaries", () => expenses.periodSummaries);
   }),
 );
