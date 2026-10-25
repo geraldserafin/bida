@@ -71,6 +71,10 @@ class PlannerState extends ChangeNotifier {
   List<CategoryProgress> _progress = const [];
   List<CategoryProgress> get progress => _progress;
 
+  /// What was paid into the current period (shared budgets).
+  double _contributed = 0;
+  double get contributed => _contributed;
+
   // ---- derived totals -------------------------------------------------------
 
   double get income => _currentPeriod?.income ?? 0;
@@ -167,9 +171,14 @@ class PlannerState extends ChangeNotifier {
 
   Future<void> _refreshProgress() async {
     final period = _currentPeriod;
-    _progress = period == null
-        ? const []
-        : await _repo.categoryProgress(period, _categoriesById);
+    if (period == null) {
+      _progress = const [];
+      _contributed = 0;
+      return;
+    }
+    final progress = await _repo.periodProgress(period, _categoriesById);
+    _progress = progress.envelopes;
+    _contributed = progress.contributed;
   }
 
   Map<String, Category> get _categoriesById => {
@@ -215,13 +224,42 @@ class PlannerState extends ChangeNotifier {
     final period = _currentPeriod;
     if (period == null) return;
 
-    final updated = await _repo.setPlan(
-      period,
-      income: income,
-      plannedByCategory: plannedByCategory,
-    );
+    final Period updated;
+    try {
+      updated = await _repo.setPlan(
+        period,
+        income: income,
+        plannedByCategory: plannedByCategory,
+      );
+    } on ApiException catch (error) {
+      // somebody else edited the plan: show what they saved before the user
+      // is asked to edit again
+      if (error.tag == 'PeriodChanged') await _reloadPeriods();
+      rethrow;
+    }
     _periods = [for (final p in _periods) p.id == updated.id ? updated : p];
     _currentPeriod = updated;
+    await _refreshProgress();
+    notifyListeners();
+  }
+
+  /// Fetches the progress of the current period again, e.g. after something
+  /// was paid into it.
+  Future<void> reloadProgress() async {
+    try {
+      await _refreshProgress();
+      notifyListeners();
+    } on ApiException {
+      // the numbers on screen stay as they were
+    }
+  }
+
+  /// Fetches the periods and the progress again, keeping the current period.
+  Future<void> _reloadPeriods() async {
+    final id = _currentPeriod?.id;
+    _periods = await _repo.periods();
+    _currentPeriod =
+        _periods.where((p) => p.id == id).firstOrNull ?? _periods.firstOrNull;
     await _refreshProgress();
     notifyListeners();
   }

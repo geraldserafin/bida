@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../l10n/app_localizations.dart';
 import '../screens/categories/categories_screen.dart';
 import '../screens/history/history_screen.dart';
 import '../screens/recurring/recurring_rules_screen.dart';
 import '../screens/settings/settings_screen.dart';
+import '../screens/spaces/spaces_screen.dart';
+import '../state/spaces_state.dart';
+import 'space_chooser.dart';
 
 /// App-wide navigation drawer, keeping the dashboard app bar uncluttered.
 class AppDrawer extends StatelessWidget {
@@ -14,6 +18,7 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final current = context.watch<SpacesState>().current;
 
     void go(Widget screen) {
       Navigator.of(context).pop(); // close the drawer
@@ -42,6 +47,40 @@ class AppDrawer extends StatelessWidget {
                     color: scheme.onPrimaryContainer,
                   ),
                 ),
+                if (current != null)
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      showSpaceChooser(context);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            spaceIcon(current),
+                            size: 16,
+                            color: scheme.onPrimaryContainer,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              current.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: scheme.onPrimaryContainer,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_drop_down,
+                            color: scheme.onPrimaryContainer,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -59,6 +98,11 @@ class AppDrawer extends StatelessWidget {
             leading: const Icon(Icons.category_outlined),
             title: Text(l10n.categories),
             onTap: () => go(const CategoriesScreen()),
+          ),
+          ListTile(
+            leading: const Icon(Icons.groups_outlined),
+            title: Text(l10n.budgets),
+            onTap: () => go(const SpacesScreen()),
           ),
           ListTile(
             leading: const Icon(Icons.repeat),

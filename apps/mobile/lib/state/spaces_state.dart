@@ -60,6 +60,32 @@ class SpacesState extends ChangeNotifier {
 
   bool get isOwner => _current?.isOwner ?? false;
 
+  /// Who is in the shared budget in use, to name the author of an expense.
+  /// Empty for a personal budget.
+  List<SpaceMember> _members = const [];
+  List<SpaceMember> get members => _members;
+
+  SpaceMember? memberById(String? userId) =>
+      _members.where((m) => m.userId == userId).firstOrNull;
+
+  /// Fetches the members again (after somebody joined, left or was renamed).
+  Future<void> reloadMembers() async {
+    final space = _current;
+    if (space == null || !space.isShared) {
+      _members = const [];
+      return;
+    }
+    try {
+      final members = await _repo.members(space.id);
+      // the user may have switched budgets while this was loading
+      if (_current?.id != space.id) return;
+      _members = members;
+      notifyListeners();
+    } on ApiException {
+      // the names are a nicety: the lists still work without them
+    }
+  }
+
   /// Tells the state whether somebody is signed in: it loads their budgets
   /// when they are, and forgets everything when they sign out.
   void bind({required bool signedIn}) {
@@ -72,6 +98,7 @@ class SpacesState extends ChangeNotifier {
   void _forget() {
     _spaces = const [];
     _current = null;
+    _members = const [];
     _invitations = const [];
     _loadError = null;
     _loading = true;
@@ -111,8 +138,11 @@ class SpacesState extends ChangeNotifier {
   }
 
   void _choose(AppSpace? space) {
+    final changed = space?.id != _current?.id;
     _current = space;
     _active.id = space?.id;
+    if (changed) _members = const [];
+    unawaited(reloadMembers());
   }
 
   /// Works in another of the user's budgets.

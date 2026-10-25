@@ -256,5 +256,150 @@
   "signInWithGoogle": "Sign in with Google",
   "googleSignInFailed": "Google sign-in did not work. Try again or use the e-mail code.",
   "orSeparator": "or",
-  "errorForbidden": "Only an owner of this budget can do that."
+  "errorForbidden": "Only an owner of this budget can do that.",
+  "budgets": "Budgets",
+  "personalBudget": "Personal",
+  "sharedBudget": "Shared",
+  "newSharedBudget": "New shared budget",
+  "budgetName": "Budget name",
+  "membersCount": "Members: {count}",
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "manageBudgets": "Manage budgets",
+  "switchBudget": "Switch budget",
+  "yourBudgets": "Your budgets",
+  "roleOwner": "Owner",
+  "roleMember": "Member",
+  "members": "Members",
+  "you": "(you)",
+  "invite": "Invite",
+  "inviteByEmail": "Invite by e-mail",
+  "role": "Role",
+  "invitationSent": "Invitation sent to {email}",
+  "@invitationSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "pendingInvitations": "Pending invitations",
+  "invitationWaiting": "waiting for an answer",
+  "invitationAcceptedWaiting": "accepted, waiting for your approval",
+  "approve": "Approve",
+  "reject": "Turn down",
+  "revokeInvitation": "Revoke the invitation",
+  "invitationsForYou": "Invitations for you",
+  "invitationFrom": "“{space}”, invited by {by}",
+  "@invitationFrom": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      },
+      "by": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationFromUnknown": "“{space}”",
+  "@invitationFromUnknown": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      }
+    }
+  },
+  "accept": "Accept",
+  "decline": "Decline",
+  "invitationAcceptedInfo": "Accepted. An owner still has to approve you joining.",
+  "invitationsBanner": "You have invitations: {count}",
+  "@invitationsBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "makeOwner": "Make an owner",
+  "makeMember": "Make a regular member",
+  "removeMember": "Remove from the budget",
+  "removeMemberConfirm": "Remove {name} from the budget? What they added stays.",
+  "@removeMemberConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveBudget": "Leave the budget",
+  "leaveBudgetConfirm": "Leave “{name}”? You lose access to it.",
+  "@leaveBudgetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteBudget": "Delete the budget",
+  "deleteBudgetConfirm": "Delete “{name}” with all its data? This cannot be undone.",
+  "@deleteBudgetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "editBudget": "Rename and change currency",
+  "removedFromBudget": "You are no longer in “{name}”.",
+  "@removedFromBudget": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contributions": "Contributions",
+  "contributedOf": "Paid in {amount} of {planned}",
+  "@contributedOf": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "planned": {
+        "type": "String"
+      }
+    }
+  },
+  "addContribution": "Add a payment",
+  "externalMoney": "Money from outside (e.g. cash from somebody else)",
+  "noContributions": "Nobody has paid in yet.",
+  "byPerson": "Who paid how much",
+  "outsideMoney": "From outside",
+  "formerMember": "Former member",
+  "deleteContributionConfirm": "Delete this payment?",
+  "yourName": "Your name",
+  "yourNameHint": "Members of your shared budgets see it",
+  "addedBy": "Added by {name}",
+  "@addedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingTitle": "What do you want to use?",
+  "onboardingPersonal": "Only my own budget",
+  "onboardingShared": "A shared budget (e.g. with a partner)",
+  "onboardingBoth": "Both",
+  "errorPeriodChanged": "Somebody changed this period meanwhile. The data was refreshed: check it and save again.",
+  "errorLimitReached": "A limit was reached (budgets, members or invitations).",
+  "errorAlreadyMember": "This address is already in the budget.",
+  "errorLastOwner": "A budget needs an owner. Hand the role to somebody else first.",
+  "errorSpaceNotEmpty": "There are other people in the budget. Remove them first.",
+  "errorPersonalSpace": "This cannot be done with the personal budget."
 }

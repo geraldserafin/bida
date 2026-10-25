@@ -534,4 +534,219 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorForbidden => 'Only an owner of this budget can do that.';
+
+  @override
+  String get budgets => 'Budgets';
+
+  @override
+  String get personalBudget => 'Personal';
+
+  @override
+  String get sharedBudget => 'Shared';
+
+  @override
+  String get newSharedBudget => 'New shared budget';
+
+  @override
+  String get budgetName => 'Budget name';
+
+  @override
+  String membersCount(int count) {
+    return 'Members: $count';
+  }
+
+  @override
+  String get manageBudgets => 'Manage budgets';
+
+  @override
+  String get switchBudget => 'Switch budget';
+
+  @override
+  String get yourBudgets => 'Your budgets';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleMember => 'Member';
+
+  @override
+  String get members => 'Members';
+
+  @override
+  String get you => '(you)';
+
+  @override
+  String get invite => 'Invite';
+
+  @override
+  String get inviteByEmail => 'Invite by e-mail';
+
+  @override
+  String get role => 'Role';
+
+  @override
+  String invitationSent(String email) {
+    return 'Invitation sent to $email';
+  }
+
+  @override
+  String get pendingInvitations => 'Pending invitations';
+
+  @override
+  String get invitationWaiting => 'waiting for an answer';
+
+  @override
+  String get invitationAcceptedWaiting => 'accepted, waiting for your approval';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get reject => 'Turn down';
+
+  @override
+  String get revokeInvitation => 'Revoke the invitation';
+
+  @override
+  String get invitationsForYou => 'Invitations for you';
+
+  @override
+  String invitationFrom(String space, String by) {
+    return '“$space”, invited by $by';
+  }
+
+  @override
+  String invitationFromUnknown(String space) {
+    return '“$space”';
+  }
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String get invitationAcceptedInfo =>
+      'Accepted. An owner still has to approve you joining.';
+
+  @override
+  String invitationsBanner(int count) {
+    return 'You have invitations: $count';
+  }
+
+  @override
+  String get makeOwner => 'Make an owner';
+
+  @override
+  String get makeMember => 'Make a regular member';
+
+  @override
+  String get removeMember => 'Remove from the budget';
+
+  @override
+  String removeMemberConfirm(String name) {
+    return 'Remove $name from the budget? What they added stays.';
+  }
+
+  @override
+  String get leaveBudget => 'Leave the budget';
+
+  @override
+  String leaveBudgetConfirm(String name) {
+    return 'Leave “$name”? You lose access to it.';
+  }
+
+  @override
+  String get deleteBudget => 'Delete the budget';
+
+  @override
+  String deleteBudgetConfirm(String name) {
+    return 'Delete “$name” with all its data? This cannot be undone.';
+  }
+
+  @override
+  String get editBudget => 'Rename and change currency';
+
+  @override
+  String removedFromBudget(String name) {
+    return 'You are no longer in “$name”.';
+  }
+
+  @override
+  String get contributions => 'Contributions';
+
+  @override
+  String contributedOf(String amount, String planned) {
+    return 'Paid in $amount of $planned';
+  }
+
+  @override
+  String get addContribution => 'Add a payment';
+
+  @override
+  String get externalMoney =>
+      'Money from outside (e.g. cash from somebody else)';
+
+  @override
+  String get noContributions => 'Nobody has paid in yet.';
+
+  @override
+  String get byPerson => 'Who paid how much';
+
+  @override
+  String get outsideMoney => 'From outside';
+
+  @override
+  String get formerMember => 'Former member';
+
+  @override
+  String get deleteContributionConfirm => 'Delete this payment?';
+
+  @override
+  String get yourName => 'Your name';
+
+  @override
+  String get yourNameHint => 'Members of your shared budgets see it';
+
+  @override
+  String addedBy(String name) {
+    return 'Added by $name';
+  }
+
+  @override
+  String get onboardingTitle => 'What do you want to use?';
+
+  @override
+  String get onboardingPersonal => 'Only my own budget';
+
+  @override
+  String get onboardingShared => 'A shared budget (e.g. with a partner)';
+
+  @override
+  String get onboardingBoth => 'Both';
+
+  @override
+  String get errorPeriodChanged =>
+      'Somebody changed this period meanwhile. The data was refreshed: check it and save again.';
+
+  @override
+  String get errorLimitReached =>
+      'A limit was reached (budgets, members or invitations).';
+
+  @override
+  String get errorAlreadyMember => 'This address is already in the budget.';
+
+  @override
+  String get errorLastOwner =>
+      'A budget needs an owner. Hand the role to somebody else first.';
+
+  @override
+  String get errorSpaceNotEmpty =>
+      'There are other people in the budget. Remove them first.';
+
+  @override
+  String get errorPersonalSpace =>
+      'This cannot be done with the personal budget.';
 }

@@ -18,6 +18,9 @@ class AuthRepository {
   final api.Transport _transport;
   final SessionStore session;
 
+  /// The name of the signed-in user, as the server last told us.
+  String? name;
+
   /// E-mails a link and a code to the address.
   Future<void> requestLink(String email) => guard(
     () => _api.auth.authRequestLink(body: api.RequestLink(email: email)),
@@ -57,13 +60,16 @@ class AuthRepository {
   Future<String> _keep(api.AuthResult result) async {
     final token = result.token;
     if (token != null) await session.save(token);
+    name = result.user.name;
     return result.user.email;
   }
 
   /// The e-mail of the user this device is signed in as, or null when it is not.
   Future<String?> currentUser() async {
     try {
-      return (await guard(() => _api.auth.authMe())).email;
+      final user = await guard(() => _api.auth.authMe());
+      name = user.name;
+      return user.email;
     } on ApiException catch (error) {
       if (error.failure == ApiFailure.unauthorized) return null;
       rethrow;
@@ -71,8 +77,12 @@ class AuthRepository {
   }
 
   /// Sets the name other members of a shared budget see.
-  Future<void> rename(String name) =>
-      guard(() => _api.auth.authRename(body: api.SaveProfile(name: name)));
+  Future<void> rename(String name) async {
+    final user = await guard(
+      () => _api.auth.authRename(body: api.SaveProfile(name: name)),
+    );
+    this.name = user.name;
+  }
 
   /// Ends the session. The device is signed out even when the server cannot
   /// be reached.
@@ -82,9 +92,13 @@ class AuthRepository {
     } on ApiException {
       // the token is dropped below either way
     }
+    name = null;
     await session.clear();
   }
 
   /// Forgets the session the server already ended.
-  Future<void> forget() => session.clear();
+  Future<void> forget() {
+    name = null;
+    return session.clear();
+  }
 }

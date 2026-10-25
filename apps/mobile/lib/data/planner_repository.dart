@@ -130,17 +130,26 @@ class PlannerRepository {
   Future<List<CategoryProgress>> categoryProgress(
     Period period,
     Map<String, Category> categories,
+  ) async => (await periodProgress(period, categories)).envelopes;
+
+  /// Like [categoryProgress], with what was paid into the period.
+  Future<PeriodProgress> periodProgress(
+    Period period,
+    Map<String, Category> categories,
   ) => guard(() async {
     final progress = await _api.expenses.expensesProgress(periodId: period.id!);
-    return [
-      for (final row in progress.envelopes)
-        if (categories[row.categoryId] case final category?)
-          CategoryProgress(
-            category: category,
-            envelope: envelopeFrom(row, period.id!, period.currency),
-            spent: fromMinor(row.spentMinor, period.currency),
-          ),
-    ];
+    return PeriodProgress(
+      envelopes: [
+        for (final row in progress.envelopes)
+          if (categories[row.categoryId] case final category?)
+            CategoryProgress(
+              category: category,
+              envelope: envelopeFrom(row, period.id!, period.currency),
+              spent: fromMinor(row.spentMinor, period.currency),
+            ),
+      ],
+      contributed: fromMinor(progress.contributedMinor, period.currency),
+    );
   });
 
   /// An empty envelope for the category, so it can be spent from right away.

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/planner_state.dart';
+import '../../state/spaces_state.dart';
 import '../../util/api_errors.dart';
 import '../../theme/category_visuals.dart';
 import 'category_editor.dart';
@@ -45,10 +46,14 @@ class CategoriesScreen extends StatelessWidget {
                     ),
                   ),
                   title: Text(category.name),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => _delete(context, state, category.id!),
-                  ),
+                  // only owners may delete what everybody works on
+                  trailing: context.watch<SpacesState>().isOwner
+                      ? IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () =>
+                              _delete(context, state, category.id!),
+                        )
+                      : null,
                   onTap: () async {
                     final planner = context.read<PlannerState>();
                     final edited = await showCategoryEditor(

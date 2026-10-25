@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/category_progress.dart';
 import '../../models/period.dart';
 import '../../state/planner_state.dart';
+import '../../state/spaces_state.dart';
 import '../../theme/category_visuals.dart';
 import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
@@ -16,6 +17,8 @@ import '../period_setup/new_period_screen.dart';
 import '../periods/periods_screen.dart';
 import '../recurring/recurring_rules_screen.dart';
 import '../settings/settings_screen.dart';
+import 'widgets/budget_header.dart';
+import 'widgets/contributions_card.dart';
 import 'widgets/planned_pie_chart.dart';
 import 'widgets/planned_vs_spent_chart.dart';
 
@@ -74,20 +77,27 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(width: 4),
         ],
       ),
-      body: Builder(
-        builder: (context) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final loadError = state.loadError;
-          if (loadError != null) {
-            return ErrorView(error: loadError, onRetry: state.load);
-          }
-          if (period == null) {
-            return _EmptyState(onCreate: () => _openNewPeriod(context));
-          }
-          return _PeriodView(state: state);
-        },
+      body: Column(
+        children: [
+          const BudgetHeader(),
+          Expanded(
+            child: Builder(
+              builder: (context) {
+                if (state.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final loadError = state.loadError;
+                if (loadError != null) {
+                  return ErrorView(error: loadError, onRetry: state.load);
+                }
+                if (period == null) {
+                  return _EmptyState(onCreate: () => _openNewPeriod(context));
+                }
+                return _PeriodView(state: state);
+              },
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: const _BottomNav(),
       floatingActionButton: period == null
@@ -240,6 +250,10 @@ class _PeriodView extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
       children: [
         _SummaryCard(state: state),
+        if (context.watch<SpacesState>().current?.isShared ?? false) ...[
+          const SizedBox(height: 14),
+          const ContributionsCard(),
+        ],
         if (state.progress.isNotEmpty) ...[
           const SizedBox(height: 14),
           PlannedPieChart(

@@ -9,6 +9,7 @@ import '../../state/planner_state.dart';
 import '../../theme/category_visuals.dart';
 import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
+import '../../util/author.dart';
 import '../../widgets/remote_data.dart';
 import '../add_expense/add_expense_screen.dart';
 import 'widgets/spending_line_chart.dart';
@@ -196,9 +197,11 @@ class _ExpenseTile extends StatelessWidget {
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        expense.note == null || expense.note!.isEmpty
-            ? dateFmt.format(expense.date)
-            : '${dateFmt.format(expense.date)} · ${expense.note}',
+        [
+          dateFmt.format(expense.date),
+          ?authorOf(context, expense),
+          if (expense.note != null && expense.note!.isNotEmpty) expense.note!,
+        ].join(' · '),
       ),
       trailing: IconButton(
         icon: const Icon(Icons.delete_outline),

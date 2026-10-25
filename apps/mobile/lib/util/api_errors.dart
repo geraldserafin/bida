@@ -5,6 +5,17 @@ import '../l10n/app_localizations.dart';
 
 /// What to tell the user when a request failed.
 String apiErrorMessage(AppLocalizations l10n, ApiException error) =>
+    switch (error.tag) {
+      'PeriodChanged' => l10n.errorPeriodChanged,
+      'LimitReached' => l10n.errorLimitReached,
+      'AlreadyMember' => l10n.errorAlreadyMember,
+      'LastOwner' => l10n.errorLastOwner,
+      'SpaceNotEmpty' => l10n.errorSpaceNotEmpty,
+      'PersonalSpace' => l10n.errorPersonalSpace,
+      _ => _failureMessage(l10n, error),
+    };
+
+String _failureMessage(AppLocalizations l10n, ApiException error) =>
     switch (error.failure) {
       ApiFailure.unreachable => l10n.errorUnreachable,
       ApiFailure.notFound => l10n.errorNotFound,

@@ -96,6 +96,72 @@ void main() {
     },
   );
 
+  test('shows what was paid into the period next to the income', () async {
+    backend.on(
+      'GET /periods/p2/progress',
+      (_) => Reply({...progressJson('p2', []), 'contributedMinor': 450000}),
+    );
+    final state = newState();
+
+    await state.load();
+
+    expect(state.contributed, 4500);
+  });
+
+  test('remembers the period per budget', () async {
+    final state = newState();
+    state.useSpace('home');
+    await Future<void>.delayed(Duration.zero);
+    await state.load();
+    await state.selectPeriod('p1');
+
+    final other = newState();
+    other.useSpace('work');
+    await Future<void>.delayed(Duration.zero);
+    await other.load();
+    // 'work' never chose, so it starts at the newest period
+    expect(other.currentPeriod?.id, 'p2');
+
+    final again = newState();
+    again.useSpace('home');
+    await Future<void>.delayed(Duration.zero);
+    await again.load();
+    expect(again.currentPeriod?.id, 'p1');
+  });
+
+  test('a plan edit on stale data reloads the plan and is refused', () async {
+    backend.on(
+      'PUT /periods/p2/plan',
+      (_) => Reply.error(409, 'PeriodChanged', {'id': 'p2'}),
+    );
+    final state = newState();
+    await state.load();
+    // somebody else saved a new income in the meantime
+    backend.on(
+      'GET /periods',
+      (_) => Reply([
+        periodJson(
+          'p2',
+          'August',
+          incomeMinor: 650000,
+          start: '2026-08-01',
+          end: '2026-08-31',
+          version: 2,
+        ),
+        periodJson('p1', 'July'),
+      ]),
+    );
+
+    await expectLater(
+      state.editCurrentPeriodPlan(income: 7000, plannedByCategory: {'c1': 1}),
+      throwsA(isA<ApiException>().having((e) => e.tag, 'tag', 'PeriodChanged')),
+    );
+
+    expect(state.currentPeriod?.id, 'p2');
+    expect(state.currentPeriod?.income, 6500);
+    expect(state.currentPeriod?.version, 2);
+  });
+
   test('load picks the newest period and derives the totals', () async {
     final state = newState();
 

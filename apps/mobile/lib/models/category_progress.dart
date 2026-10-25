@@ -6,6 +6,15 @@ import 'envelope.dart';
 ///
 /// Not stored anywhere — assembled by the repository from the API's progress
 /// for the dashboard and category detail screens.
+/// The envelopes of a period with what was spent from them, and what was paid
+/// into the period (shared budgets).
+class PeriodProgress {
+  const PeriodProgress({required this.envelopes, required this.contributed});
+
+  final List<CategoryProgress> envelopes;
+  final double contributed;
+}
+
 class CategoryProgress {
   final Category category;
   final Envelope envelope;

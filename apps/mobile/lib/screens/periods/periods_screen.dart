@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/period_summary.dart';
 import '../../state/planner_state.dart';
+import '../../state/spaces_state.dart';
 import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
 import '../../widgets/remote_data.dart';
@@ -196,11 +197,13 @@ class _PeriodTile extends StatelessWidget {
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    tooltip: l10n.deletePeriod,
-                    onPressed: () => _confirmDelete(context),
-                  ),
+                  // only owners may delete what everybody works on
+                  if (context.watch<SpacesState>().isOwner)
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      tooltip: l10n.deletePeriod,
+                      onPressed: () => _confirmDelete(context),
+                    ),
                 ],
               ),
               if (active) ...[

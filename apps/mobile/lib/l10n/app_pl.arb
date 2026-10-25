@@ -155,5 +155,150 @@
   "signInWithGoogle": "Zaloguj przez Google",
   "googleSignInFailed": "Logowanie przez Google nie udało się. Spróbuj ponownie albo użyj kodu z e-maila.",
   "orSeparator": "lub",
-  "errorForbidden": "Tylko właściciel tego budżetu może to zrobić."
+  "errorForbidden": "Tylko właściciel tego budżetu może to zrobić.",
+  "budgets": "Budżety",
+  "personalBudget": "Osobisty",
+  "sharedBudget": "Wspólny",
+  "newSharedBudget": "Nowy wspólny budżet",
+  "budgetName": "Nazwa budżetu",
+  "membersCount": "Osób: {count}",
+  "@membersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "manageBudgets": "Zarządzaj budżetami",
+  "switchBudget": "Przełącz budżet",
+  "yourBudgets": "Twoje budżety",
+  "roleOwner": "Właściciel",
+  "roleMember": "Członek",
+  "members": "Członkowie",
+  "you": "(Ty)",
+  "invite": "Zaproś",
+  "inviteByEmail": "Zaproś e-mailem",
+  "role": "Rola",
+  "invitationSent": "Wysłano zaproszenie na {email}",
+  "@invitationSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "pendingInvitations": "Oczekujące zaproszenia",
+  "invitationWaiting": "czeka na odpowiedź",
+  "invitationAcceptedWaiting": "przyjęte, czeka na Twoje zatwierdzenie",
+  "approve": "Zatwierdź",
+  "reject": "Odrzuć",
+  "revokeInvitation": "Cofnij zaproszenie",
+  "invitationsForYou": "Zaproszenia dla Ciebie",
+  "invitationFrom": "„{space}”, zaprasza {by}",
+  "@invitationFrom": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      },
+      "by": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationFromUnknown": "„{space}”",
+  "@invitationFromUnknown": {
+    "placeholders": {
+      "space": {
+        "type": "String"
+      }
+    }
+  },
+  "accept": "Przyjmij",
+  "decline": "Odrzuć",
+  "invitationAcceptedInfo": "Przyjęto. Właściciel musi jeszcze zatwierdzić Twoje dołączenie.",
+  "invitationsBanner": "Masz zaproszenia: {count}",
+  "@invitationsBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "makeOwner": "Zrób właścicielem",
+  "makeMember": "Zrób zwykłym członkiem",
+  "removeMember": "Usuń z budżetu",
+  "removeMemberConfirm": "Usunąć {name} z budżetu? To, co dodał(a), zostaje.",
+  "@removeMemberConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "leaveBudget": "Opuść budżet",
+  "leaveBudgetConfirm": "Opuścić „{name}”? Stracisz do niego dostęp.",
+  "@leaveBudgetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteBudget": "Usuń budżet",
+  "deleteBudgetConfirm": "Usunąć „{name}” razem z wszystkimi danymi? Tego nie da się cofnąć.",
+  "@deleteBudgetConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "editBudget": "Zmień nazwę i walutę",
+  "removedFromBudget": "Nie ma Cię już w budżecie „{name}”.",
+  "@removedFromBudget": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "contributions": "Wpłaty",
+  "contributedOf": "Wpłacono {amount} z {planned}",
+  "@contributedOf": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "planned": {
+        "type": "String"
+      }
+    }
+  },
+  "addContribution": "Dodaj wpłatę",
+  "externalMoney": "Pieniądze z zewnątrz (np. gotówka od kogoś)",
+  "noContributions": "Nikt jeszcze nic nie wpłacił.",
+  "byPerson": "Kto ile wpłacił",
+  "outsideMoney": "Z zewnątrz",
+  "formerMember": "Były członek",
+  "deleteContributionConfirm": "Usunąć tę wpłatę?",
+  "yourName": "Twoja nazwa",
+  "yourNameHint": "Widzą ją członkowie Twoich wspólnych budżetów",
+  "addedBy": "Dodał(a): {name}",
+  "@addedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingTitle": "Czego chcesz używać?",
+  "onboardingPersonal": "Tylko mojego budżetu",
+  "onboardingShared": "Wspólnego budżetu (np. z partnerem)",
+  "onboardingBoth": "Obu",
+  "errorPeriodChanged": "Ktoś zmienił ten okres w międzyczasie. Odświeżyliśmy dane: sprawdź je i zapisz jeszcze raz.",
+  "errorLimitReached": "Osiągnięto limit (budżetów, członków albo zaproszeń).",
+  "errorAlreadyMember": "Ten adres jest już w budżecie.",
+  "errorLastOwner": "Budżet musi mieć właściciela. Najpierw przekaż tę rolę komuś innemu.",
+  "errorSpaceNotEmpty": "W budżecie są jeszcze inne osoby. Najpierw je usuń.",
+  "errorPersonalSpace": "Tego nie można zrobić z budżetem osobistym."
 }

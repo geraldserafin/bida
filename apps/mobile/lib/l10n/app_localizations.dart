@@ -1033,6 +1033,378 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only an owner of this budget can do that.'**
   String get errorForbidden;
+
+  /// No description provided for @budgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Budgets'**
+  String get budgets;
+
+  /// No description provided for @personalBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get personalBudget;
+
+  /// No description provided for @sharedBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Shared'**
+  String get sharedBudget;
+
+  /// No description provided for @newSharedBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'New shared budget'**
+  String get newSharedBudget;
+
+  /// No description provided for @budgetName.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget name'**
+  String get budgetName;
+
+  /// No description provided for @membersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Members: {count}'**
+  String membersCount(int count);
+
+  /// No description provided for @manageBudgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage budgets'**
+  String get manageBudgets;
+
+  /// No description provided for @switchBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch budget'**
+  String get switchBudget;
+
+  /// No description provided for @yourBudgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Your budgets'**
+  String get yourBudgets;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get roleOwner;
+
+  /// No description provided for @roleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get roleMember;
+
+  /// No description provided for @members.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get members;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'(you)'**
+  String get you;
+
+  /// No description provided for @invite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get invite;
+
+  /// No description provided for @inviteByEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite by e-mail'**
+  String get inviteByEmail;
+
+  /// No description provided for @role.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get role;
+
+  /// No description provided for @invitationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation sent to {email}'**
+  String invitationSent(String email);
+
+  /// No description provided for @pendingInvitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending invitations'**
+  String get pendingInvitations;
+
+  /// No description provided for @invitationWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'waiting for an answer'**
+  String get invitationWaiting;
+
+  /// No description provided for @invitationAcceptedWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'accepted, waiting for your approval'**
+  String get invitationAcceptedWaiting;
+
+  /// No description provided for @approve.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approve;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn down'**
+  String get reject;
+
+  /// No description provided for @revokeInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke the invitation'**
+  String get revokeInvitation;
+
+  /// No description provided for @invitationsForYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitations for you'**
+  String get invitationsForYou;
+
+  /// No description provided for @invitationFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'“{space}”, invited by {by}'**
+  String invitationFrom(String space, String by);
+
+  /// No description provided for @invitationFromUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'“{space}”'**
+  String invitationFromUnknown(String space);
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// No description provided for @decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
+
+  /// No description provided for @invitationAcceptedInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted. An owner still has to approve you joining.'**
+  String get invitationAcceptedInfo;
+
+  /// No description provided for @invitationsBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'You have invitations: {count}'**
+  String invitationsBanner(int count);
+
+  /// No description provided for @makeOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Make an owner'**
+  String get makeOwner;
+
+  /// No description provided for @makeMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a regular member'**
+  String get makeMember;
+
+  /// No description provided for @removeMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from the budget'**
+  String get removeMember;
+
+  /// No description provided for @removeMemberConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from the budget? What they added stays.'**
+  String removeMemberConfirm(String name);
+
+  /// No description provided for @leaveBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the budget'**
+  String get leaveBudget;
+
+  /// No description provided for @leaveBudgetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave “{name}”? You lose access to it.'**
+  String leaveBudgetConfirm(String name);
+
+  /// No description provided for @deleteBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the budget'**
+  String get deleteBudget;
+
+  /// No description provided for @deleteBudgetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}” with all its data? This cannot be undone.'**
+  String deleteBudgetConfirm(String name);
+
+  /// No description provided for @editBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename and change currency'**
+  String get editBudget;
+
+  /// No description provided for @removedFromBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'You are no longer in “{name}”.'**
+  String removedFromBudget(String name);
+
+  /// No description provided for @contributions.
+  ///
+  /// In en, this message translates to:
+  /// **'Contributions'**
+  String get contributions;
+
+  /// No description provided for @contributedOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid in {amount} of {planned}'**
+  String contributedOf(String amount, String planned);
+
+  /// No description provided for @addContribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a payment'**
+  String get addContribution;
+
+  /// No description provided for @externalMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Money from outside (e.g. cash from somebody else)'**
+  String get externalMoney;
+
+  /// No description provided for @noContributions.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has paid in yet.'**
+  String get noContributions;
+
+  /// No description provided for @byPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Who paid how much'**
+  String get byPerson;
+
+  /// No description provided for @outsideMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'From outside'**
+  String get outsideMoney;
+
+  /// No description provided for @formerMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Former member'**
+  String get formerMember;
+
+  /// No description provided for @deleteContributionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this payment?'**
+  String get deleteContributionConfirm;
+
+  /// No description provided for @yourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name'**
+  String get yourName;
+
+  /// No description provided for @yourNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Members of your shared budgets see it'**
+  String get yourNameHint;
+
+  /// No description provided for @addedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Added by {name}'**
+  String addedBy(String name);
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to use?'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Only my own budget'**
+  String get onboardingPersonal;
+
+  /// No description provided for @onboardingShared.
+  ///
+  /// In en, this message translates to:
+  /// **'A shared budget (e.g. with a partner)'**
+  String get onboardingShared;
+
+  /// No description provided for @onboardingBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Both'**
+  String get onboardingBoth;
+
+  /// No description provided for @errorPeriodChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Somebody changed this period meanwhile. The data was refreshed: check it and save again.'**
+  String get errorPeriodChanged;
+
+  /// No description provided for @errorLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'A limit was reached (budgets, members or invitations).'**
+  String get errorLimitReached;
+
+  /// No description provided for @errorAlreadyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'This address is already in the budget.'**
+  String get errorAlreadyMember;
+
+  /// No description provided for @errorLastOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'A budget needs an owner. Hand the role to somebody else first.'**
+  String get errorLastOwner;
+
+  /// No description provided for @errorSpaceNotEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'There are other people in the budget. Remove them first.'**
+  String get errorSpaceNotEmpty;
+
+  /// No description provided for @errorPersonalSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be done with the personal budget.'**
+  String get errorPersonalSpace;
 }
 
 class _AppLocalizationsDelegate

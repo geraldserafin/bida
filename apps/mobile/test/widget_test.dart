@@ -4,7 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:money_planner/l10n/app_localizations.dart';
 import 'package:money_planner/screens/dashboard/dashboard_screen.dart';
+import 'package:money_planner/data/active_space.dart';
+import 'package:money_planner/data/sharing_repository.dart';
 import 'package:money_planner/state/planner_state.dart';
+import 'package:money_planner/state/spaces_state.dart';
 import 'package:provider/provider.dart';
 
 import 'support/fake_backend.dart';
@@ -13,6 +16,10 @@ Widget app(PlannerState state, FakeBackend backend) => MultiProvider(
   providers: [
     Provider.value(value: backend.repository()),
     ChangeNotifierProvider<PlannerState>.value(value: state),
+    ChangeNotifierProvider<SpacesState>(
+      create: (_) =>
+          SpacesState(SharingRepository(backend.dio()), ActiveSpace()),
+    ),
   ],
   child: const MaterialApp(
     locale: Locale('pl'),

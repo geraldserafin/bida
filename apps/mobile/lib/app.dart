@@ -11,6 +11,7 @@ import 'l10n/app_localizations.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/lock/lock_gate.dart';
 import 'screens/login/auth_gate.dart';
+import 'screens/onboarding/first_run_prompt.dart';
 import 'state/app_settings.dart';
 import 'state/auth_state.dart';
 import 'state/planner_state.dart';
@@ -120,7 +121,9 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
             locale: const Locale('pl'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const LockGate(child: AuthGate(child: DashboardScreen())),
+            home: const LockGate(
+              child: AuthGate(child: FirstRunPrompt(child: DashboardScreen())),
+            ),
           ),
         ),
       ),

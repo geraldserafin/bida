@@ -7,6 +7,7 @@ import '../../models/transaction.dart';
 import '../../state/planner_state.dart';
 import '../../widgets/remote_data.dart';
 import '../../theme/category_visuals.dart';
+import '../../util/author.dart';
 import '../../util/money_format.dart';
 import '../../util/pickers.dart';
 import '../add_expense/add_expense_screen.dart';
@@ -416,6 +417,17 @@ class _DayGroups extends StatelessWidget {
   }
 }
 
+/// The author of the expense (in shared budgets) and its note, on one line.
+Widget? _subtitle(BuildContext context, Transaction transaction) {
+  final text = [
+    ?authorOf(context, transaction.expense),
+    if (transaction.note != null && transaction.note!.isNotEmpty)
+      transaction.note!,
+  ].join(' · ');
+  if (text.isEmpty) return null;
+  return Text(text, maxLines: 1, overflow: TextOverflow.ellipsis);
+}
+
 class _TransactionTile extends StatelessWidget {
   const _TransactionTile({required this.transaction});
   final Transaction transaction;
@@ -445,13 +457,7 @@ class _TransactionTile extends StatelessWidget {
         transaction.category.name,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
-      subtitle: transaction.note == null || transaction.note!.isEmpty
-          ? null
-          : Text(
-              transaction.note!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+      subtitle: _subtitle(context, transaction),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,

@@ -31,6 +31,15 @@ class AuthState extends ChangeNotifier {
   String? _email;
   String? get email => _email;
 
+  /// What other members of shared budgets see; null until the user sets it.
+  String? get name => _repo.name;
+
+  /// Sets the name other members see. Throws [ApiException].
+  Future<void> rename(String name) async {
+    await _repo.rename(name);
+    notifyListeners();
+  }
+
   /// Why the server could not be asked who is signed in, or null.
   ApiException? _restoreError;
   ApiException? get restoreError => _restoreError;

@@ -10,6 +10,8 @@ import '../../services/auth_service.dart';
 
 import '../../state/app_settings.dart';
 import '../../state/auth_state.dart';
+import '../../state/spaces_state.dart';
+import '../../widgets/dialogs.dart';
 import '../../state/planner_state.dart';
 import '../../util/api_errors.dart';
 import '../../util/csv_save.dart';
@@ -105,6 +107,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final path = await saveCsv(csv!);
     if (path == null) return; // user cancelled the dialog
     messenger.showSnackBar(SnackBar(content: Text(l10n.csvExported(path))));
+  }
+
+  Future<void> _rename() async {
+    final l10n = AppLocalizations.of(context);
+    final auth = context.read<AuthState>();
+    final name = await textDialog(
+      context,
+      title: l10n.yourName,
+      label: l10n.yourName,
+      hint: l10n.yourNameHint,
+      action: l10n.save,
+      initial: auth.name ?? '',
+    );
+    if (name == null || !mounted) return;
+    final saved = await attempt(context, () => auth.rename(name));
+    if (saved && mounted) {
+      // the others see the new name; so does the list of members
+      await context.read<SpacesState>().reloadMembers();
+    }
   }
 
   Future<void> _signOut() async {
@@ -228,6 +249,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: Text(
                   l10n.signedInAs(context.watch<AuthState>().email ?? ''),
                 ),
+              ),
+              const Divider(height: 1),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.badge_outlined),
+                title: Text(l10n.yourName),
+                subtitle: Text(
+                  context.watch<AuthState>().name ?? l10n.yourNameHint,
+                ),
+                onTap: _rename,
               ),
               const Divider(height: 1),
               ListTile(
