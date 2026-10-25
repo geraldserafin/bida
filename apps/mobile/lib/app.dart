@@ -10,7 +10,6 @@ import 'screens/lock/lock_gate.dart';
 import 'state/app_settings.dart';
 import 'state/planner_state.dart';
 import 'theme/app_theme.dart';
-import 'widgets/server_status_banner.dart';
 
 /// Root widget: provides app-wide state and wires up theming, localization
 /// (Polish by default) and the home screen.
@@ -68,12 +67,6 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
             locale: const Locale('pl'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            builder: (context, child) => Column(
-              children: [
-                Expanded(child: child!),
-                const ServerStatusBanner(),
-              ],
-            ),
             home: const LockGate(child: DashboardScreen()),
           ),
         ),

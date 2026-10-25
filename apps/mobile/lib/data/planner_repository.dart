@@ -20,16 +20,6 @@ class PlannerRepository {
   /// Expenses come in pages of this size (the API allows at most 200).
   final int pageSize;
 
-  // -------------------------------------------------------------------- server
-
-  Future<({String status, int uptimeSeconds})> health() => guard(() async {
-    final health = await _api.system.systemHealth();
-    return (
-      status: health.status.json ?? 'unknown',
-      uptimeSeconds: health.uptimeSeconds,
-    );
-  });
-
   // ---------------------------------------------------------------- categories
 
   Future<List<Category>> categories() => guard(() async {
