@@ -15,7 +15,7 @@ import 'transfer/transfer_client.dart';
 
 /// Money Planner API `v0.0.0`.
 ///
-/// Everything except `/health` and the space list works inside a space. Pick it with the `X-Space-Id` header; without the header the default space is used. Amounts are integers in the minor unit of their currency (12.34 PLN is 1234).
+/// Everything except `/health` and `/auth` needs a signed-in user: send the session token as `Authorization: Bearer`, or let the browser send the session cookie. Most endpoints work inside a space: pick it with the `X-Space-Id` header (a space the user belongs to); without the header it is the first space of the user. Amounts are integers in the minor unit of their currency (12.34 PLN is 1234).
 class BidaApi {
   BidaApi(Dio dio, {String? baseUrl}) : _dio = dio, _baseUrl = baseUrl;
 
