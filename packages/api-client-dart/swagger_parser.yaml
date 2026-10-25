@@ -1,0 +1,10 @@
+swagger_parser:
+  schema_path: ../api-contract/openapi.json
+  output_directory: lib/src
+  language: dart
+  json_serializer: json_serializable
+  client_postfix: Client
+  root_client: true
+  root_client_name: BidaApi
+  put_in_folder: true
+  squash_clients: false
