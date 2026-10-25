@@ -23,6 +23,17 @@
   };
   processes.docs.exec = "pnpm --filter @bida/docs dev";
 
+  # The Flutter app: boots the emulator if needed and runs `flutter run` on it
+  # (see start-mobile below). is_tty lets you type r / R for hot reload when the
+  # process is focused in the process-compose TUI.
+  processes.mobile = {
+    exec = "start-mobile";
+    process-compose = {
+      is_tty = true;
+      depends_on.api.condition = "process_started";
+    };
+  };
+
   scripts.start-mobile.exec = ''
     adb start-server >/dev/null
     if ! adb devices | grep -q '^emulator-'; then
