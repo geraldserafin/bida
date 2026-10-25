@@ -141,12 +141,22 @@ Runner: `vitest` z `@effect/vitest`.
 ## Przestrzenie
 
 - **Przestrzeń (`space`) to właściciel danych.** Kategorie, okresy, koperty, wydatki i reguły należą do dokładnie jednej przestrzeni (`space_id` w każdej tabeli). To ona, a nie użytkownik, jest kluczem własności. Współdzielenie budżetu będzie więc oznaczać wspólną przestrzeń z kilkoma członkami, bez scalania danych.
-- Po instalacji istnieje jedna przestrzeń domyślna (`DEFAULT_SPACE_ID`). Konta i członkostwo dojdą później i nie zmienią reszty modelu.
-- **Wybór przestrzeni.** Middleware `SpaceContext` czyta nagłówek `X-Space-Id`, a bez niego używa przestrzeni domyślnej. Dostarcza serwis `CurrentSpace`. Tu później wejdzie sprawdzanie członkostwa zalogowanego użytkownika. Nagłówka nie ma w parametrach endpointów, jest opisany w opisie API.
+- Użytkownik należy do przestrzeni przez tabelę `memberships` (`space_id`, `user_id`, `role` = `owner` lub `member`). Po instalacji istnieje jeszcze przestrzeń domyślna (`DEFAULT_SPACE_ID`) z danymi sprzed kont; przejmuje ją pierwsze logowanie adresu z `CLAIM_EMAIL`. Każdy inny nowy użytkownik dostaje własną, pustą przestrzeń.
+- **Wybór przestrzeni.** Middleware `SpaceContext` czyta nagłówek `X-Space-Id`. Przestrzeń musi być jedną z przestrzeni zalogowanego użytkownika, w przeciwnym razie jest 404 (nie ujawniamy, czy istnieje). Bez nagłówka bierze pierwszą przestrzeń użytkownika. Dostarcza serwis `CurrentSpace` i wymaga `CurrentUser` z `Authenticated`, więc w grupie jest zawsze `.middleware(SpaceContext).middleware(Authenticated)` (później dodane działa pierwsze). Nagłówka nie ma w parametrach endpointów, jest opisany w opisie API.
 - **Zapytania.** Każde zapytanie repozytorium filtruje po `space_id` z `CurrentSpace`. Typ `InSpace<A, E>` oznacza efekt, który działa w przestrzeni bieżącego żądania, więc kompilator pilnuje, że nie da się wywołać repozytorium poza żądaniem.
-- Same przestrzenie (lista, tworzenie, edycja) nie są ograniczone do przestrzeni, bo to one są najemcami. `GET /spaces/current` zwraca przestrzeń żądania.
+- Same przestrzenie (lista, tworzenie, edycja) nie są ograniczone do przestrzeni, bo to one są najemcami, ale wymagają logowania: lista pokazuje tylko przestrzenie użytkownika, a nowa przestrzeń ma go za właściciela. `GET /spaces/current` zwraca przestrzeń żądania.
 - **Eksport, import i CSV** działają na przestrzeni żądania. Import zastępuje dane tylko tej przestrzeni.
-- Testy uruchamiają się jako żądania w przestrzeni domyślnej (`TestSpace`, `TestSpaceContext`), a izolację między przestrzeniami sprawdza `spaces.test.ts`.
+- Testy uruchamiają się jako żądania w przestrzeni domyślnej (`TestSpace`, `TestSpaceContext`, `TestAuthenticated`), a izolację między przestrzeniami i członkostwo sprawdza `spaces.test.ts`.
+
+## Konta i sesje
+
+Bez haseł: użytkownik dowodzi, że ma dostęp do adresu e-mail.
+
+- **Logowanie.** `POST /auth/magic-link` wysyła e-mail z linkiem i 6-cyfrowym kodem (zawsze 204, więc nie ujawnia, czy adres ma konto). Kod albo token z linku wymienia się na sesję (`/auth/magic-link/code`, `/auth/magic-link/token`). Pierwsze logowanie zakłada konto i jego pierwszą przestrzeń. Link i kod ważą 15 minut i działają raz; kod blokuje się po 5 złych próbach; jeden adres może zamówić 5 maili na godzinę. Dostawca OAuth (Google) dojdzie osobno.
+- **Sesja to wiersz w tabeli `sessions`**, a jej token to 256 losowych bitów, w bazie trzymany tylko jako hash SHA-256. Wygasa po 30 dniach od ostatniego użycia, a `POST /auth/logout` kończy ją od razu. To nie jest JWT: serwer przy każdym żądaniu sprawdza sesję w bazie, więc unieważnienie działa natychmiast.
+- **Przekazywanie sesji.** Apka mobilna wysyła `Authorization: Bearer` i trzyma token w secure storage. Przeglądarka dostaje ciasteczko `bida_session` (`HttpOnly`, `Secure`, `SameSite=Lax`), którego skrypty nie widzą; o wyborze decyduje pole `transport` (`token` albo `cookie`) przy logowaniu. Żądanie z ciasteczkiem, które coś zmienia, musi mieć nagłówek `Origin` z `CORS_ORIGINS`, inaczej obca strona mogłaby zmusić przeglądarkę do działania w imieniu użytkownika.
+- **Middleware `Authenticated`** (kontrakt, `HttpApiSecurity`: bearer i cookie) dostarcza `CurrentUser`. Jego implementacja jest w module `auth`, a schematy trafiają do OpenAPI (przycisk Authorize w Swaggerze).
+- **E-mail** wysyła `Mailer` (`platform/mailer.ts`, `nodemailer`). Bez `SMTP_URL` wiadomości trafiają tylko do logu, co jest przeznaczone do developmentu. Ustawienia: `SMTP_URL`, `MAIL_FROM`, `APP_URL`, `COOKIE_SECURE`, `CLAIM_EMAIL`, `CORS_ORIGINS`.
 
 ## Walidacja i konwencje API
 
@@ -160,7 +170,7 @@ Zasada: zły input kończy się na brzegu odpowiedzią 400, a nie błędem bazy 
 - **Nazwy w specu.** Schematy odpowiedzi mają `identifier`, a klasy błędów są nazywane przez `wire()` (`errors.ts`), żeby w OpenAPI nie pojawiało się `...Encoded`. `wire` zwraca ten sam schemat dla tej samej klasy, bo inaczej OpenAPI numeruje duplikaty (`CategoryNotFound_3`).
 - **Równoległe `apply`** reguł cyklicznych jest serializowane blokadą doradczą Postgresa (`pg_advisory_xact_lock`) na okres, więc drugie wywołanie czeka i nie dodaje nic.
 
-Znane luki, celowo odłożone do kont i deploymentu: brak uwierzytelniania (każdy, kto zna UUID przestrzeni, ma dostęp), `GET /spaces` pokazuje wszystkie przestrzenie, brak CORS i limitu żądań na minutę, listy bez paginacji (poza wydatkami), `X-Space-Id` poza parametrami w specu.
+Znane luki, celowo odłożone: limit żądań ogólnie (jest tylko limit maili logowania na adres), czyszczenie wygasłych kodów i sesji z bazy, listy bez paginacji (poza wydatkami), `X-Space-Id` poza parametrami w specu.
 
 ## Klient Dart
 
