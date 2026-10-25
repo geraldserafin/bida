@@ -12,17 +12,21 @@ import {
   CategoriesHttp,
   CategoriesModule,
 } from "./modules/categories/categories.module.ts";
+import {
+  ExpensesHttp,
+  ExpensesModule,
+} from "./modules/expenses/expenses.module.ts";
 import { SystemHttp } from "./modules/system/system.module.ts";
 import { AppConfig } from "./platform/config.ts";
 import { DbLive } from "./platform/db.ts";
 
 // Domain modules: each exposes its services, they may depend on each other.
-const Modules = Layer.mergeAll(CategoriesModule, BudgetsModule);
+const Modules = Layer.mergeAll(CategoriesModule, BudgetsModule, ExpensesModule);
 
 const ApiRoutes = HttpApiBuilder.layer(Api, {
   openapiPath: "/openapi.json",
 }).pipe(
-  Layer.provide([SystemHttp, CategoriesHttp, BudgetsHttp]),
+  Layer.provide([SystemHttp, CategoriesHttp, BudgetsHttp, ExpensesHttp]),
   Layer.provide(Modules),
   Layer.provide(DbLive),
 );

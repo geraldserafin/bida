@@ -4,6 +4,7 @@ import {
   Envelope,
   EnvelopeAlreadyExists,
   type EnvelopeId,
+  EnvelopeNotFound,
   type EnvelopePlan,
   InvalidPeriodRange,
   NoPeriods,
@@ -39,6 +40,7 @@ export class BudgetsService extends Context.Service<
       Envelope,
       PeriodNotFound | CategoryNotFound | EnvelopeAlreadyExists
     >;
+    getEnvelope(id: EnvelopeId): Effect.Effect<Envelope, EnvelopeNotFound>;
     deletePeriod(id: PeriodId): Effect.Effect<void, PeriodNotFound>;
   }
 >()("bida/budgets/BudgetsService") {
@@ -200,6 +202,16 @@ export class BudgetsService extends Context.Service<
         return yield* insertEnvelope(id, input);
       });
 
+      const getEnvelope = Effect.fn("BudgetsService.getEnvelope")(function* (
+        id: EnvelopeId,
+      ) {
+        const found = yield* repo.findEnvelopeById(id);
+        return yield* Option.match(found, {
+          onNone: () => Effect.fail(new EnvelopeNotFound({ id })),
+          onSome: Effect.succeed,
+        });
+      });
+
       const deletePeriod = Effect.fn("BudgetsService.deletePeriod")(function* (
         id: PeriodId,
       ) {
@@ -214,6 +226,7 @@ export class BudgetsService extends Context.Service<
         createPeriod,
         setPlan,
         addEnvelope,
+        getEnvelope,
         deletePeriod,
       });
     }),
