@@ -63,7 +63,7 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 - Eksport i import CSV z deduplikacją (`US-7.3`–`7.5`)
 - Jednorazowa migracja danych z lokalnej bazy aplikacji
 
-## Etap 8 – Wspólne budżety
+## Etap 8 – Wspólne budżety (zrobione)
 
 Opis: `ARCHITECTURE.md` („Wspólne budżety"), historyjki: `USER_STORIES.md` (sekcje 10–11).
 
