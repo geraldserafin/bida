@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 
 import 'system/system_client.dart';
 import 'categories/categories_client.dart';
+import 'budgets/budgets_client.dart';
 
 /// Money Planner API `v0.0.0`
 class BidaApi {
@@ -18,9 +19,13 @@ class BidaApi {
 
   SystemClient? _system;
   CategoriesClient? _categories;
+  BudgetsClient? _budgets;
 
   SystemClient get system => _system ??= SystemClient(_dio, baseUrl: _baseUrl);
 
   CategoriesClient get categories =>
       _categories ??= CategoriesClient(_dio, baseUrl: _baseUrl);
+
+  BudgetsClient get budgets =>
+      _budgets ??= BudgetsClient(_dio, baseUrl: _baseUrl);
 }
