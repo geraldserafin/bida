@@ -4,3 +4,4 @@ export * from "./categories/index.ts";
 export * from "./expenses/index.ts";
 export * from "./recurring/index.ts";
 export * from "./system/index.ts";
+export * from "./transfer/index.ts";
