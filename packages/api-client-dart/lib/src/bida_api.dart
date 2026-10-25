@@ -8,6 +8,7 @@ import 'system/system_client.dart';
 import 'categories/categories_client.dart';
 import 'budgets/budgets_client.dart';
 import 'expenses/expenses_client.dart';
+import 'recurring/recurring_client.dart';
 
 /// Money Planner API `v0.0.0`
 class BidaApi {
@@ -22,6 +23,7 @@ class BidaApi {
   CategoriesClient? _categories;
   BudgetsClient? _budgets;
   ExpensesClient? _expenses;
+  RecurringClient? _recurring;
 
   SystemClient get system => _system ??= SystemClient(_dio, baseUrl: _baseUrl);
 
@@ -33,4 +35,7 @@ class BidaApi {
 
   ExpensesClient get expenses =>
       _expenses ??= ExpensesClient(_dio, baseUrl: _baseUrl);
+
+  RecurringClient get recurring =>
+      _recurring ??= RecurringClient(_dio, baseUrl: _baseUrl);
 }

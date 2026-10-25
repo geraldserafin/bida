@@ -2,6 +2,7 @@ import { Schema } from "effect";
 import { Model } from "effect/schema";
 import { EnvelopeId, Money, PeriodId } from "../budgets/index.ts";
 import { CategoryId } from "../categories/index.ts";
+import { RecurringRuleId } from "../recurring/recurring.model.ts";
 
 export const ExpenseId = Schema.String.pipe(Schema.brand("ExpenseId"));
 export type ExpenseId = typeof ExpenseId.Type;
@@ -28,6 +29,8 @@ export class Expense extends Model.Class<Expense>("Expense")({
   amountMinor: Cost,
   spentAt: SpentAt,
   note: Schema.NullOr(Schema.String),
+  /** Set when the expense was generated from a recurring rule. */
+  recurringId: Schema.NullOr(RecurringRuleId),
   createdAt: Model.DateTimeInsertFromDate,
   updatedAt: Model.DateTimeUpdateFromDate,
 }) {}

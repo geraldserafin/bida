@@ -15,6 +15,7 @@ class Expense {
     required this.amountMinor,
     required this.spentAt,
     required this.note,
+    required this.recurringId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -28,6 +29,7 @@ class Expense {
   final int amountMinor;
   final String spentAt;
   final String? note;
+  final String? recurringId;
   final String createdAt;
   final String updatedAt;
 
