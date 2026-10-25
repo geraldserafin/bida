@@ -72,6 +72,10 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 - Pilnowanie zmian niekompatybilnych kontraktu (np. sprawdzanie diffa `openapi.json` w CI)
 - Ewentualnie tryb offline i synchronizacja (decyzja po etapie 5)
 
+## Etap 9 – Model kopert i współdzielenie
+
+Przestrzenie i okresy ustępują kopertom z subkopertami, saldem toczącym się i współdzielonymi kopertami. Model, reguły i etapy: [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md).
+
 ## Zależności między etapami
 
 ```

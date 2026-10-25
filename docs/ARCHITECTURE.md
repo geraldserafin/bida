@@ -140,6 +140,8 @@ Runner: `vitest` z `@effect/vitest`.
 
 ## Przestrzenie
 
+> Do zastąpienia: przestrzenie i okresy znikają na rzecz modelu kopert z [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md). Opis poniżej dotyczy stanu przed zmianą.
+
 - **Przestrzeń (`space`) to właściciel danych.** Kategorie, okresy, koperty, wydatki i reguły należą do dokładnie jednej przestrzeni (`space_id` w każdej tabeli). To ona, a nie użytkownik, jest kluczem własności. Współdzielenie budżetu będzie więc oznaczać wspólną przestrzeń z kilkoma członkami, bez scalania danych.
 - Użytkownik należy do przestrzeni przez tabelę `memberships` (`space_id`, `user_id`, `role` = `owner` lub `member`). Po instalacji istnieje jeszcze przestrzeń domyślna (`DEFAULT_SPACE_ID`) z danymi sprzed kont; przejmuje ją pierwsze logowanie adresu z `CLAIM_EMAIL`. Każdy inny nowy użytkownik dostaje własną, pustą przestrzeń.
 - **Wybór przestrzeni.** Middleware `SpaceContext` czyta nagłówek `X-Space-Id`. Przestrzeń musi być jedną z przestrzeni zalogowanego użytkownika, w przeciwnym razie jest 404 (nie ujawniamy, czy istnieje). Bez nagłówka bierze pierwszą przestrzeń użytkownika. Dostarcza serwis `CurrentSpace` i wymaga `CurrentUser` z `Authenticated`, więc w grupie jest zawsze `.middleware(SpaceContext).middleware(Authenticated)` (później dodane działa pierwsze). Nagłówka nie ma w parametrach endpointów, jest opisany w opisie API.
