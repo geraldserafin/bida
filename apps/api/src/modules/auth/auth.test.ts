@@ -10,9 +10,23 @@ import { SqlClient } from "effect/sql";
 import { DbLive } from "../../platform/db.ts";
 import { outbox, resetDb, TestMailer } from "../../platform/testing.ts";
 import { SpacesModule, SpacesService } from "../spaces/spaces.module.ts";
-import { AuthModule, AuthService } from "./auth.module.ts";
+import { AuthModule, AuthService, GoogleVerifier } from "./auth.module.ts";
+
+/** Google tokens are `subject|email|name` here; the real check has its own test. */
+const TestGoogle = Layer.succeed(
+  GoogleVerifier,
+  GoogleVerifier.of({
+    verify: (idToken) => {
+      const [subject, email, name] = idToken.split("|");
+      return subject && email
+        ? Effect.succeed({ subject, email, name: name || null })
+        : Effect.fail(new InvalidLogin());
+    },
+  }),
+);
 
 const TestLayer = Layer.mergeAll(AuthModule, SpacesModule).pipe(
+  Layer.provideMerge(TestGoogle),
   Layer.provideMerge(TestMailer),
   Layer.provideMerge(DbLive),
 );
@@ -185,6 +199,84 @@ layer(TestLayer)("sign-in", (it) => {
       // both devices stay signed in
       yield* auth.authenticate(first.token);
       yield* auth.authenticate(second.token);
+    }),
+  );
+
+  it.effect("a Google account signs in and is found again", () =>
+    Effect.gen(function* () {
+      yield* start;
+      const auth = yield* AuthService;
+      const spaces = yield* SpacesService;
+
+      const first = yield* auth.signInWithGoogle(
+        "g1|Gus@Example.com|Gus",
+        null,
+      );
+      assert.strictEqual(first.user.email, "gus@example.com");
+      assert.strictEqual(first.user.name, "Gus");
+      assert.strictEqual((yield* spaces.listFor(first.user.id)).length, 1);
+      assert.strictEqual(
+        (yield* auth.authenticate(first.token)).user.id,
+        first.user.id,
+      );
+
+      const again = yield* auth.signInWithGoogle(
+        "g1|gus@example.com|Gus",
+        null,
+      );
+      assert.strictEqual(again.user.id, first.user.id);
+      assert.strictEqual((yield* spaces.listFor(first.user.id)).length, 1);
+    }),
+  );
+
+  it.effect("Google and the e-mail link reach the same account", () =>
+    Effect.gen(function* () {
+      yield* start;
+      const auth = yield* AuthService;
+      const spaces = yield* SpacesService;
+
+      yield* auth.requestLink("hal@example.com");
+      const byMail = yield* auth.verifyCode(
+        "hal@example.com",
+        lastMail().code,
+        null,
+      );
+      const byGoogle = yield* auth.signInWithGoogle(
+        "g2|hal@example.com|Hal",
+        null,
+      );
+
+      assert.strictEqual(byGoogle.user.id, byMail.user.id);
+      assert.strictEqual((yield* spaces.listFor(byMail.user.id)).length, 1);
+    }),
+  );
+
+  it.effect("a Google account keeps its user when the address changes", () =>
+    Effect.gen(function* () {
+      yield* start;
+      const auth = yield* AuthService;
+
+      const before = yield* auth.signInWithGoogle(
+        "g3|old@example.com|Ivy",
+        null,
+      );
+      const after = yield* auth.signInWithGoogle(
+        "g3|new@example.com|Ivy",
+        null,
+      );
+
+      assert.strictEqual(after.user.id, before.user.id);
+      assert.strictEqual(after.user.email, "old@example.com");
+    }),
+  );
+
+  it.effect("a token Google would not vouch for is refused", () =>
+    Effect.gen(function* () {
+      const auth = yield* AuthService;
+      const error = yield* auth
+        .signInWithGoogle("nonsense", null)
+        .pipe(Effect.flip);
+      assert.instanceOf(error, InvalidLogin);
     }),
   );
 

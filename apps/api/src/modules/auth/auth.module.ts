@@ -6,10 +6,11 @@ import { AuthenticatedLive } from "./authenticated.ts";
 
 export { AuthHttp } from "./auth.http.ts";
 export { AuthService } from "./auth.service.ts";
+export { GoogleVerifier } from "./google.ts";
 
 /**
  * Public surface of the module: exposes `AuthService`. Depends on spaces and
- * requires `SqlClient` and `Mailer`.
+ * requires `SqlClient`, `Mailer` and `GoogleVerifier`.
  */
 export const AuthModule = AuthService.layer.pipe(
   Layer.provide(AuthRepository.layer),

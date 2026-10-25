@@ -154,6 +154,50 @@
         }
       }
     },
+    "/auth/google": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "auth.googleSignIn",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "AuthResult",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "InvalidLogin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidLogin"
+                }
+              }
+            }
+          }
+        },
+        "description": "The app signs in with Google and sends the ID token it got. The token has to be for one of this server's Google client ids and its e-mail address verified by Google. Creates the account on the first sign-in; an account with the same address is the same account.",
+        "summary": "Sign in with a Google ID token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleSignIn"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
     "/auth/me": {
       "get": {
         "tags": [
@@ -4295,6 +4339,32 @@
         ],
         "additionalProperties": false
       },
+      "GoogleSignIn": {
+        "type": "object",
+        "properties": {
+          "idToken": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 4096
+          },
+          "transport": {
+            "$ref": "#/components/schemas/Transport"
+          }
+        },
+        "required": [
+          "idToken",
+          "transport"
+        ],
+        "additionalProperties": false
+      },
+      "Transport": {
+        "type": "string",
+        "enum": [
+          "token",
+          "cookie"
+        ],
+        "description": "`token` returns the session token in the response body (mobile apps); `cookie` sets it as an HTTP-only cookie instead (browser apps)."
+      },
       "VerifyToken": {
         "type": "object",
         "properties": {
@@ -4312,14 +4382,6 @@
           "transport"
         ],
         "additionalProperties": false
-      },
-      "Transport": {
-        "type": "string",
-        "enum": [
-          "token",
-          "cookie"
-        ],
-        "description": "`token` returns the session token in the response body (mobile apps); `cookie` sets it as an HTTP-only cookie instead (browser apps)."
       },
       "VerifyCode": {
         "type": "object",
