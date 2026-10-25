@@ -80,6 +80,7 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
       providers: [
         Provider.value(value: widget.repository),
         ChangeNotifierProvider.value(value: _auth),
+        ChangeNotifierProvider.value(value: widget.settings),
         // loads the data once somebody is signed in, forgets it on sign-out
         ChangeNotifierProxyProvider2<AuthState, AppSettings, PlannerState>(
           create: (_) => PlannerState(
@@ -90,7 +91,6 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
             ..useFirstDay(settings.firstDayOfMonth)
             ..signedIn(auth.isSignedIn),
         ),
-        ChangeNotifierProvider.value(value: widget.settings),
       ],
       child: Consumer<AppSettings>(
         builder: (context, settings, _) => Listener(
