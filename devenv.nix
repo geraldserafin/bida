@@ -3,12 +3,16 @@
   packages = [ pkgs.pnpm ];
 
   env.DATABASE_URL = "postgres://bida@127.0.0.1:5432/bida";
+  env.TEST_DATABASE_URL = "postgres://bida@127.0.0.1:5432/bida_test";
 
   services.postgres = {
     enable = true;
     listen_addresses = "127.0.0.1";
     port = 5432;
-    initialDatabases = [ { name = "bida"; } ];
+    initialDatabases = [
+      { name = "bida"; }
+      { name = "bida_test"; }
+    ];
     initialScript = "CREATE ROLE bida SUPERUSER LOGIN;";
   };
 
