@@ -8,6 +8,7 @@ import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 
 import '../../state/app_settings.dart';
+import '../../state/auth_state.dart';
 import '../../state/planner_state.dart';
 import '../../util/api_errors.dart';
 import '../../util/csv_save.dart';
@@ -105,6 +106,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     messenger.showSnackBar(SnackBar(content: Text(l10n.csvExported(path))));
   }
 
+  Future<void> _signOut() async {
+    final l10n = AppLocalizations.of(context);
+    final auth = context.read<AuthState>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.signOut),
+        content: Text(l10n.signOutConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.signOut),
+          ),
+        ],
+      ),
+    );
+    // the app closes this screen once the user is signed out
+    if (confirmed == true) await auth.signOut();
+  }
+
   Future<void> _importCsv() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -186,6 +211,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
+              ),
+            ],
+          ),
+
+          // ---- Account ----
+          _SectionHeader(l10n.account),
+          _Group(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.person_outline),
+                title: Text(
+                  l10n.signedInAs(context.watch<AuthState>().email ?? ''),
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: Text(l10n.signOut),
+                onTap: _signOut,
               ),
             ],
           ),

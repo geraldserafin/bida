@@ -901,6 +901,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t load your data'**
   String get loadFailed;
+
+  /// No description provided for @errorUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'You are signed out. Sign in again.'**
+  String get errorUnauthorized;
+
+  /// No description provided for @errorRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many tries. Wait a while and try again.'**
+  String get errorRateLimited;
+
+  /// No description provided for @signInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signInTitle;
+
+  /// No description provided for @signInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your e-mail address. We will send you a code and a link to sign in; there is no password.'**
+  String get signInSubtitle;
+
+  /// No description provided for @emailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'E-mail address'**
+  String get emailAddress;
+
+  /// No description provided for @enterValidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid e-mail address'**
+  String get enterValidEmail;
+
+  /// No description provided for @sendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get sendCode;
+
+  /// No description provided for @codeSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to {email}. Enter it below.'**
+  String codeSentTo(String email);
+
+  /// No description provided for @signInCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get signInCode;
+
+  /// No description provided for @enterCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit code'**
+  String get enterCode;
+
+  /// No description provided for @signInAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signInAction;
+
+  /// No description provided for @useOtherEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Use another address'**
+  String get useOtherEmail;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the code again'**
+  String get resendCode;
+
+  /// No description provided for @invalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'The code is wrong or has expired.'**
+  String get invalidCode;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @signedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String signedInAs(String email);
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// No description provided for @signOutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of this device?'**
+  String get signOutConfirm;
 }
 
 class _AppLocalizationsDelegate

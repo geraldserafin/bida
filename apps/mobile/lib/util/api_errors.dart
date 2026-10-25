@@ -11,6 +11,8 @@ String apiErrorMessage(AppLocalizations l10n, ApiException error) =>
       ApiFailure.conflict => l10n.errorConflict,
       ApiFailure.invalid => l10n.errorInvalid,
       ApiFailure.server => l10n.errorServer,
+      ApiFailure.unauthorized => l10n.errorUnauthorized,
+      ApiFailure.rateLimited => l10n.errorRateLimited,
     };
 
 /// Runs [action] and, when the server cannot do it, tells the user and

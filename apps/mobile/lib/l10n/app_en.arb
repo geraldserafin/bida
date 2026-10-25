@@ -220,5 +220,37 @@
   "errorInvalid": "The server did not accept these values. Check what you entered.",
   "errorServer": "Something went wrong on the server. Try again in a moment.",
   "retry": "Try again",
-  "loadFailed": "Couldn't load your data"
+  "loadFailed": "Couldn't load your data",
+  "errorUnauthorized": "You are signed out. Sign in again.",
+  "errorRateLimited": "Too many tries. Wait a while and try again.",
+  "signInTitle": "Sign in",
+  "signInSubtitle": "Enter your e-mail address. We will send you a code and a link to sign in; there is no password.",
+  "emailAddress": "E-mail address",
+  "enterValidEmail": "Enter a valid e-mail address",
+  "sendCode": "Send code",
+  "codeSentTo": "We sent a code to {email}. Enter it below.",
+  "@codeSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "signInCode": "Code",
+  "enterCode": "Enter the 6-digit code",
+  "signInAction": "Sign in",
+  "useOtherEmail": "Use another address",
+  "resendCode": "Send the code again",
+  "invalidCode": "The code is wrong or has expired.",
+  "account": "Account",
+  "signedInAs": "Signed in as {email}",
+  "@signedInAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "signOut": "Sign out",
+  "signOutConfirm": "Sign out of this device?"
 }
