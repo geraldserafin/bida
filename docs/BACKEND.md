@@ -1,144 +1,75 @@
-# Backend – spis funkcji do zrobienia
+# API – spis endpointów
 
-Źródło: przegląd kodu `apps/mobile/lib` (ekrany, `PlannerState`, `PlannerRepository`, serwisy).
-Dziś cała apka jest lokalna: SQLite + `flutter_secure_storage` + ręczny sync szyfrowanym plikiem na GitHubie.
-Cel: dane i logika na serwerze, apka tylko klient.
+Skrót tego, co serwer udostępnia. Źródłem prawdy jest kontrakt (`packages/api-contract`), z którego powstaje Swagger (`docs.bida.maknet.com.pl`) i `openapi.json`. Model i zasady: [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md), architektura: [ARCHITECTURE.md](ARCHITECTURE.md).
 
-> **Konta:** logowanie linkiem i kodem z e-maila oraz sesje są zrobione (patrz `ARCHITECTURE.md`, „Konta i sesje"); poniższa sekcja o auth to pierwotny plan. Właścicielem danych jest przestrzeń (`space_id`), a nie użytkownik, patrz `ARCHITECTURE.md`, sekcja „Przestrzenie"; konta będą tylko członkami przestrzeni. Co użytkownik może robić w apce: `USER_STORIES.md`.
+Wszystko poza `/health` i `/auth/*` wymaga zalogowanego użytkownika (nagłówek `Authorization: Bearer` albo ciasteczko sesji). Kwoty to liczby całkowite w groszach. Błędy domenowe mają ciało `{ "_tag": "...", ... }`.
 
-## 0. Decyzje do podjęcia przed kodowaniem
+## System i konto
 
-| Temat    | Stan dziś                     | Propozycja                                                            |
-| -------- | ----------------------------- | --------------------------------------------------------------------- |
-| Konta    | brak, jedno urządzenie        | rejestracja/logowanie, każdy zasób należy do usera                    |
-| ID       | autoinkrement `INTEGER`       | UUID (v7) – klient może tworzyć rekordy offline                       |
-| Kwoty    | `REAL` (double)               | liczby całkowite w groszach (`amountMinor`) – bez błędów zaokrągleń   |
-| Daty     | ISO bez strefy (czas lokalny) | `Instant` UTC + osobno data kalendarzowa (`YYYY-MM-DD`) dla okresów   |
-| Offline  | działa w pełni bez sieci      | do ustalenia: online-only (prościej) vs offline-first z kolejką zmian |
-| Baza     | –                             | Postgres (+ migracje), np. `@effect/sql-pg`                           |
-| Usuwanie | twarde                        | soft delete (`deletedAt`), jeśli ma być sync offline                  |
+| Endpoint | Opis |
+|---|---|
+| `GET /health` | czy serwer działa |
+| `POST /auth/magic-link` | wysyła e-mail z linkiem i 6-cyfrowym kodem (zawsze 204) |
+| `POST /auth/magic-link/code`, `/auth/magic-link/token` | wymieniają kod albo token z linku na sesję |
+| `POST /auth/google`, `/auth/google/access-token` | logowanie przez Google (token ID z aplikacji, token dostępu z przeglądarki) |
+| `GET /auth/me` | zalogowany użytkownik |
+| `POST /auth/logout` | kończy sesję |
 
-## 1. Model danych (tabele)
+## Koperty
 
-Przeniesione 1:1 z lokalnego SQLite, plus `userId` w każdej tabeli.
-- `users` – id, email, passwordHash, createdAt
-- `settings` – userId, themeMode, firstDayOfMonth (1–28), locale
-- `periods` – id, userId, name, startDate, endDate, income
-- `categories` – id, userId, name, color (hex), icon?
-- `splits` (koperty) – id, periodId, categoryId, plannedAmount
-- `expenses` – id, splitId, amount, date (z godziną), note?, recurringId?
-- `recurring_rules` – id, userId, categoryId, amount, frequency (`weekly|monthly`), note?, active
+| Endpoint | Opis |
+|---|---|
+| `GET /envelopes` | wszystkie koperty użytkownika: top-level i subkoperty, po nazwie |
+| `GET /envelopes/{id}` | jedna koperta (404, gdy jej nie widać) |
+| `POST /envelopes` | tworzy kopertę; `parentId` ustawione = subkoperta (rodzic musi być top-level, inaczej 422 `ParentMustBeTopLevel`) |
+| `PUT /envelopes/{id}` | zmienia nazwę, kolor i ikonę; miejsca w drzewie nie zmienia |
+| `DELETE /envelopes/{id}` | usuwa kopertę z subkopertami, przydziałami, wydatkami i regułami; przydzielone pieniądze wracają do puli |
 
-Reguły integralności z apki, które muszą zostać na serwerze:
-- kategoria **w użyciu** (ma split w jakimkolwiek okresie) nie może być usunięta → `409`
-- usunięcie okresu kasuje kaskadowo splity i wydatki
-- jedna koperta na kategorię w okresie (`UNIQUE(periodId, categoryId)`)
-- `firstDayOfMonth` tylko 1–28; kwoty wydatków > 0
+## Przydziały
 
-## 2. Konto i autoryzacja
+| Endpoint | Opis |
+|---|---|
+| `GET /allocations?envelopeId&from&to` | przydziały koperty (dla top-level także jej subkopert), najnowsze pierwsze |
+| `POST /allocations` | wkłada pieniądze do koperty; ujemna kwota zabiera je z powrotem |
+| `PUT /allocations/{id}`, `DELETE /allocations/{id}` | zmiana i usunięcie własnego przydziału |
 
-Zastępuje lokalny `AuthService` tam, gdzie chodzi o tożsamość. **PIN i biometria zostają lokalne** (blokada ekranu apki, `LockGate`) – to nie jest logowanie do serwera.
-- `POST /auth/register`
-- `POST /auth/login` → access token + refresh token
-- `POST /auth/refresh`
-- `POST /auth/logout`
-- `GET  /me`, `PATCH /me` (email, hasło)
-- `DELETE /me` – usunięcie konta i wszystkich danych (RODO)
-- middleware: wszystkie pozostałe endpointy wymagają tokenu; filtrowanie po `userId`
-- (opcjonalnie) reset hasła mailem
+Przydział do subkoperty dzieli to, co użytkownik włożył do rodzica (nie rusza jego puli). Gdy koperta nie ma tylu pieniędzy albo przypisałoby się więcej, niż włożono do rodzica, odpowiedź to 409 `NotEnoughMoney` z `availableMinor`. Pula poniżej zera jest dozwolona.
 
-## 3. Ustawienia użytkownika
+## Przychody
 
-Dziś `AppSettings` w secure storage. Przenieść to, co ma sens między urządzeniami:
-- `GET /settings`, `PUT /settings` – `firstDayOfMonth`, `themeMode`
-- Zostaje lokalnie: PIN, biometria, ostatnio wybrany okres (UI)
+| Endpoint | Opis |
+|---|---|
+| `GET /incomes?from&to` | przychody użytkownika, najnowsze pierwsze |
+| `POST /incomes`, `PUT /incomes/{id}`, `DELETE /incomes/{id}` | dodanie, zmiana i usunięcie |
 
-## 4. Kategorie (`CategoriesScreen`, `CategoryEditor`)
+## Wydatki
 
-- `GET    /categories`
-- `POST   /categories`
-- `PATCH  /categories/{id}` (nazwa, kolor, ikona)
-- `DELETE /categories/{id}` → `409`, gdy w użyciu
-- Pierwszy start: **domyślny zestaw kategorii** dla nowego konta (dziś ich tworzenie jest po stronie apki – sprawdzić `category_visuals`/seed)
+| Endpoint | Opis |
+|---|---|
+| `POST /expenses` | dodaje wydatek do koperty (top-level albo sub) |
+| `GET /expenses/{id}` | jeden wydatek |
+| `PUT /expenses/{id}`, `DELETE /expenses/{id}` | zmiana i usunięcie; wolno autorowi i właścicielowi koperty, inaczej 403 |
+| `GET /expenses?envelopeId&from&to&limit&offset` | lista, najnowsze pierwsze; `envelopeId` top-level obejmuje jej subkoperty; `from` włącznie, `to` wyłącznie (chwile ISO); domyślnie 50, najwyżej 200 |
 
-## 5. Okresy i plan (`NewPeriodScreen`, `PeriodsScreen`, dashboard)
+## Reguły cykliczne
 
-- `GET    /periods` – lista, najnowsze pierwsze
-- `GET    /periods/current` – najnowszy po `startDate`
-- `POST   /periods` – tworzy okres **razem ze splitami** w jednej transakcji (`name, startDate, endDate, income, planned: {categoryId: amount}`); pomija kwoty ≤ 0
-- `GET    /periods/{id}` – okres + podsumowanie (`planned, spent, remaining, unallocated`)
-- `PUT    /periods/{id}/plan` – edycja dochodu i alokacji (logika z `editCurrentPeriodPlan`):
-  - kwota > 0 → utwórz/zaktualizuj split
-  - kwota = 0 → usuń split, **chyba że ma wydatki** – wtedy zostaje z `planned = 0`
-- `DELETE /periods/{id}` – kaskadowo
-- `GET    /periods/summaries` – podsumowanie wszystkich okresów (planned/spent), do ekranu listy
-- Podpowiedź planu nowego okresu z reguł cyklicznych (`plannedFromRecurring`) – może być liczona po stronie klienta z `GET /recurring-rules`, albo `GET /periods/plan-suggestion`
-- „Wybrany okres" (`current_period_id`) – stan UI, zostaje na kliencie
+| Endpoint | Opis |
+|---|---|
+| `GET /recurring-rules` | własne reguły użytkownika |
+| `POST /recurring-rules`, `PUT /recurring-rules/{id}`, `DELETE /recurring-rules/{id}` | zarządzanie; usunięcie nie kasuje wydatków, które reguła już dodała |
+| `POST /recurring-rules/apply` | dodaje po jednym wydatku dla aktywnych reguł niezastosowanych jeszcze dla `from` (`{ from, to }`); można wołać wielokrotnie |
 
-## 6. Koperty i postęp (dashboard, `CategoryDetailScreen`)
+## Przegląd
 
-- `GET /periods/{id}/progress` – lista `{category, split, spent, planned, remaining}` (dziś `categoryProgress`; agregat liczony w SQL `SUM`)
-- `POST /periods/{id}/envelopes` – szybkie dodanie koperty (`quickAddEnvelope`): tworzy kategorię + split z `planned = 0` w jednej transakcji, zwraca `splitId`
-- Dane do wykresów (pie planned, planned vs spent, linia wydatków w kategorii): wystarczą `progress` + wydatki koperty; osobne endpointy tylko jeśli wyjdzie za ciężko
+| Endpoint | Opis |
+|---|---|
+| `GET /overview?from&to&timeZone` | przychód, to, co włożono do kopert i wydano w zakresie dni, pula na koniec zakresu oraz liczby każdej koperty (otwarcie, przydzielone, wydane, saldo, wolne) |
+| `GET /overview/months?startDay&timeZone` | historia miesięcy od pierwszej aktywności do dziś, najnowsze pierwsze |
 
-## 7. Wydatki (`AddExpenseScreen`, `HistoryScreen`, `PeriodDetailScreen`)
+## Eksport i import
 
-- `POST   /expenses` – `splitId, amount, date, note?`
-- `GET    /splits/{id}/expenses` – wydatki koperty, od najnowszych
-- `PATCH  /expenses/{id}`
-- `DELETE /expenses/{id}`
-- `GET    /periods/{id}/transactions` – wydatki okresu z dołączoną kategorią, `ORDER BY date DESC, id DESC`
-  - filtry z ekranu Historia po stronie serwera: `categoryId`, `from`, `to` (data + godzina), paginacja (`limit`, `cursor`)
-- Walidacja: split musi należeć do usera
-
-## 8. Wydatki cykliczne (`RecurringRulesScreen`, `RecurringEditor`)
-
-- `GET    /recurring-rules`
-- `POST   /recurring-rules`
-- `PATCH  /recurring-rules/{id}` (w tym `active`)
-- `DELETE /recurring-rules/{id}` – wydatki już wygenerowane zostają (`recurringId → NULL`)
-- `POST   /periods/{id}/recurring/apply` – generuje wydatek dla każdej aktywnej reguły, która nie była jeszcze użyta w tym okresie (idempotentne); tworzy split, jeśli brak (planned = kwota reguły); zwraca liczbę dodanych
-- Do rozważenia: **automatyczne** naliczanie cron-em zamiast ręcznego przycisku (dziś tylko ręcznie)
-
-## 9. Import / eksport / backup (`SettingsScreen`, `BackupScreen`)
-
-Zastępuje ręczny sync przez GitHub (`GitHubSyncService`, `SyncManager`, `CryptoService`, `SyncSetupScreen`) – po przejściu na serwer te pliki i ekrany można usunąć.
-- `GET  /export` – pełny zrzut danych usera (JSON, ten sam kształt co dziś `exportData`: `periods, categories, recurring_rules, splits, expenses`)
-- `POST /import` – zastąpienie wszystkich danych zrzutem, w jednej transakcji; najpierw dry-run/podgląd (liczby wierszy: okresy, wydatki – jak `RestorePreview`)
-- `GET  /export.csv` – CSV `Period,Category,Amount,Date,Note`
-- `POST /import/csv` – import CSV z dopasowaniem okresów/kategorii po nazwie (tworzy brakujące), **pomija duplikaty** (ta sama koperta + kwota + dzień + notatka), zwraca `{imported, skipped}`
-- **Migracja z lokalnej bazy**: jednorazowy `POST /import` z istniejącego `money_planner.db` przy pierwszym logowaniu
-- Szyfrowanie po stronie klienta (passphrase) – decyzja: zostaje (zero-knowledge) czy rezygnujemy na rzecz TLS + szyfrowania na dysku
-
-## 10. Synchronizacja (jeśli offline-first)
-
-- `GET  /sync?since=<cursor>` – zmiany od ostatniego sync
-- `POST /sync` – paczka zmian z klienta (upsert/delete po UUID)
-- Rozwiązywanie konfliktów: dziś last-write-wins; zostawić tak albo `updatedAt` per rekord
-- Pole `updatedAt` / `deletedAt` we wszystkich tabelach
-
-## 11. Infrastruktura backendu
-
-- Kontrakt w `packages/api-contract` (kolejne grupy: `auth`, `periods`, `categories`, `expenses`, `recurring`, `export`) → Swagger w `apps/docs` generuje się sam
-- Spójny model błędów: `401` brak tokenu, `404` nie ma/nie twoje, `409` konflikt (kategoria w użyciu), `422` walidacja
-- Migracje bazy, seed dla dev
-- Konfiguracja przez env (`DATABASE_URL`, `JWT_SECRET`, `PORT`)
-- Testy: logika planu (`PUT /plan`), idempotencja `recurring/apply`, import CSV
-- Deployment: hosting API, `docs.bida.com` dla Swaggera, HTTPS (apka ma teraz tylko cleartext w debug manifeście)
-
-## 12. Zmiany po stronie apki (żeby ten backend miał z kim gadać)
-
-- Warstwa `ApiClient` (`http` jest już w zależnościach) zamiast `PlannerRepository`/sqflite
-- Ekran logowania/rejestracji przed `LockGate`
-- Obsługa błędów sieci i stanów ładowania w `PlannerState`
-- Usunięcie `database_helper`, `sqflite*`, `github_sync_service`, `sync_manager`, `crypto_service`, `sync_setup_screen` po migracji
-- Adres API z `--dart-define=API_URL=...` (już jest w `server_status_banner.dart`)
-
-## Proponowana kolejność
-
-1. Baza + migracje + użytkownicy + auth (sekcje 0, 1, 2)
-2. Kategorie, okresy, splity, `progress` (4–6) – wystarczy do działającego dashboardu
-3. Wydatki + historia (7)
-4. Reguły cykliczne (8)
-5. Import/eksport i migracja z lokalnej bazy (9)
-6. Sync offline, jeśli w ogóle potrzebny (10)
+| Endpoint | Opis |
+|---|---|
+| `GET /export`, `POST /import/preview`, `POST /import` | pełna kopia danych użytkownika jako JSON; import zastępuje te dane w jednej transakcji i nadaje nowe ID |
+| `GET /export.csv`, `POST /import/csv` | wydatki jako CSV `Envelope,Subenvelope,Amount,Date,Note`; import tworzy brakujące koperty po nazwie i pomija duplikaty (ta sama koperta, kwota, dzień i notatka) |
+| `POST /import/legacy` | kopia z pierwszej, offline'owej wersji aplikacji (okres → przychód i przydziały, kategoria → koperta) |
