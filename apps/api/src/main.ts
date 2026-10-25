@@ -21,6 +21,10 @@ import {
   RecurringModule,
 } from "./modules/recurring/recurring.module.ts";
 import { SystemHttp } from "./modules/system/system.module.ts";
+import {
+  TransferHttp,
+  TransferModule,
+} from "./modules/transfer/transfer.module.ts";
 import { AppConfig } from "./platform/config.ts";
 import { DbLive } from "./platform/db.ts";
 
@@ -30,6 +34,7 @@ const Modules = Layer.mergeAll(
   BudgetsModule,
   ExpensesModule,
   RecurringModule,
+  TransferModule,
 );
 
 const ApiRoutes = HttpApiBuilder.layer(Api, {
@@ -41,6 +46,7 @@ const ApiRoutes = HttpApiBuilder.layer(Api, {
     BudgetsHttp,
     ExpensesHttp,
     RecurringHttp,
+    TransferHttp,
   ]),
   Layer.provide(Modules),
   Layer.provide(DbLive),
