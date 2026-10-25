@@ -79,7 +79,9 @@
   processes.mobile = {
     exec = ''
       cd "$DEVENV_ROOT/apps/mobile"
-      exec flutter run -d emulator-5554
+      # GOOGLE_CLIENT_ID (the web client id of the Google Cloud project) turns
+      # on "Sign in with Google"; without it only the e-mail code is offered
+      exec flutter run -d emulator-5554 ''${GOOGLE_CLIENT_ID:+--dart-define=GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID}
     '';
     process-compose = {
       is_tty = true;
