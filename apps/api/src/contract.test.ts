@@ -3,6 +3,7 @@ import {
   CategoryNotFound,
   CreateExpense,
   CreatePeriod,
+  ImportLegacy,
   IsoDate,
   MAX_MINOR,
   Money,
@@ -94,4 +95,51 @@ it("wire() names the response schema after the error class", () => {
     Schema.toEncoded(annotated).ast.annotations?.identifier,
     "CategoryNotFound",
   );
+});
+
+it("accepts the backup the mobile app builds from its old database", () => {
+  // the payload of the app's `LegacyMigrator`, as its tests assert it
+  const sent = {
+    backup: {
+      version: 1,
+      data: {
+        periods: [
+          {
+            id: 1,
+            name: "July",
+            start_date: "2026-07-01T00:00:00.000",
+            end_date: "2026-07-31T00:00:00.000",
+            income: 5000.5,
+          },
+        ],
+        categories: [
+          { id: 1, name: "Food", color: "#22C55E", icon: "restaurant" },
+        ],
+        recurring_rules: [
+          {
+            id: 1,
+            category_id: 1,
+            amount: 99.99,
+            frequency: "monthly",
+            note: "Gym",
+            active: 1,
+          },
+        ],
+        splits: [
+          { id: 1, period_id: 1, category_id: 1, planned_amount: 1200.25 },
+        ],
+        expenses: [
+          {
+            id: 1,
+            split_id: 1,
+            amount: 45.99,
+            date: "2026-07-03T10:30:00.000",
+            note: "Biedronka",
+            recurring_id: 1,
+          },
+        ],
+      },
+    },
+  };
+  assert.doesNotThrow(() => Schema.decodeUnknownSync(ImportLegacy)(sent));
 });
