@@ -4,7 +4,7 @@
 Dziś cała apka jest lokalna: SQLite + `flutter_secure_storage` + ręczny sync szyfrowanym plikiem na GitHubie.
 Cel: dane i logika na serwerze, apka tylko klient.
 
-> **Zakres etapu 1:** bez kont i logowania – jeden anonimowy właściciel danych. Sekcja 2 (auth) jest odłożona na później. Właścicielem danych jest przestrzeń (`space_id`), a nie użytkownik, patrz `ARCHITECTURE.md`, sekcja „Przestrzenie"; konta będą tylko członkami przestrzeni. Co użytkownik może robić w apce: `USER_STORIES.md`.
+> **Konta:** logowanie linkiem i kodem z e-maila oraz sesje są zrobione (patrz `ARCHITECTURE.md`, „Konta i sesje"); poniższa sekcja o auth to pierwotny plan. Właścicielem danych jest przestrzeń (`space_id`), a nie użytkownik, patrz `ARCHITECTURE.md`, sekcja „Przestrzenie"; konta będą tylko członkami przestrzeni. Co użytkownik może robić w apce: `USER_STORIES.md`.
 
 ## 0. Decyzje do podjęcia przed kodowaniem
 

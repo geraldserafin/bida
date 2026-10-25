@@ -65,8 +65,10 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 
 ## Etap 8 – Dalej
 
-- Konta i logowanie, członkostwo w przestrzeniach (zaproszenia, role), przeniesienie okresu do wspólnej przestrzeni
-- Deployment API oraz `docs.bida.com` (Swagger)
+- Konta i logowanie przez link i kod z e-maila: zrobione (sesje, członkostwo w przestrzeniach)
+- Logowanie przez Google (OAuth2)
+- Zaproszenia i role w przestrzeniach, przeniesienie okresu do wspólnej przestrzeni
+- Zarządzanie sesjami (lista urządzeń, wylogowanie ze wszystkich), usuwanie konta
 - Pilnowanie zmian niekompatybilnych kontraktu (np. sprawdzanie diffa `openapi.json` w CI)
 - Ewentualnie tryb offline i synchronizacja (decyzja po etapie 5)
 
