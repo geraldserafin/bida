@@ -221,17 +221,335 @@
         "description": "Fails with 409 while any envelope still uses the category.",
         "summary": "Delete a category"
       }
+    },
+    "/periods": {
+      "get": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "budgets.list",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Period"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Newest first.",
+        "summary": "List periods"
+      },
+      "post": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "budgets.create",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "PeriodDetail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CategoryNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "InvalidPeriodRange",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidPeriodRangeEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Creates the period together with its initial envelopes.",
+        "summary": "Create a period",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePeriod"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/periods/current": {
+      "get": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "budgets.current",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "PeriodDetail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NoPeriods",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoPeriodsEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "The period with the latest start date.",
+        "summary": "Get the current period"
+      }
+    },
+    "/periods/{id}": {
+      "get": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "budgets.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "PeriodDetail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PeriodNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a period"
+      },
+      "delete": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "budgets.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "404": {
+            "description": "PeriodNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Also deletes its envelopes.",
+        "summary": "Delete a period"
+      }
+    },
+    "/periods/{id}/plan": {
+      "put": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "budgets.setPlan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "PeriodDetail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PeriodNotFound | CategoryNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "A zero amount removes the envelope, or keeps it at zero when it already has expenses.",
+        "summary": "Set income and envelope amounts",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPlan"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/periods/{id}/envelopes": {
+      "post": {
+        "tags": [
+          "Budgets"
+        ],
+        "operationId": "budgets.addEnvelope",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PeriodNotFound | CategoryNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "EnvelopeAlreadyExists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeAlreadyExistsEncoded"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add an envelope to a period",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnvelopePlan"
+              }
+            }
+          },
+          "required": true
+        }
+      }
     }
   },
   "components": {
     "schemas": {
-      "CategoryInUseEncoded": {
+      "PeriodNotFoundEncoded": {
         "type": "object",
         "properties": {
           "_tag": {
             "type": "string",
             "enum": [
-              "CategoryInUse"
+              "PeriodNotFound"
             ]
           },
           "id": {
@@ -244,6 +562,29 @@
         ],
         "additionalProperties": false
       },
+      "EnvelopeAlreadyExistsEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "EnvelopeAlreadyExists"
+            ]
+          },
+          "periodId": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "periodId",
+          "categoryId"
+        ],
+        "additionalProperties": false
+      },
       "CategoryNotFoundEncoded": {
         "type": "object",
         "properties": {
@@ -251,6 +592,242 @@
             "type": "string",
             "enum": [
               "CategoryNotFound"
+            ]
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "Envelope": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "periodId": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "plannedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "periodId",
+          "categoryId",
+          "plannedMinor",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "title": "Envelope.json"
+      },
+      "EnvelopePlan": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string"
+          },
+          "plannedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "categoryId",
+          "plannedMinor"
+        ],
+        "additionalProperties": false
+      },
+      "PeriodDetail": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/Period"
+          },
+          "envelopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Envelope"
+            }
+          },
+          "plannedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "unallocatedMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "period",
+          "envelopes",
+          "plannedMinor",
+          "unallocatedMinor"
+        ],
+        "additionalProperties": false
+      },
+      "Period": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "incomeMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "startDate",
+          "endDate",
+          "incomeMinor",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "title": "Period.json"
+      },
+      "SetPlan": {
+        "type": "object",
+        "properties": {
+          "incomeMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "envelopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnvelopePlan"
+            }
+          }
+        },
+        "required": [
+          "incomeMinor",
+          "envelopes"
+        ],
+        "additionalProperties": false
+      },
+      "InvalidPeriodRangeEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "InvalidPeriodRange"
+            ]
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "startDate",
+          "endDate"
+        ],
+        "additionalProperties": false
+      },
+      "CreatePeriod": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "incomeMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "envelopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnvelopePlan"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "startDate",
+          "endDate",
+          "incomeMinor",
+          "envelopes"
+        ],
+        "additionalProperties": false
+      },
+      "NoPeriodsEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "NoPeriods"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "CategoryInUseEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "CategoryInUse"
             ]
           },
           "id": {
@@ -393,6 +970,9 @@
     },
     {
       "name": "Categories"
+    },
+    {
+      "name": "Budgets"
     }
   ]
 }
