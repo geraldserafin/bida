@@ -41,7 +41,7 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 
 - Okresy: tworzenie z podziałem na koperty w jednej transakcji, lista, szczegóły, usuwanie kaskadowe (`US-1.x`)
 - Edycja planu z zachowaniem kopert, które mają wydatki (`PUT /periods/{id}/plan`)
-- `progress` (planned / spent / remaining / unallocated) i podsumowania okresów (`US-2.x`)
+- Podsumowanie okresu: planned / unallocated (`US-2.x`). `spent`, `remaining` i `progress` per kategoria wymagają wydatków, więc dochodzą w etapie 5 (moduł `expenses` zależy od `budgets`, nie odwrotnie)
 - Szybkie dodanie koperty razem z kategorią
 - Blokada usunięcia kategorii w użyciu (klucz obcy → `CategoryInUse`)
 
