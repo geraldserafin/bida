@@ -1,14 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
-/// Base URL of the backend. 10.0.2.2 is the host machine as seen from the
-/// Android emulator; override with `--dart-define=API_URL=...`.
-const apiUrl = String.fromEnvironment(
-  'API_URL',
-  defaultValue: 'http://10.0.2.2:3000',
-);
+import '../services/api_client.dart';
 
 /// Thin strip showing whether the backend `/health` endpoint is reachable.
 class ServerStatusBanner extends StatefulWidget {
@@ -22,12 +14,8 @@ class _ServerStatusBannerState extends State<ServerStatusBanner> {
   late Future<String> _status = _check();
 
   Future<String> _check() async {
-    final res = await http
-        .get(Uri.parse('$apiUrl/health'))
-        .timeout(const Duration(seconds: 5));
-    if (res.statusCode != 200) throw Exception('HTTP ${res.statusCode}');
-    final json = jsonDecode(res.body) as Map<String, dynamic>;
-    return 'Server: ${json['status']} (uptime ${json['uptimeSeconds']}s)';
+    final health = await api.system.systemHealth();
+    return 'Server: ${health.status.name} (uptime ${health.uptimeSeconds}s)';
   }
 
   @override
