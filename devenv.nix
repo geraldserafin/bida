@@ -23,31 +23,35 @@
   };
   processes.docs.exec = "pnpm --filter @bida/docs dev";
 
-  # The Flutter app: boots the emulator if needed and runs `flutter run` on it
-  # (see start-mobile below). is_tty lets you type r / R for hot reload when the
-  # process is focused in the process-compose TUI.
-  processes.mobile = {
-    exec = "start-mobile";
-    process-compose = {
-      is_tty = true;
-      depends_on.api.condition = "process_started";
+  # The emulator runs in the foreground (`emu` ends with `exec emulator`), so
+  # stopping or restarting this process stops or restarts the emulator. It is
+  # healthy once Android has finished booting.
+  processes.emulator = {
+    exec = "emu";
+    process-compose.readiness_probe = {
+      exec.command = ''[ "$(adb -e shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]'';
+      initial_delay_seconds = 10;
+      period_seconds = 3;
+      failure_threshold = 100;
     };
   };
 
-  scripts.start-mobile.exec = ''
-    adb start-server >/dev/null
-    if ! adb devices | grep -q '^emulator-'; then
-      echo "starting emulator (log: $DEVENV_ROOT/.android/emu.log)..."
-      mkdir -p "$DEVENV_ROOT/.android"
-      setsid nohup emu >"$DEVENV_ROOT/.android/emu.log" 2>&1 &
-    fi
-    adb wait-for-device
-    until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do
-      sleep 2
-    done
-    cd "$DEVENV_ROOT/apps/mobile"
-    exec flutter run "$@"
-  '';
+  # The Flutter app on the emulator, started once the emulator is booted and
+  # the api is up. is_tty lets you type r / R for hot reload when the process
+  # is focused in the process-compose TUI. Restart it to rebuild.
+  processes.mobile = {
+    exec = ''
+      cd "$DEVENV_ROOT/apps/mobile"
+      exec flutter run -d emulator-5554
+    '';
+    process-compose = {
+      is_tty = true;
+      depends_on = {
+        emulator.condition = "process_healthy";
+        api.condition = "process_started";
+      };
+    };
+  };
 
   languages.javascript = {
     enable = true;
