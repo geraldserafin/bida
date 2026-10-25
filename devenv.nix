@@ -16,29 +16,27 @@
     initialScript = "CREATE ROLE bida SUPERUSER LOGIN;";
   };
 
-  # `devenv up` starts postgres, the api (http://localhost:3000), the
-  # swagger docs (http://localhost:5174) and the Flutter app.
+  # `devenv up` starts postgres, the api (http://localhost:3000) and the
+  # swagger docs (http://localhost:5174).
+  process.manager.implementation = "process-compose";
   processes.api = {
     exec = "pnpm --filter @bida/api dev";
     process-compose.depends_on.postgres.condition = "process_healthy";
   };
   processes.docs.exec = "pnpm --filter @bida/docs dev";
 
-  # The Flutter app. There is no Metro-style dev server for native Flutter, so
-  # this waits until a device shows up (start the emulator yourself with `emu`)
-  # and then runs `flutter run` on it. The app reaches the api through 10.0.2.2
-  # (see apps/mobile/lib/services/api_client.dart).
-  processes.mobile = {
-    exec = ''
-      cd "$DEVENV_ROOT/apps/mobile"
-      adb wait-for-device
-      until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do
-        sleep 2
-      done
-      flutter run
-    '';
-    process-compose.depends_on.api.condition = "process_started";
-  };
+  # Runs the Flutter app on a running device or emulator (start one with `emu`).
+  # Not a process: native Flutter has no dev server to keep alive, and this way
+  # you get the terminal for hot reload (r / R). The app reaches the api through
+  # 10.0.2.2 (see apps/mobile/lib/services/api_client.dart).
+  scripts.mobile.exec = ''
+    cd "$DEVENV_ROOT/apps/mobile"
+    adb wait-for-device
+    until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do
+      sleep 2
+    done
+    exec flutter run "$@"
+  '';
 
   languages.javascript = {
     enable = true;
