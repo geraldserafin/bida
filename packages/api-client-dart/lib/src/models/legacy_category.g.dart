@@ -1,19 +1,20 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'categories.dart';
+part of 'legacy_category.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator
 // **************************************************************************
 
-Categories _$CategoriesFromJson(Map<String, dynamic> json) => Categories(
-  id: (json['id'] as num).toInt(),
-  name: json['name'] as String,
-  color: json['color'] as String,
-  icon: json['icon'] as String?,
-);
+LegacyCategory _$LegacyCategoryFromJson(Map<String, dynamic> json) =>
+    LegacyCategory(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      color: json['color'] as String,
+      icon: json['icon'] as String?,
+    );
 
-Map<String, dynamic> _$CategoriesToJson(Categories instance) =>
+Map<String, dynamic> _$LegacyCategoryToJson(LegacyCategory instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,

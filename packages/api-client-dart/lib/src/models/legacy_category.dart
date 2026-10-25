@@ -4,24 +4,24 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-part 'categories.g.dart';
+part 'legacy_category.g.dart';
 
 @JsonSerializable()
-class Categories {
-  const Categories({
+class LegacyCategory {
+  const LegacyCategory({
     required this.id,
     required this.name,
     required this.color,
     required this.icon,
   });
 
-  factory Categories.fromJson(Map<String, Object?> json) =>
-      _$CategoriesFromJson(json);
+  factory LegacyCategory.fromJson(Map<String, Object?> json) =>
+      _$LegacyCategoryFromJson(json);
 
   final int id;
   final String name;
   final String color;
   final String? icon;
 
-  Map<String, Object?> toJson() => _$CategoriesToJson(this);
+  Map<String, Object?> toJson() => _$LegacyCategoryToJson(this);
 }

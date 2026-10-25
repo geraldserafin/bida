@@ -4,11 +4,11 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-part 'expenses.g.dart';
+part 'legacy_expense.g.dart';
 
 @JsonSerializable()
-class Expenses {
-  const Expenses({
+class LegacyExpense {
+  const LegacyExpense({
     required this.id,
     required this.splitId,
     required this.amount,
@@ -17,17 +17,17 @@ class Expenses {
     required this.recurringId,
   });
 
-  factory Expenses.fromJson(Map<String, Object?> json) =>
-      _$ExpensesFromJson(json);
+  factory LegacyExpense.fromJson(Map<String, Object?> json) =>
+      _$LegacyExpenseFromJson(json);
 
   final int id;
   @JsonKey(name: 'split_id')
   final int splitId;
-  final dynamic amount;
+  final num amount;
   final String date;
   final String? note;
   @JsonKey(name: 'recurring_id')
   final int? recurringId;
 
-  Map<String, Object?> toJson() => _$ExpensesToJson(this);
+  Map<String, Object?> toJson() => _$LegacyExpenseToJson(this);
 }

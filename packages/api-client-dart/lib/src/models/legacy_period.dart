@@ -4,11 +4,11 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-part 'periods.g.dart';
+part 'legacy_period.g.dart';
 
 @JsonSerializable()
-class Periods {
-  const Periods({
+class LegacyPeriod {
+  const LegacyPeriod({
     required this.id,
     required this.name,
     required this.startDate,
@@ -16,8 +16,8 @@ class Periods {
     required this.income,
   });
 
-  factory Periods.fromJson(Map<String, Object?> json) =>
-      _$PeriodsFromJson(json);
+  factory LegacyPeriod.fromJson(Map<String, Object?> json) =>
+      _$LegacyPeriodFromJson(json);
 
   final int id;
   final String name;
@@ -25,7 +25,7 @@ class Periods {
   final String startDate;
   @JsonKey(name: 'end_date')
   final String endDate;
-  final dynamic income;
+  final num income;
 
-  Map<String, Object?> toJson() => _$PeriodsToJson(this);
+  Map<String, Object?> toJson() => _$LegacyPeriodToJson(this);
 }

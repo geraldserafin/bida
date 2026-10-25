@@ -4,7 +4,7 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'data.dart';
+import 'legacy_data.dart';
 
 part 'legacy_backup.g.dart';
 
@@ -21,7 +21,7 @@ class LegacyBackup {
 
   final int version;
   final String? exportedAt;
-  final Data data;
+  final LegacyData data;
 
   Map<String, Object?> toJson() => _$LegacyBackupToJson(this);
 }

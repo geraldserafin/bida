@@ -4,11 +4,11 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-part 'recurring_rules.g.dart';
+part 'legacy_recurring_rule.g.dart';
 
 @JsonSerializable()
-class RecurringRules {
-  const RecurringRules({
+class LegacyRecurringRule {
+  const LegacyRecurringRule({
     required this.id,
     required this.categoryId,
     required this.amount,
@@ -17,16 +17,16 @@ class RecurringRules {
     required this.active,
   });
 
-  factory RecurringRules.fromJson(Map<String, Object?> json) =>
-      _$RecurringRulesFromJson(json);
+  factory LegacyRecurringRule.fromJson(Map<String, Object?> json) =>
+      _$LegacyRecurringRuleFromJson(json);
 
   final int id;
   @JsonKey(name: 'category_id')
   final int categoryId;
-  final dynamic amount;
+  final num amount;
   final String frequency;
   final String? note;
   final int active;
 
-  Map<String, Object?> toJson() => _$RecurringRulesToJson(this);
+  Map<String, Object?> toJson() => _$LegacyRecurringRuleToJson(this);
 }

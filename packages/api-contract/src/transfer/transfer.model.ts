@@ -35,60 +35,62 @@ export const ImportPreview = Schema.Struct({
 }).annotate({ identifier: "ImportPreview" });
 export type ImportPreview = typeof ImportPreview.Type;
 
-/**
+/*
  * A backup made by the first, offline version of the mobile app: integer ids,
- * snake_case columns and amounts in zloty as decimals.
+ * snake_case columns and amounts in zloty as decimals. The rows are the raw
+ * rows of its SQLite tables, so the names are the old table and column names.
  */
+const LegacyPeriod = Schema.Struct({
+  id: Schema.Int,
+  name: Schema.String,
+  start_date: Schema.String,
+  end_date: Schema.String,
+  income: Schema.Finite,
+}).annotate({ identifier: "LegacyPeriod" });
+
+const LegacyCategory = Schema.Struct({
+  id: Schema.Int,
+  name: Schema.String,
+  color: Schema.String,
+  icon: Schema.NullOr(Schema.String),
+}).annotate({ identifier: "LegacyCategory" });
+
+const LegacyRecurringRule = Schema.Struct({
+  id: Schema.Int,
+  category_id: Schema.Int,
+  amount: Schema.Finite,
+  frequency: Schema.String,
+  note: Schema.NullOr(Schema.String),
+  active: Schema.Int,
+}).annotate({ identifier: "LegacyRecurringRule" });
+
+/** What the old app called an envelope. */
+const LegacySplit = Schema.Struct({
+  id: Schema.Int,
+  period_id: Schema.Int,
+  category_id: Schema.Int,
+  planned_amount: Schema.Finite,
+}).annotate({ identifier: "LegacySplit" });
+
+const LegacyExpense = Schema.Struct({
+  id: Schema.Int,
+  split_id: Schema.Int,
+  amount: Schema.Finite,
+  date: Schema.String,
+  note: Schema.NullOr(Schema.String),
+  recurring_id: Schema.NullOr(Schema.Int),
+}).annotate({ identifier: "LegacyExpense" });
+
 export const LegacyBackup = Schema.Struct({
   version: Schema.Int,
   exportedAt: Schema.optional(Schema.String),
   data: Schema.Struct({
-    periods: Schema.Array(
-      Schema.Struct({
-        id: Schema.Int,
-        name: Schema.String,
-        start_date: Schema.String,
-        end_date: Schema.String,
-        income: Schema.Number,
-      }),
-    ),
-    categories: Schema.Array(
-      Schema.Struct({
-        id: Schema.Int,
-        name: Schema.String,
-        color: Schema.String,
-        icon: Schema.NullOr(Schema.String),
-      }),
-    ),
-    recurring_rules: Schema.Array(
-      Schema.Struct({
-        id: Schema.Int,
-        category_id: Schema.Int,
-        amount: Schema.Number,
-        frequency: Schema.String,
-        note: Schema.NullOr(Schema.String),
-        active: Schema.Int,
-      }),
-    ),
-    splits: Schema.Array(
-      Schema.Struct({
-        id: Schema.Int,
-        period_id: Schema.Int,
-        category_id: Schema.Int,
-        planned_amount: Schema.Number,
-      }),
-    ),
-    expenses: Schema.Array(
-      Schema.Struct({
-        id: Schema.Int,
-        split_id: Schema.Int,
-        amount: Schema.Number,
-        date: Schema.String,
-        note: Schema.NullOr(Schema.String),
-        recurring_id: Schema.NullOr(Schema.Int),
-      }),
-    ),
-  }),
+    periods: Schema.Array(LegacyPeriod),
+    categories: Schema.Array(LegacyCategory),
+    recurring_rules: Schema.Array(LegacyRecurringRule),
+    splits: Schema.Array(LegacySplit),
+    expenses: Schema.Array(LegacyExpense),
+  }).annotate({ identifier: "LegacyData" }),
 }).annotate({ identifier: "LegacyBackup" });
 export type LegacyBackup = typeof LegacyBackup.Type;
 

@@ -8,7 +8,7 @@ part of 'legacy_backup.dart';
 
 LegacyBackup _$LegacyBackupFromJson(Map<String, dynamic> json) => LegacyBackup(
   version: (json['version'] as num).toInt(),
-  data: Data.fromJson(json['data'] as Map<String, dynamic>),
+  data: LegacyData.fromJson(json['data'] as Map<String, dynamic>),
   exportedAt: json['exportedAt'] as String?,
 );
 
