@@ -4,6 +4,7 @@
 
 // Clients
 export 'system/system_client.dart';
+export 'auth/auth_client.dart';
 export 'spaces/spaces_client.dart';
 export 'categories/categories_client.dart';
 export 'periods/periods_client.dart';
@@ -11,6 +12,7 @@ export 'expenses/expenses_client.dart';
 export 'recurring/recurring_client.dart';
 export 'transfer/transfer_client.dart';
 // Data classes
+export 'models/unauthorized.dart';
 export 'models/space_not_found.dart';
 export 'models/invalid_csv.dart';
 export 'models/csv_import_result.dart';
@@ -58,7 +60,17 @@ export 'models/update_category.dart';
 export 'models/create_category.dart';
 export 'models/space.dart';
 export 'models/save_space.dart';
+export 'models/user.dart';
+export 'models/email.dart';
+export 'models/invalid_login.dart';
+export 'models/auth_result.dart';
+export 'models/verify_token.dart';
+export 'models/transport.dart';
+export 'models/verify_code.dart';
+export 'models/too_many_requests.dart';
+export 'models/request_link.dart';
 export 'models/health.dart';
+export 'models/unauthorized_tag.dart';
 export 'models/space_not_found_tag.dart';
 export 'models/invalid_csv_tag.dart';
 export 'models/invalid_import_tag.dart';
@@ -74,6 +86,8 @@ export 'models/envelope_already_exists_tag.dart';
 export 'models/invalid_period_range_tag.dart';
 export 'models/no_periods_tag.dart';
 export 'models/category_in_use_tag.dart';
+export 'models/invalid_login_tag.dart';
+export 'models/too_many_requests_tag.dart';
 export 'models/health_status.dart';
 // Root client
 export 'bida_api.dart';

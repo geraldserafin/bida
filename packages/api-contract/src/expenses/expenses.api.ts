@@ -5,6 +5,7 @@ import {
   HttpApiSchema,
   OpenApi,
 } from "effect/http-api";
+import { Authenticated } from "../auth/authenticated.ts";
 import {
   EnvelopeId,
   EnvelopeNotFound,
@@ -96,4 +97,5 @@ export class ExpensesApi extends HttpApiGroup.make("expenses")
     ),
   )
   .middleware(SpaceContext)
+  .middleware(Authenticated)
   .annotateMerge(OpenApi.annotations({ title: "Expenses" })) {}

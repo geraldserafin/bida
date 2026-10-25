@@ -5,6 +5,7 @@
 import 'package:dio/dio.dart';
 
 import 'system/system_client.dart';
+import 'auth/auth_client.dart';
 import 'spaces/spaces_client.dart';
 import 'categories/categories_client.dart';
 import 'periods/periods_client.dart';
@@ -24,6 +25,7 @@ class BidaApi {
   static String get version => '0.0.0';
 
   SystemClient? _system;
+  AuthClient? _auth;
   SpacesClient? _spaces;
   CategoriesClient? _categories;
   PeriodsClient? _periods;
@@ -32,6 +34,8 @@ class BidaApi {
   TransferClient? _transfer;
 
   SystemClient get system => _system ??= SystemClient(_dio, baseUrl: _baseUrl);
+
+  AuthClient get auth => _auth ??= AuthClient(_dio, baseUrl: _baseUrl);
 
   SpacesClient get spaces => _spaces ??= SpacesClient(_dio, baseUrl: _baseUrl);
 

@@ -1,4 +1,4 @@
-import { Api, CurrentSpace } from "@bida/api-contract";
+import { Api, CurrentSpace, CurrentUser } from "@bida/api-contract";
 import { Effect } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
 import { SpacesService } from "./spaces.service.ts";
@@ -10,11 +10,19 @@ export const SpacesHttp = HttpApiBuilder.group(
   Effect.fn(function* (handlers) {
     const spaces = yield* SpacesService;
     return handlers
-      .handle("list", () => spaces.list)
-      .handle("create", ({ payload }) => spaces.create(payload))
+      .handle("list", () =>
+        Effect.flatMap(CurrentUser, ({ user }) => spaces.listFor(user.id)),
+      )
+      .handle("create", ({ payload }) =>
+        Effect.flatMap(CurrentUser, ({ user }) =>
+          spaces.createFor(user.id, payload),
+        ),
+      )
       .handle("current", () => CurrentSpace)
       .handle("update", ({ params, payload }) =>
-        spaces.update(params.id, payload),
+        Effect.flatMap(CurrentUser, ({ user }) =>
+          spaces.updateFor(user.id, params.id, payload),
+        ),
       );
   }),
 );

@@ -12,14 +12,29 @@ import { SpacesRepository } from "./spaces.repository.ts";
 export class SpacesService extends Context.Service<
   SpacesService,
   {
-    list: Effect.Effect<ReadonlyArray<Space>>;
-    create(input: SaveSpace): Effect.Effect<Space>;
-    update(id: SpaceId, input: SaveSpace): Effect.Effect<Space, SpaceNotFound>;
+    /** The spaces the user is a member of. */
+    listFor(userId: string): Effect.Effect<ReadonlyArray<Space>>;
+    /** A new space the user owns. */
+    createFor(userId: string, input: SaveSpace): Effect.Effect<Space>;
+    /** Only members find the space; for everyone else it does not exist. */
+    updateFor(
+      userId: string,
+      id: SpaceId,
+      input: SaveSpace,
+    ): Effect.Effect<Space, SpaceNotFound>;
     /**
-     * The space a request asks for by id. Without an id it is the default
-     * space.
+     * The space a request of the user works in: the one the header names, which
+     * the user has to be a member of, or their first space without a header.
      */
-    resolve(id: string | undefined): Effect.Effect<Space, SpaceNotFound>;
+    resolveFor(
+      userId: string,
+      id: string | undefined,
+    ): Effect.Effect<Space, SpaceNotFound>;
+    /**
+     * Gives the user the space that holds the data from before accounts
+     * existed, if nobody has it yet. `None` when somebody does.
+     */
+    claimDefault(userId: string): Effect.Effect<Option.Option<Space>>;
   }
 >()("bida/spaces/SpacesService") {
   static readonly layer = Layer.effect(
@@ -27,32 +42,23 @@ export class SpacesService extends Context.Service<
     Effect.gen(function* () {
       const repo = yield* SpacesRepository;
 
-      const resolve = Effect.fn("SpacesService.resolve")(function* (
-        id: string | undefined,
-      ) {
-        const raw = id ?? DEFAULT_SPACE_ID;
-        // a header that is not even a uuid cannot name a space
-        if (!Schema.is(SpaceId)(raw))
-          return yield* new SpaceNotFound({ id: raw });
-        const spaceId = raw;
-        const found = yield* repo.findById(spaceId);
-        return yield* Option.match(found, {
-          onNone: () => Effect.fail(new SpaceNotFound({ id: spaceId })),
-          onSome: Effect.succeed,
-        });
-      });
-
-      const create = Effect.fn("SpacesService.create")(function* (
+      const createFor = Effect.fn("SpacesService.createFor")(function* (
+        userId: string,
         input: SaveSpace,
       ) {
         const row = yield* Space.insert.makeEffect(input).pipe(Effect.orDie);
-        return yield* repo.insert(row);
+        const space = yield* repo.insert(row);
+        yield* repo.addMember(space.id, userId, "owner");
+        return space;
       });
 
-      const update = Effect.fn("SpacesService.update")(function* (
+      const updateFor = Effect.fn("SpacesService.updateFor")(function* (
+        userId: string,
         id: SpaceId,
         input: SaveSpace,
       ) {
+        const member = yield* repo.findForUser(userId, id);
+        if (Option.isNone(member)) return yield* new SpaceNotFound({ id });
         const updated = yield* repo.update(id, input);
         return yield* Option.match(updated, {
           onNone: () => Effect.fail(new SpaceNotFound({ id })),
@@ -60,7 +66,38 @@ export class SpacesService extends Context.Service<
         });
       });
 
-      return SpacesService.of({ list: repo.list, create, update, resolve });
+      const resolveFor = Effect.fn("SpacesService.resolveFor")(function* (
+        userId: string,
+        id: string | undefined,
+      ) {
+        if (id === undefined) {
+          const [first] = yield* repo.listForUser(userId);
+          return first ?? (yield* new SpaceNotFound({ id: "" }));
+        }
+        // a header that is not even a uuid cannot name a space
+        if (!Schema.is(SpaceId)(id)) return yield* new SpaceNotFound({ id });
+        const found = yield* repo.findForUser(userId, id);
+        return yield* Option.match(found, {
+          onNone: () => Effect.fail(new SpaceNotFound({ id })),
+          onSome: Effect.succeed,
+        });
+      });
+
+      const claimDefault = Effect.fn("SpacesService.claimDefault")(function* (
+        userId: string,
+      ) {
+        if (yield* repo.defaultSpaceHasMembers) return Option.none<Space>();
+        yield* repo.addMember(DEFAULT_SPACE_ID, userId, "owner");
+        return yield* repo.findForUser(userId, DEFAULT_SPACE_ID);
+      });
+
+      return SpacesService.of({
+        listFor: repo.listForUser,
+        createFor,
+        updateFor,
+        resolveFor,
+        claimDefault,
+      });
     }),
   );
 }

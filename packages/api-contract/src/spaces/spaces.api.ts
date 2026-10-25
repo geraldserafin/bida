@@ -5,6 +5,7 @@ import {
   HttpApiSchema,
   OpenApi,
 } from "effect/http-api";
+import { Authenticated } from "../auth/authenticated.ts";
 import { wire } from "../errors.ts";
 import { SaveSpace, SpaceId, SpaceJson } from "./space.model.ts";
 import { SpaceContext } from "./space-context.ts";
@@ -44,4 +45,5 @@ export class SpacesApi extends HttpApiGroup.make("spaces")
       }),
     ),
   )
+  .middleware(Authenticated)
   .annotateMerge(OpenApi.annotations({ title: "Spaces" })) {}

@@ -5,6 +5,7 @@ import {
   HttpApiSchema,
   OpenApi,
 } from "effect/http-api";
+import { Authenticated } from "../auth/authenticated.ts";
 import { CategoryNotFound } from "../categories/index.ts";
 import { wire } from "../errors.ts";
 import { SpaceContext } from "../spaces/space-context.ts";
@@ -107,4 +108,5 @@ export class PeriodsApi extends HttpApiGroup.make("periods")
   )
   .prefix("/periods")
   .middleware(SpaceContext)
+  .middleware(Authenticated)
   .annotateMerge(OpenApi.annotations({ title: "Periods" })) {}
