@@ -138,8 +138,9 @@ Api (Effect) → openapi.json → generator → packages/api-client-dart → zal
 1. **Spec:** skrypt zapisuje `OpenApi.fromApi(Api)` do `openapi.json` i commitujemy go. Plik jest jedynym wejściem generatora i pokazuje zmiany kontraktu w diffie.
 2. **Generator:** [`swagger_parser`](https://github.com/artflutter/swagger_parser). Czyta OpenAPI 3.1 i generuje klienta na `dio` + `retrofit` oraz klasy danych. Uruchamiany w devenv (Dart jest w toolchainie Fluttera).
 3. **Paczka:** `packages/api-client-dart` (np. `bida_api_client`). **Wygenerowany kod jest commitowany**, żeby konsument nie musiał niczego generować.
-4. **CI:** po wygenerowaniu klienta `git diff --exit-code` musi być czysty. Zmiana kontraktu bez regeneracji klienta zatrzymuje build.
-5. **Dystrybucja:** paczka leży w monorepo, więc nie ma rejestru, publikowania ani tagów. Aplikacja Dart importuje ją przez zależność `path`:
+4. **Regeneracja:** `pnpm gen:dart-client` zapisuje `openapi.json`, uruchamia `swagger_parser` i `build_runner` (pliki `.g.dart`) oraz formatuje kod. Ręczny `lib/bida_api_client.dart` tylko re-eksportuje wygenerowane `lib/src/export.dart`, a generator nadpisuje wyłącznie `lib/src`.
+5. **Kontrola aktualności:** `pnpm check:dart-client` regeneruje klienta i sprawdza `git diff --exit-code`. Hook `pre-commit` uruchamia go, gdy w commicie zmienia się `packages/api-contract/src` lub `scripts`. Zmiana kontraktu bez zacommitowanego klienta nie przejdzie. Osobnego CI jeszcze nie ma.
+6. **Dystrybucja:** paczka leży w monorepo, więc nie ma rejestru, publikowania ani tagów. Aplikacja Dart importuje ją przez zależność `path`:
 
    ```yaml
    dependencies:
@@ -148,9 +149,19 @@ Api (Effect) → openapi.json → generator → packages/api-client-dart → zal
    ```
 
    Backend i klient zmieniają się w jednym commicie, więc kontrakt i jego konsument nie rozjeżdżają się wersjami.
-6. **Zmiany niekompatybilne** (usunięty endpoint lub pole, zmieniony typ) wymagają w tym samym PR poprawienia aplikacji, która klienta używa. Osobne wersjonowanie paczki nie jest potrzebne.
+7. **Zmiany niekompatybilne** (usunięty endpoint lub pole, zmieniony typ) wymagają w tym samym PR poprawienia aplikacji, która klienta używa. Osobne wersjonowanie paczki nie jest potrzebne.
 
-**Ryzyko:** Effect generuje OpenAPI 3.1, a część generatorów obsługuje je niepełnie. Przed budową pipeline'u robimy spike na realnym specu (patrz `ROADMAP.md`, etap 3). Wymagania wobec kontraktu, które ułatwiają generowanie: jawne `operationId` (nazwy endpointów), brandowane ID widoczne w specu jako `string`, błędy zadeklarowane w `error` każdego endpointu.
+### Wymagania wobec kontraktu
+
+Wnioski ze spike'u na `swagger_parser` i OpenAPI 3.1 wygenerowanym przez Effect (działa, po spełnieniu poniższych):
+
+- **Schematy w odpowiedziach i payloadach muszą mieć `identifier`** (`Category.json.annotate({ identifier: "Category" })`). Bez tego Effect wstawia schemat inline i generator tworzy osobną klasę dla każdego endpointu (`GetCategoriesIdResponse`, `PostCategoriesResponse`...). Z identyfikatorem powstaje jedna klasa `Category`.
+- **Liczby całkowite jako `Schema.Int`**, nie `Schema.Number`. `Number` dopuszcza `Infinity` i `NaN`, więc w specu pojawia się `anyOf` i generator nie wyprowadza typu `int`.
+- Brandowane ID są w specu zwykłym `string`, więc w Dart są `String`.
+- Daty (`createdAt`, `updatedAt`) są w Dart na razie `String`, bo spec nie niesie informacji o formacie `date-time`.
+- Nazwy metod pochodzą z `operationId` (`grupa.endpoint`), więc klient ma `api.categories.categoriesList()`. Powtórzenie nazwy grupy jest kosmetyczne.
+- Błędy deklarowane w `error` trafiają do klas modeli (`CategoryNotFoundEncoded`), ale klient zgłasza je jako `DioException` z kodem statusu i ciałem.
+- Klasa `Category` z klienta koliduje nazwą z modelem w aplikacji mobilnej, więc tam importujemy ją z prefiksem.
 
 ## Jak dodać nową domenę
 
