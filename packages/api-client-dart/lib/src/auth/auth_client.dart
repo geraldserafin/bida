@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../models/auth_result.dart';
+import '../models/google_sign_in.dart';
 import '../models/request_link.dart';
 import '../models/user.dart';
 import '../models/verify_code.dart';
@@ -32,6 +33,12 @@ abstract class AuthClient {
   /// Sign in with the token from the e-mailed link
   @POST('/auth/magic-link/token')
   Future<AuthResult> authVerifyToken({@Body() required VerifyToken body});
+
+  /// Sign in with a Google ID token.
+  ///
+  /// The app signs in with Google and sends the ID token it got. The token has to be for one of this server's Google client ids and its e-mail address verified by Google. Creates the account on the first sign-in; an account with the same address is the same account.
+  @POST('/auth/google')
+  Future<AuthResult> authGoogleSignIn({@Body() required GoogleSignIn body});
 
   /// The signed-in user
   @GET('/auth/me')

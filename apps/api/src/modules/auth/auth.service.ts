@@ -11,6 +11,7 @@ import { AppConfig } from "../../platform/config.ts";
 import { Mailer } from "../../platform/mailer.ts";
 import { SpacesService } from "../spaces/spaces.module.ts";
 import { AuthRepository } from "./auth.repository.ts";
+import { type GoogleProfile, GoogleVerifier } from "./google.ts";
 import { newCode, newSecret, sameHash, sha256 } from "./tokens.ts";
 
 const LINK_TTL_SECONDS = 15 * 60;
@@ -43,6 +44,11 @@ export class AuthService extends Context.Service<
       token: string,
       userAgent: string | null,
     ): Effect.Effect<SignedIn, InvalidLogin>;
+    /** Signs in with the ID token an app got from Google sign-in. */
+    signInWithGoogle(
+      idToken: string,
+      userAgent: string | null,
+    ): Effect.Effect<SignedIn, InvalidLogin>;
     /** The user and session behind a session token. */
     authenticate(
       token: string,
@@ -56,6 +62,7 @@ export class AuthService extends Context.Service<
       const repo = yield* AuthRepository;
       const spaces = yield* SpacesService;
       const mailer = yield* Mailer;
+      const google = yield* GoogleVerifier;
       const sql = yield* SqlClient.SqlClient;
       const { appUrl, claimEmail } = yield* AppConfig;
       const claim = normalize(claimEmail);
@@ -87,11 +94,12 @@ export class AuthService extends Context.Service<
       /** The account of the address, created with its first space on first use. */
       const userFor = Effect.fn("AuthService.userFor")(function* (
         email: string,
+        name: string | null = null,
       ) {
         const known = yield* repo.findUserByEmail(email);
         if (Option.isSome(known)) return known.value;
         const row = yield* User.insert
-          .makeEffect({ email, name: null })
+          .makeEffect({ email, name })
           .pipe(Effect.orDie);
         const inserted = yield* repo.insertUser(row);
         // lost a race with another sign-in of the same address
@@ -117,13 +125,12 @@ export class AuthService extends Context.Service<
         return user;
       });
 
+      /** Starts a session for the user, found or created by [findUser]. */
       const signIn = Effect.fn("AuthService.signIn")(function* (
-        email: string,
+        findUser: Effect.Effect<User>,
         userAgent: string | null,
       ) {
-        const user = yield* sql
-          .withTransaction(userFor(email))
-          .pipe(Effect.orDie);
+        const user = yield* sql.withTransaction(findUser).pipe(Effect.orDie);
         const token = newSecret();
         yield* repo.insertSession({
           id: crypto.randomUUID(),
@@ -151,7 +158,7 @@ export class AuthService extends Context.Service<
           return yield* new InvalidLogin();
         if (!(yield* repo.consumeCode(open.value.id)))
           return yield* new InvalidLogin();
-        return yield* signIn(email, userAgent);
+        return yield* signIn(userFor(email), userAgent);
       });
 
       const verifyToken = Effect.fn("AuthService.verifyToken")(function* (
@@ -160,8 +167,33 @@ export class AuthService extends Context.Service<
       ) {
         const email = yield* repo.consumeToken(sha256(token));
         if (Option.isNone(email)) return yield* new InvalidLogin();
-        return yield* signIn(email.value, userAgent);
+        return yield* signIn(userFor(email.value), userAgent);
       });
+
+      /**
+       * The account of a Google identity. The first time, an account with the
+       * same address (Google verified it) is the same person; failing that a
+       * new one is created.
+       */
+      const userForGoogle = Effect.fn("AuthService.userForGoogle")(function* (
+        profile: GoogleProfile,
+      ) {
+        const known = yield* repo.findIdentity("google", profile.subject);
+        if (Option.isSome(known)) {
+          const user = yield* repo.findUserById(known.value);
+          if (Option.isSome(user)) return user.value;
+        }
+        const user = yield* userFor(normalize(profile.email), profile.name);
+        yield* repo.insertIdentity("google", profile.subject, user.id);
+        return user;
+      });
+
+      const signInWithGoogle = Effect.fn("AuthService.signInWithGoogle")(
+        function* (idToken: string, userAgent: string | null) {
+          const profile = yield* google.verify(idToken);
+          return yield* signIn(userForGoogle(profile), userAgent);
+        },
+      );
 
       const authenticate = Effect.fn("AuthService.authenticate")(function* (
         token: string,
@@ -180,6 +212,7 @@ export class AuthService extends Context.Service<
         requestLink,
         verifyCode,
         verifyToken,
+        signInWithGoogle,
         authenticate,
         logout: repo.deleteSession,
       });

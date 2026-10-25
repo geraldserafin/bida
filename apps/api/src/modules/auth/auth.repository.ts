@@ -19,6 +19,17 @@ export class AuthRepository extends Context.Service<
       input: typeof User.insert.Type,
     ): Effect.Effect<Option.Option<User>>;
 
+    /** The user behind an identity at a provider, e.g. a Google account. */
+    findIdentity(
+      provider: string,
+      subject: string,
+    ): Effect.Effect<Option.Option<string>>;
+    insertIdentity(
+      provider: string,
+      subject: string,
+      userId: string,
+    ): Effect.Effect<void>;
+
     /** How many e-mails were sent to the address since `seconds` ago. */
     countCodesSince(email: string, seconds: number): Effect.Effect<number>;
     insertCode(input: {
@@ -101,6 +112,20 @@ export class AuthRepository extends Context.Service<
         findUserByEmail: (email) => findUserByEmail(email).pipe(Effect.orDie),
         findUserById: (id) => findUserById(id).pipe(Effect.orDie),
         insertUser: (input) => insertUser(input).pipe(Effect.orDie),
+
+        findIdentity: (provider, subject) =>
+          rows(
+            sql<{ userId: string }>`SELECT user_id FROM identities
+              WHERE provider = ${provider} AND subject = ${subject}`,
+          ).pipe(
+            Effect.map((result) => Option.fromNullishOr(result[0]?.userId)),
+          ),
+        insertIdentity: (provider, subject, userId) =>
+          rows(
+            sql`INSERT INTO identities (provider, subject, user_id)
+              VALUES (${provider}, ${subject}, ${userId})
+              ON CONFLICT DO NOTHING`,
+          ).pipe(Effect.asVoid),
 
         countCodesSince: (email, seconds) =>
           rows(

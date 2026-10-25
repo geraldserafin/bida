@@ -8,6 +8,7 @@ import {
   AuthenticatedModule,
   AuthHttp,
   AuthModule,
+  GoogleVerifier,
 } from "./modules/auth/auth.module.ts";
 import {
   BudgetsHttp,
@@ -73,6 +74,7 @@ const ApiRoutes = HttpApiBuilder.layer(Api, {
   Layer.provide(Handlers),
   Layer.provide(Modules),
   Layer.provide(Mailer.layer),
+  Layer.provide(GoogleVerifier.layer),
   Layer.provide(DbLive),
 );
 
