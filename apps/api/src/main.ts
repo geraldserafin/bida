@@ -16,17 +16,32 @@ import {
   ExpensesHttp,
   ExpensesModule,
 } from "./modules/expenses/expenses.module.ts";
+import {
+  RecurringHttp,
+  RecurringModule,
+} from "./modules/recurring/recurring.module.ts";
 import { SystemHttp } from "./modules/system/system.module.ts";
 import { AppConfig } from "./platform/config.ts";
 import { DbLive } from "./platform/db.ts";
 
 // Domain modules: each exposes its services, they may depend on each other.
-const Modules = Layer.mergeAll(CategoriesModule, BudgetsModule, ExpensesModule);
+const Modules = Layer.mergeAll(
+  CategoriesModule,
+  BudgetsModule,
+  ExpensesModule,
+  RecurringModule,
+);
 
 const ApiRoutes = HttpApiBuilder.layer(Api, {
   openapiPath: "/openapi.json",
 }).pipe(
-  Layer.provide([SystemHttp, CategoriesHttp, BudgetsHttp, ExpensesHttp]),
+  Layer.provide([
+    SystemHttp,
+    CategoriesHttp,
+    BudgetsHttp,
+    ExpensesHttp,
+    RecurringHttp,
+  ]),
   Layer.provide(Modules),
   Layer.provide(DbLive),
 );

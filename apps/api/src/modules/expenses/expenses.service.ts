@@ -9,6 +9,7 @@ import {
   type PeriodId,
   type PeriodNotFound,
   type PeriodProgress,
+  type RecurringRuleId,
   type UpdateExpense,
 } from "@bida/api-contract";
 import { Context, type DateTime, Effect, Layer, Option } from "effect";
@@ -31,6 +32,14 @@ export class ExpensesService extends Context.Service<
   ExpensesService,
   {
     create(input: CreateExpense): Effect.Effect<Expense, EnvelopeNotFound>;
+    /** Adds the expense a recurring rule produces. */
+    createFromRule(
+      input: CreateExpense & { readonly recurringId: RecurringRuleId },
+    ): Effect.Effect<Expense, EnvelopeNotFound>;
+    /** Rules that already produced an expense in the period. */
+    appliedRecurringIds(
+      periodId: PeriodId,
+    ): Effect.Effect<ReadonlySet<RecurringRuleId>>;
     get(id: ExpenseId): Effect.Effect<Expense, ExpenseNotFound>;
     update(
       id: ExpenseId,
@@ -50,8 +59,9 @@ export class ExpensesService extends Context.Service<
       const repo = yield* ExpensesRepository;
       const budgets = yield* BudgetsService;
 
-      const create = Effect.fn("ExpensesService.create")(function* (
+      const insert = Effect.fn("ExpensesService.insert")(function* (
         input: CreateExpense,
+        recurringId: RecurringRuleId | null,
       ) {
         const envelope = yield* budgets.getEnvelope(input.envelopeId);
         const row = yield* Expense.insert
@@ -61,10 +71,17 @@ export class ExpensesService extends Context.Service<
             amountMinor: input.amountMinor,
             spentAt: input.spentAt,
             note: input.note,
+            recurringId,
           })
           .pipe(Effect.orDie);
         return yield* repo.insert(row);
       });
+
+      const create = (input: CreateExpense) => insert(input, null);
+
+      const createFromRule = (
+        input: CreateExpense & { readonly recurringId: RecurringRuleId },
+      ) => insert(input, input.recurringId);
 
       const get = Effect.fn("ExpensesService.get")(function* (id: ExpenseId) {
         const found = yield* repo.findById(id);
@@ -156,6 +173,8 @@ export class ExpensesService extends Context.Service<
 
       return ExpensesService.of({
         create,
+        createFromRule,
+        appliedRecurringIds: repo.appliedRecurringIds,
         get,
         update,
         remove,
