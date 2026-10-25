@@ -25,14 +25,18 @@
 
   # The emulator runs in the foreground (`emu` ends with `exec emulator`), so
   # stopping or restarting this process stops or restarts the emulator. It is
-  # healthy once Android has finished booting.
+  # healthy once Android has finished booting. is_tty forwards keyboard input to
+  # the emulator when the process is focused in the process-compose TUI.
   processes.emulator = {
     exec = "emu";
-    process-compose.readiness_probe = {
-      exec.command = ''[ "$(adb -e shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]'';
-      initial_delay_seconds = 10;
-      period_seconds = 3;
-      failure_threshold = 100;
+    process-compose = {
+      is_tty = true;
+      readiness_probe = {
+        exec.command = ''[ "$(adb -e shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]'';
+        initial_delay_seconds = 10;
+        period_seconds = 3;
+        failure_threshold = 100;
+      };
     };
   };
 
