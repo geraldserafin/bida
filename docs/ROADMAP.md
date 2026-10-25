@@ -65,7 +65,7 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 
 ## Etap 8 – Dalej
 
-- Konta, logowanie i `userId` w tabelach
+- Konta i logowanie, członkostwo w przestrzeniach (zaproszenia, role), przeniesienie okresu do wspólnej przestrzeni
 - Deployment API oraz `docs.bida.com` (Swagger)
 - Pilnowanie zmian niekompatybilnych kontraktu (np. sprawdzanie diffa `openapi.json` w CI)
 - Ewentualnie tryb offline i synchronizacja (decyzja po etapie 5)

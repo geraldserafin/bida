@@ -127,6 +127,27 @@ const ApiRoutes = HttpApiBuilder.layer(Api).pipe(
 
 Runner: `vitest` z `@effect/vitest`.
 
+## Waluty
+
+- **Kwota to liczba całkowita w jednostce mniejszej waluty** (`amountMinor`): 12,34 PLN to `1234`, 500 JPY to `500`. Liczbę miejsc po przecinku podaje `exponentOf(currency)` z kontraktu (`CURRENCY_EXPONENTS`).
+- **Kody walut to enum w kontrakcie** (`Currency`, ISO 4217). Dodanie waluty to jedna linia w `currency.ts`. Baza sprawdza tylko kształt (`^[A-Z]{3}$`), więc nowa waluta nie wymaga migracji.
+- **Okres ma walutę**, a wszystkie jego kwoty (dochód, koperty, wydatki) są w niej. Dzięki temu `planned − spent` zawsze ma sens.
+- **Waluta domyślna** to ustawienie przestrzeni (`defaultCurrency`). Podstawia się automatycznie przy tworzeniu okresu i reguły cyklicznej, ale każde żądanie może podać inną.
+- **Wydatek w innej walucie niż okres** zapisuje kwotę w walucie okresu (`amountMinor`, to ona liczy się do koperty) oraz to, co faktycznie zapłacono: `originalAmountMinor` i `originalCurrency` (oba null albo oba ustawione). Kursy wpisuje użytkownik, a konwersji nie liczymy. Podanie waluty okresu jest traktowane jak zwykły wydatek.
+- **Reguła cykliczna ma walutę** i jest stosowana tylko do okresów w tej samej walucie.
+- **Eksport i CSV** niosą walutę (kolumna `Currency`), a kwoty są formatowane i czytane według jej miejsc po przecinku.
+- Okresów w różnych walutach nie sumujemy.
+
+## Przestrzenie
+
+- **Przestrzeń (`space`) to właściciel danych.** Kategorie, okresy, koperty, wydatki i reguły należą do dokładnie jednej przestrzeni (`space_id` w każdej tabeli). To ona, a nie użytkownik, jest kluczem własności. Współdzielenie budżetu będzie więc oznaczać wspólną przestrzeń z kilkoma członkami, bez scalania danych.
+- Po instalacji istnieje jedna przestrzeń domyślna (`DEFAULT_SPACE_ID`). Konta i członkostwo dojdą później i nie zmienią reszty modelu.
+- **Wybór przestrzeni.** Middleware `SpaceContext` czyta nagłówek `X-Space-Id`, a bez niego używa przestrzeni domyślnej. Dostarcza serwis `CurrentSpace`. Tu później wejdzie sprawdzanie członkostwa zalogowanego użytkownika. Nagłówka nie ma w parametrach endpointów, jest opisany w opisie API.
+- **Zapytania.** Każde zapytanie repozytorium filtruje po `space_id` z `CurrentSpace`. Typ `InSpace<A, E>` oznacza efekt, który działa w przestrzeni bieżącego żądania, więc kompilator pilnuje, że nie da się wywołać repozytorium poza żądaniem.
+- Same przestrzenie (lista, tworzenie, edycja) nie są ograniczone do przestrzeni, bo to one są najemcami. `GET /spaces/current` zwraca przestrzeń żądania.
+- **Eksport, import i CSV** działają na przestrzeni żądania. Import zastępuje dane tylko tej przestrzeni.
+- Testy uruchamiają się jako żądania w przestrzeni domyślnej (`TestSpace`, `TestSpaceContext`), a izolację między przestrzeniami sprawdza `spaces.test.ts`.
+
 ## Klient Dart
 
 Z `Api` generujemy klienta Dart, żeby aplikacje w monorepo nie pisały zapytań ręcznie.
