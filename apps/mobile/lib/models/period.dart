@@ -1,13 +1,16 @@
-/// A single planning period, e.g. "July 2026".
+/// A budgeting period (e.g. "July 2026") with the income to be distributed.
 ///
-/// Holds the total [income] for the period; how that income is divided across
-/// categories is modelled separately as [Split]s.
+/// How the income is split across categories is modelled separately as
+/// [Envelope]s.
 class Period {
-  final int? id;
+  final String? id;
   final String name;
   final DateTime startDate;
   final DateTime endDate;
   final double income;
+
+  /// ISO 4217 code. Every amount of the period is in this currency.
+  final String currency;
 
   const Period({
     this.id,
@@ -15,14 +18,18 @@ class Period {
     required this.startDate,
     required this.endDate,
     required this.income,
+    this.currency = defaultCurrency,
   });
 
+  static const defaultCurrency = 'PLN';
+
   Period copyWith({
-    int? id,
+    String? id,
     String? name,
     DateTime? startDate,
     DateTime? endDate,
     double? income,
+    String? currency,
   }) {
     return Period(
       id: id ?? this.id,
@@ -30,22 +37,7 @@ class Period {
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       income: income ?? this.income,
+      currency: currency ?? this.currency,
     );
   }
-
-  factory Period.fromMap(Map<String, Object?> map) => Period(
-    id: map['id'] as int?,
-    name: map['name'] as String,
-    startDate: DateTime.parse(map['start_date'] as String),
-    endDate: DateTime.parse(map['end_date'] as String),
-    income: (map['income'] as num).toDouble(),
-  );
-
-  Map<String, Object?> toMap() => {
-    'id': id,
-    'name': name,
-    'start_date': startDate.toIso8601String(),
-    'end_date': endDate.toIso8601String(),
-    'income': income,
-  };
 }

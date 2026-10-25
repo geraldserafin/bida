@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/period_summary.dart';
 import '../../state/planner_state.dart';
+import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
+import '../../widgets/remote_data.dart';
 import '../period_setup/new_period_screen.dart';
 
 const _accent = Color(0xFF22C55E);
@@ -29,14 +31,9 @@ class PeriodsScreen extends StatelessWidget {
         icon: const Icon(Icons.add),
         label: Text(l10n.newPeriod),
       ),
-      body: FutureBuilder<List<PeriodSummary>>(
-        key: ValueKey(state.periods.length),
-        future: state.periodSummaries(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final summaries = snapshot.data!;
+      body: RemoteData<List<PeriodSummary>>(
+        load: state.periodSummaries,
+        builder: (context, summaries) {
           if (summaries.isEmpty) {
             return Center(child: Text(l10n.noPeriodsYet));
           }
@@ -54,7 +51,7 @@ class _Grouped extends StatelessWidget {
   const _Grouped({required this.summaries, required this.activeId});
 
   final List<PeriodSummary> summaries;
-  final int? activeId;
+  final String? activeId;
 
   @override
   Widget build(BuildContext context) {
@@ -142,8 +139,12 @@ class _PeriodTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: () async {
-          await context.read<PlannerState>().selectPeriod(summary.period.id!);
-          if (context.mounted) Navigator.of(context).pop();
+          final state = context.read<PlannerState>();
+          final selected = await attempt(
+            context,
+            () => state.selectPeriod(summary.period.id!),
+          );
+          if (selected && context.mounted) Navigator.of(context).pop();
         },
         child: Padding(
           padding: const EdgeInsets.all(14),
@@ -244,9 +245,14 @@ class _PeriodTile extends StatelessWidget {
       ),
     );
 
-    if (confirmed == true) {
-      await state.deletePeriod(summary.period.id!);
-      messenger.showSnackBar(SnackBar(content: Text(l10n.periodDeleted)));
+    if (confirmed == true && context.mounted) {
+      final deleted = await attempt(
+        context,
+        () => state.deletePeriod(summary.period.id!),
+      );
+      if (deleted) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.periodDeleted)));
+      }
     }
   }
 }

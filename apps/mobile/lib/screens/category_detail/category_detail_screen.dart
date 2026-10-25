@@ -7,7 +7,9 @@ import '../../models/category_progress.dart';
 import '../../models/expense.dart';
 import '../../state/planner_state.dart';
 import '../../theme/category_visuals.dart';
+import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
+import '../../widgets/remote_data.dart';
 import '../add_expense/add_expense_screen.dart';
 import 'widgets/spending_line_chart.dart';
 
@@ -16,20 +18,24 @@ import 'widgets/spending_line_chart.dart';
 /// so you always land on the category you actually added to.
 Future<void> _openExpense(
   BuildContext context, {
-  int? initialSplitId,
+  String? initialEnvelopeId,
   Expense? existing,
-  int? currentSplitId,
+  String? currentEnvelopeId,
 }) async {
-  final from = currentSplitId ?? initialSplitId;
-  final saved = await Navigator.of(context).push<int>(
+  final from = currentEnvelopeId ?? initialEnvelopeId;
+  final saved = await Navigator.of(context).push<String>(
     MaterialPageRoute(
-      builder: (_) =>
-          AddExpenseScreen(initialSplitId: initialSplitId, existing: existing),
+      builder: (_) => AddExpenseScreen(
+        initialEnvelopeId: initialEnvelopeId,
+        existing: existing,
+      ),
     ),
   );
   if (saved != null && saved != from && context.mounted) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => CategoryDetailScreen(splitId: saved)),
+      MaterialPageRoute(
+        builder: (_) => CategoryDetailScreen(envelopeId: saved),
+      ),
     );
   }
 }
@@ -37,9 +43,9 @@ Future<void> _openExpense(
 /// Detail for a single envelope: planned/spent/remaining plus the list of
 /// expenses logged against it, each of which can be deleted.
 class CategoryDetailScreen extends StatelessWidget {
-  const CategoryDetailScreen({super.key, required this.splitId});
+  const CategoryDetailScreen({super.key, required this.envelopeId});
 
-  final int splitId;
+  final String envelopeId;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +53,7 @@ class CategoryDetailScreen extends StatelessWidget {
     final state = context.watch<PlannerState>();
 
     // Resolve the live progress row for this split (updates after a delete).
-    final matches = state.progress.where((p) => p.split.id == splitId);
+    final matches = state.progress.where((p) => p.envelope.id == envelopeId);
     if (matches.isEmpty) {
       return Scaffold(appBar: AppBar(), body: const SizedBox.shrink());
     }
@@ -56,7 +62,7 @@ class CategoryDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(progress.category.name)),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openExpense(context, initialSplitId: splitId),
+        onPressed: () => _openExpense(context, initialEnvelopeId: envelopeId),
         icon: const Icon(Icons.add),
         label: Text(l10n.addExpense),
       ),
@@ -65,15 +71,9 @@ class CategoryDetailScreen extends StatelessWidget {
           _Header(progress: progress),
           const Divider(height: 1),
           Expanded(
-            child: FutureBuilder<List<Expense>>(
-              // Keyed on spent so the data re-queries after add/delete.
-              key: ValueKey(progress.spent),
-              future: state.expensesForSplit(splitId),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final expenses = snapshot.data!;
+            child: RemoteData<List<Expense>>(
+              load: () => state.expensesForEnvelope(envelopeId),
+              builder: (context, expenses) {
                 final color = progress.category.displayColor;
                 return ListView(
                   padding: const EdgeInsets.all(16),
@@ -208,7 +208,7 @@ class _ExpenseTile extends StatelessWidget {
       onTap: () => _openExpense(
         context,
         existing: expense,
-        currentSplitId: expense.splitId,
+        currentEnvelopeId: expense.envelopeId,
       ),
     );
   }
@@ -236,9 +236,14 @@ class _ExpenseTile extends StatelessWidget {
       ),
     );
 
-    if (confirmed == true) {
-      await planner.deleteExpense(expense.id!);
-      messenger.showSnackBar(SnackBar(content: Text(l10n.expenseDeleted)));
+    if (confirmed == true && context.mounted) {
+      final deleted = await attempt(
+        context,
+        () => planner.deleteExpense(expense.id!),
+      );
+      if (deleted) {
+        messenger.showSnackBar(SnackBar(content: Text(l10n.expenseDeleted)));
+      }
     }
   }
 }

@@ -7,6 +7,7 @@ import '../../models/category.dart';
 import '../../models/period.dart';
 import '../../state/app_settings.dart';
 import '../../state/planner_state.dart';
+import '../../util/api_errors.dart';
 import '../../theme/category_visuals.dart';
 import '../../util/money_format.dart';
 import '../../util/pickers.dart';
@@ -43,7 +44,7 @@ class _NewPeriodScreenState extends State<NewPeriodScreen> {
   late DateTime _endDate;
 
   /// categoryId -> planned amount text controller.
-  final Map<int, TextEditingController> _plannedControllers = {};
+  final Map<String, TextEditingController> _plannedControllers = {};
 
   bool _saving = false;
 
@@ -109,33 +110,40 @@ class _NewPeriodScreenState extends State<NewPeriodScreen> {
     final state = context.read<PlannerState>();
 
     // Include every category (0 included) so edits can also clear allocations.
-    final planned = <int, double>{
+    final planned = <String, double>{
       for (final entry in _plannedControllers.entries)
         entry.key: _parseAmount(entry.value.text),
     };
 
-    if (_isEdit) {
-      await state.editCurrentPeriodPlan(
-        income: _income,
-        plannedByCategory: planned,
-      );
-    } else {
-      await state.createPeriod(
+    final saved = await attempt(context, () {
+      if (_isEdit) {
+        return state.editCurrentPeriodPlan(
+          income: _income,
+          plannedByCategory: planned,
+        );
+      }
+      return state.createPeriod(
         name: _nameController.text.trim(),
         startDate: _startDate,
         endDate: _endDate,
         income: _income,
         plannedByCategory: planned,
       );
-    }
+    });
 
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    if (saved) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() => _saving = false); // stay here so nothing typed is lost
+    }
   }
 
   Future<void> _addCategory() async {
     final created = await showCategoryEditor(context);
     if (created != null && mounted) {
-      await context.read<PlannerState>().addCategory(created);
+      final state = context.read<PlannerState>();
+      await attempt(context, () => state.addCategory(created));
     }
   }
 

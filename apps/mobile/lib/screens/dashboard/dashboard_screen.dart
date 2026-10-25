@@ -6,7 +6,9 @@ import '../../models/category_progress.dart';
 import '../../models/period.dart';
 import '../../state/planner_state.dart';
 import '../../theme/category_visuals.dart';
+import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
+import '../../widgets/error_view.dart';
 import '../add_expense/add_expense_screen.dart';
 import '../category_detail/category_detail_screen.dart';
 import '../history/history_screen.dart';
@@ -21,7 +23,7 @@ import 'widgets/planned_vs_spent_chart.dart';
 void _openEnvelope(BuildContext context, CategoryProgress progress) {
   Navigator.of(context).push(
     MaterialPageRoute(
-      builder: (_) => CategoryDetailScreen(splitId: progress.split.id!),
+      builder: (_) => CategoryDetailScreen(envelopeId: progress.envelope.id!),
     ),
   );
 }
@@ -76,6 +78,10 @@ class DashboardScreen extends StatelessWidget {
         builder: (context) {
           if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
+          }
+          final loadError = state.loadError;
+          if (loadError != null) {
+            return ErrorView(error: loadError, onRetry: state.load);
           }
           if (period == null) {
             return _EmptyState(onCreate: () => _openNewPeriod(context));
@@ -166,7 +172,7 @@ class _PeriodSwitcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonHideUnderline(
-      child: DropdownButton<int>(
+      child: DropdownButton<String>(
         value: state.currentPeriod!.id,
         isExpanded: true,
         borderRadius: BorderRadius.circular(12),
@@ -179,7 +185,9 @@ class _PeriodSwitcher extends StatelessWidget {
             DropdownMenuItem(value: p.id, child: Text(p.name)),
         ],
         onChanged: (id) {
-          if (id != null) context.read<PlannerState>().selectPeriod(id);
+          if (id == null) return;
+          final state = context.read<PlannerState>();
+          attempt(context, () => state.selectPeriod(id));
         },
       ),
     );
@@ -383,7 +391,8 @@ class _CategoryProgressTile extends StatelessWidget {
       child: InkWell(
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => CategoryDetailScreen(splitId: progress.split.id!),
+            builder: (_) =>
+                CategoryDetailScreen(envelopeId: progress.envelope.id!),
           ),
         ),
         child: Padding(

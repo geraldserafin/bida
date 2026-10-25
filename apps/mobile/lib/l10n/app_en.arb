@@ -1,34 +1,42 @@
 {
   "@@locale": "en",
   "appTitle": "PLNing",
-
   "dashboardEmptyTitle": "Your envelope budget lives here.",
   "dashboardEmptyBody": "Create a period and split your income to get started.",
   "newPeriod": "New period",
   "addExpense": "Add expense",
   "envelopes": "Envelopes",
   "noEnvelopes": "No categories allocated yet.",
-
   "income": "Income",
   "planned": "Planned",
   "spent": "Spent",
   "unallocated": "Unallocated",
   "overAllocated": "Over-allocated",
-
   "remaining": "Remaining",
   "remainingIn": "Remaining · {period}",
   "@remainingIn": {
-    "placeholders": { "period": { "type": "String" } }
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
   },
   "amountLeft": "{amount} left",
   "@amountLeft": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "overBy": "Over by {amount}",
   "@overBy": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
-
   "periodName": "Period name",
   "enterName": "Enter a name",
   "start": "Start",
@@ -38,12 +46,15 @@
   "splitAcrossCategories": "Split across categories",
   "overAllocationWarning": "You've allocated {amount} more than your income. You can still continue.",
   "@overAllocationWarning": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "createPeriod": "Create period",
   "editPlan": "Edit plan",
   "saveChanges": "Save changes",
-
   "noEnvelopesForExpense": "This period has no envelopes yet. Add categories to the period before logging expenses.",
   "envelope": "Envelope",
   "pickEnvelope": "Pick an envelope",
@@ -53,7 +64,6 @@
   "noteOptional": "Note (optional)",
   "saveExpense": "Save expense",
   "editExpense": "Edit expense",
-
   "categories": "Categories",
   "manageCategories": "Manage categories",
   "newCategory": "New category",
@@ -66,24 +76,24 @@
   "addCategory": "Add category",
   "noCategories": "No categories yet. Add your first one.",
   "categoryInUse": "Can't delete a category that's used in a period.",
-
   "period": "Period",
-
   "expenses": "Expenses",
   "noExpenses": "No expenses in this envelope yet.",
   "deleteExpense": "Delete expense",
   "deleteExpenseConfirm": "Delete this expense of {amount}?",
   "@deleteExpenseConfirm": {
-    "placeholders": { "amount": { "type": "String" } }
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
   },
   "cancel": "Cancel",
   "expenseDeleted": "Expense deleted",
-
   "plannedSplit": "Planned split",
   "plannedVsSpent": "Planned vs. spent",
   "spendingOverTime": "Spending over time",
   "notEnoughData": "Not enough data yet.",
-
   "recurringRules": "Recurring rules",
   "newRule": "New rule",
   "editRule": "Edit rule",
@@ -99,10 +109,13 @@
   "applyRecurring": "Add recurring to this period",
   "recurringApplied": "{count, plural, =0{Everything is already up to date} =1{Added 1 recurring expense} other{Added {count} recurring expenses}}",
   "@recurringApplied": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "needCategoryFirst": "Add a category first.",
-
   "settings": "Settings",
   "security": "Security",
   "appLock": "App lock (PIN)",
@@ -121,54 +134,6 @@
   "biometricReason": "Authenticate to unlock Money Planner",
   "pinSaved": "PIN saved",
   "lockDisabled": "App lock disabled",
-
-  "cloudSync": "Cloud sync",
-  "syncSubtitle": "Encrypted backup to a private GitHub repo",
-  "setUpSync": "Set up GitHub sync",
-  "githubToken": "GitHub token",
-  "repoOwner": "Owner (user or org)",
-  "repoName": "Repository",
-  "filePath": "File path",
-  "syncPassphrase": "Encryption passphrase",
-  "connect": "Connect",
-  "syncNow": "Sync now",
-  "restoreFromCloud": "Restore from cloud",
-  "disconnect": "Disconnect",
-  "lastSynced": "Last synced: {when}",
-  "@lastSynced": {
-    "placeholders": { "when": { "type": "String" } }
-  },
-  "neverSynced": "Never synced",
-  "syncComplete": "Sync complete",
-  "restoreComplete": "Restored from cloud",
-  "nothingToRestore": "Nothing to restore yet",
-  "restoreWarningTitle": "Restore from cloud?",
-  "restoreWarningBody": "This replaces all local data with the cloud copy.",
-  "restorePreviewCloud": "Cloud backup: {periods} periods · {expenses} expenses",
-  "@restorePreviewCloud": {
-    "placeholders": {
-      "periods": { "type": "int" },
-      "expenses": { "type": "int" }
-    }
-  },
-  "restorePreviewLocal": "Your data now: {periods} periods · {expenses} expenses — this will be replaced",
-  "@restorePreviewLocal": {
-    "placeholders": {
-      "periods": { "type": "int" },
-      "expenses": { "type": "int" }
-    }
-  },
-  "restoreSnapshotNote": "A safety copy of your current data is saved first, so you can recover if the restore is wrong.",
-  "snapshotKept": "Previous data saved to {path}",
-  "@snapshotKept": {
-    "placeholders": { "path": { "type": "String" } }
-  },
-  "syncFailed": "Sync failed: {error}",
-  "@syncFailed": {
-    "placeholders": { "error": { "type": "String" } }
-  },
-  "restore": "Restore",
-
   "general": "General",
   "appearance": "Appearance",
   "dataSection": "Data",
@@ -180,29 +145,42 @@
   "themeAuto": "Auto",
   "exportCsv": "Export data (CSV)",
   "importCsv": "Import from CSV",
-  "noExportFound": "No export file found",
   "importResult": "{count, plural, =0{No expenses to import} =1{Imported 1 expense} other{Imported {count} expenses}}",
   "@importResult": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "importSkipped": "{count, plural, =1{, skipped 1 duplicate} other{, skipped {count} duplicates}}",
   "@importSkipped": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-  "backup": "Backup",
   "about": "About",
   "csvExported": "Exported to {path}",
   "@csvExported": {
-    "placeholders": { "path": { "type": "String" } }
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
   },
   "today": "Today",
   "noteHint": "e.g. Weekly groceries",
   "addNew": "New",
   "remainingInCategory": "Remaining in {category}",
   "@remainingInCategory": {
-    "placeholders": { "category": { "type": "String" } }
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
   },
-
   "history": "History",
   "periods": "Periods",
   "all": "All",
@@ -217,15 +195,30 @@
   "deletePeriod": "Delete period",
   "deletePeriodConfirm": "Delete \"{name}\" and all its data?",
   "@deletePeriodConfirm": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "periodDeleted": "Period deleted",
   "dashboard": "Dashboard",
   "periodRange": "{start} – {end}",
   "@periodRange": {
     "placeholders": {
-      "start": { "type": "String" },
-      "end": { "type": "String" }
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
     }
-  }
+  },
+  "errorUnreachable": "Can't reach the server. Check your connection and try again.",
+  "errorNotFound": "That data no longer exists. It may have been changed on another device.",
+  "errorConflict": "This conflicts with the data that is already there.",
+  "errorInvalid": "The server did not accept these values. Check what you entered.",
+  "errorServer": "Something went wrong on the server. Try again in a moment.",
+  "retry": "Try again",
+  "loadFailed": "Couldn't load your data"
 }

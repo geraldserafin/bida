@@ -2,6 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'data/legacy_migrator.dart';
+import 'data/planner_repository.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/lock/lock_gate.dart';
@@ -13,9 +15,16 @@ import 'widgets/server_status_banner.dart';
 /// Root widget: provides app-wide state and wires up theming, localization
 /// (Polish by default) and the home screen.
 class MoneyPlannerApp extends StatefulWidget {
-  const MoneyPlannerApp({super.key, required this.settings});
+  const MoneyPlannerApp({
+    super.key,
+    required this.settings,
+    required this.repository,
+    required this.migrator,
+  });
 
   final AppSettings settings;
+  final PlannerRepository repository;
+  final LegacyMigrator migrator;
 
   @override
   State<MoneyPlannerApp> createState() => _MoneyPlannerAppState();
@@ -37,7 +46,13 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => PlannerState()..load()),
+        Provider.value(value: widget.repository),
+        ChangeNotifierProvider(
+          create: (_) => PlannerState(
+            repository: widget.repository,
+            beforeLoad: widget.migrator.migrateIfNeeded,
+          )..load(),
+        ),
         ChangeNotifierProvider.value(value: widget.settings),
       ],
       child: Consumer<AppSettings>(

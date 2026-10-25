@@ -308,93 +308,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockDisabled => 'App lock disabled';
 
   @override
-  String get cloudSync => 'Cloud sync';
-
-  @override
-  String get syncSubtitle => 'Encrypted backup to a private GitHub repo';
-
-  @override
-  String get setUpSync => 'Set up GitHub sync';
-
-  @override
-  String get githubToken => 'GitHub token';
-
-  @override
-  String get repoOwner => 'Owner (user or org)';
-
-  @override
-  String get repoName => 'Repository';
-
-  @override
-  String get filePath => 'File path';
-
-  @override
-  String get syncPassphrase => 'Encryption passphrase';
-
-  @override
-  String get connect => 'Connect';
-
-  @override
-  String get syncNow => 'Sync now';
-
-  @override
-  String get restoreFromCloud => 'Restore from cloud';
-
-  @override
-  String get disconnect => 'Disconnect';
-
-  @override
-  String lastSynced(String when) {
-    return 'Last synced: $when';
-  }
-
-  @override
-  String get neverSynced => 'Never synced';
-
-  @override
-  String get syncComplete => 'Sync complete';
-
-  @override
-  String get restoreComplete => 'Restored from cloud';
-
-  @override
-  String get nothingToRestore => 'Nothing to restore yet';
-
-  @override
-  String get restoreWarningTitle => 'Restore from cloud?';
-
-  @override
-  String get restoreWarningBody =>
-      'This replaces all local data with the cloud copy.';
-
-  @override
-  String restorePreviewCloud(int periods, int expenses) {
-    return 'Cloud backup: $periods periods · $expenses expenses';
-  }
-
-  @override
-  String restorePreviewLocal(int periods, int expenses) {
-    return 'Your data now: $periods periods · $expenses expenses — this will be replaced';
-  }
-
-  @override
-  String get restoreSnapshotNote =>
-      'A safety copy of your current data is saved first, so you can recover if the restore is wrong.';
-
-  @override
-  String snapshotKept(String path) {
-    return 'Previous data saved to $path';
-  }
-
-  @override
-  String syncFailed(String error) {
-    return 'Sync failed: $error';
-  }
-
-  @override
-  String get restore => 'Restore';
-
-  @override
   String get general => 'General';
 
   @override
@@ -428,9 +341,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importCsv => 'Import from CSV';
 
   @override
-  String get noExportFound => 'No export file found';
-
-  @override
   String importResult(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -452,9 +362,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get backup => 'Backup';
 
   @override
   String get about => 'About';
@@ -529,4 +436,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String periodRange(String start, String end) {
     return '$start – $end';
   }
+
+  @override
+  String get errorUnreachable =>
+      'Can\'t reach the server. Check your connection and try again.';
+
+  @override
+  String get errorNotFound =>
+      'That data no longer exists. It may have been changed on another device.';
+
+  @override
+  String get errorConflict =>
+      'This conflicts with the data that is already there.';
+
+  @override
+  String get errorInvalid =>
+      'The server did not accept these values. Check what you entered.';
+
+  @override
+  String get errorServer =>
+      'Something went wrong on the server. Try again in a moment.';
+
+  @override
+  String get retry => 'Try again';
+
+  @override
+  String get loadFailed => 'Couldn\'t load your data';
 }

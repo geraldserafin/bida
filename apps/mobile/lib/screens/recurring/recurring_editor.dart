@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/category.dart';
+import '../../models/period.dart';
 import '../../models/recurring_rule.dart';
 import '../../theme/category_visuals.dart';
 
@@ -34,7 +35,7 @@ class _RecurringEditorSheet extends StatefulWidget {
 class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
   late final TextEditingController _amountController;
   late final TextEditingController _noteController;
-  late int _categoryId;
+  late String _categoryId;
   late bool _active;
 
   @override
@@ -66,6 +67,7 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
         id: widget.existing?.id,
         categoryId: _categoryId,
         amount: amount,
+        currency: widget.existing?.currency ?? Period.defaultCurrency,
         frequency: widget.existing?.frequency ?? RecurrenceFrequency.monthly,
         note: _noteController.text.trim().isEmpty
             ? null
@@ -92,7 +94,7 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
+            DropdownButtonFormField<String>(
               initialValue: _categoryId,
               isExpanded: true,
               decoration: InputDecoration(

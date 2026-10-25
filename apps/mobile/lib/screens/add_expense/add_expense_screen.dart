@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/category_progress.dart';
 import '../../models/expense.dart';
 import '../../state/planner_state.dart';
+import '../../util/api_errors.dart';
 import '../../theme/category_visuals.dart';
 import '../../util/money_format.dart';
 import '../categories/category_editor.dart';
@@ -19,9 +20,9 @@ String _amountText(double v) {
 /// Amount-first entry for logging a real expense against an envelope, or
 /// editing an existing one when [existing] is provided.
 class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key, this.initialSplitId, this.existing});
+  const AddExpenseScreen({super.key, this.initialEnvelopeId, this.existing});
 
-  final int? initialSplitId;
+  final String? initialEnvelopeId;
   final Expense? existing;
 
   @override
@@ -32,7 +33,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  int? _splitId;
+  String? _envelopeId;
   DateTime _date = DateTime.now();
   bool _saving = false;
   String? _amountError;
@@ -44,12 +45,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.initState();
     final e = widget.existing;
     if (e != null) {
-      _splitId = e.splitId;
+      _envelopeId = e.envelopeId;
       _amountController.text = _amountText(e.amount);
       _date = e.date;
       _noteController.text = e.note ?? '';
     } else {
-      _splitId = widget.initialSplitId;
+      _envelopeId = widget.initialEnvelopeId;
     }
   }
 
@@ -69,7 +70,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       setState(() => _amountError = l10n.enterAmount);
       return;
     }
-    if (_splitId == null) {
+    if (_envelopeId == null) {
       setState(() {}); // surface the "pick an envelope" hint
       return;
     }
@@ -80,25 +81,32 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         ? null
         : _noteController.text.trim();
 
-    if (_isEdit) {
-      await state.updateExpense(
-        widget.existing!.copyWith(
-          splitId: _splitId!,
-          amount: _amount,
-          date: _date,
-          note: note,
-        ),
-      );
-    } else {
-      await state.addExpense(
-        splitId: _splitId!,
+    final saved = await attempt(context, () {
+      if (_isEdit) {
+        return state.updateExpense(
+          widget.existing!.copyWith(
+            envelopeId: _envelopeId!,
+            amount: _amount,
+            date: _date,
+            note: note,
+          ),
+        );
+      }
+      return state.addExpense(
+        envelopeId: _envelopeId!,
         amount: _amount,
         date: _date,
         note: note,
       );
+    });
+
+    if (!mounted) return;
+    if (saved) {
+      // Return the envelope that was saved to, so callers can follow it.
+      Navigator.of(context).pop(_envelopeId);
+    } else {
+      setState(() => _saving = false); // stay here so nothing typed is lost
     }
-    // Return the envelope that was saved to, so callers can follow it.
-    if (mounted) Navigator.of(context).pop(_splitId);
   }
 
   Future<void> _deleteExpense() async {
@@ -128,8 +136,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (confirmed != true || !mounted) return;
 
     setState(() => _saving = true);
-    await context.read<PlannerState>().deleteExpense(widget.existing!.id!);
-    if (mounted) Navigator.of(context).pop(_splitId);
+    final state = context.read<PlannerState>();
+    final deleted = await attempt(
+      context,
+      () => state.deleteExpense(widget.existing!.id!),
+    );
+    if (!mounted) return;
+    if (deleted) {
+      Navigator.of(context).pop(_envelopeId);
+    } else {
+      setState(() => _saving = false);
+    }
   }
 
   Future<void> _pickDate() async {
@@ -145,10 +162,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Future<void> _addNewCategory() async {
     final created = await showCategoryEditor(context);
     if (created == null || !mounted) return;
-    final splitId = await context.read<PlannerState>().quickAddEnvelope(
-      created,
+    final state = context.read<PlannerState>();
+    String? envelopeId;
+    await attempt(
+      context,
+      () async => envelopeId = await state.quickAddEnvelope(created),
     );
-    if (mounted && splitId != null) setState(() => _splitId = splitId);
+    if (mounted && envelopeId != null) {
+      setState(() => _envelopeId = envelopeId);
+    }
   }
 
   String _dateLabel(AppLocalizations l10n) {
@@ -168,7 +190,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final progress = context.watch<PlannerState>().progress;
     CategoryProgress? selected;
     for (final p in progress) {
-      if (p.split.id == _splitId) {
+      if (p.envelope.id == _envelopeId) {
         selected = p;
         break;
       }
@@ -294,9 +316,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           else
             _CategoryGrid(
               progress: progress,
-              selectedSplitId: _splitId,
+              selectedEnvelopeId: _envelopeId,
               onSelect: (id) => setState(() {
-                _splitId = id;
+                _envelopeId = id;
                 _amountError = null;
               }),
               onAddNew: _addNewCategory,
@@ -369,14 +391,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 class _CategoryGrid extends StatelessWidget {
   const _CategoryGrid({
     required this.progress,
-    required this.selectedSplitId,
+    required this.selectedEnvelopeId,
     required this.onSelect,
     required this.onAddNew,
   });
 
   final List<CategoryProgress> progress;
-  final int? selectedSplitId;
-  final ValueChanged<int> onSelect;
+  final String? selectedEnvelopeId;
+  final ValueChanged<String> onSelect;
   final VoidCallback onAddNew;
 
   @override
@@ -392,8 +414,8 @@ class _CategoryGrid extends StatelessWidget {
         for (final p in progress)
           _CategoryChip(
             progress: p,
-            selected: p.split.id == selectedSplitId,
-            onTap: () => onSelect(p.split.id!),
+            selected: p.envelope.id == selectedEnvelopeId,
+            onTap: () => onSelect(p.envelope.id!),
           ),
         _AddChip(onTap: onAddNew),
       ],

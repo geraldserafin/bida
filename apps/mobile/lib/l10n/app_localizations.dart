@@ -650,156 +650,6 @@ abstract class AppLocalizations {
   /// **'App lock disabled'**
   String get lockDisabled;
 
-  /// No description provided for @cloudSync.
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud sync'**
-  String get cloudSync;
-
-  /// No description provided for @syncSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Encrypted backup to a private GitHub repo'**
-  String get syncSubtitle;
-
-  /// No description provided for @setUpSync.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up GitHub sync'**
-  String get setUpSync;
-
-  /// No description provided for @githubToken.
-  ///
-  /// In en, this message translates to:
-  /// **'GitHub token'**
-  String get githubToken;
-
-  /// No description provided for @repoOwner.
-  ///
-  /// In en, this message translates to:
-  /// **'Owner (user or org)'**
-  String get repoOwner;
-
-  /// No description provided for @repoName.
-  ///
-  /// In en, this message translates to:
-  /// **'Repository'**
-  String get repoName;
-
-  /// No description provided for @filePath.
-  ///
-  /// In en, this message translates to:
-  /// **'File path'**
-  String get filePath;
-
-  /// No description provided for @syncPassphrase.
-  ///
-  /// In en, this message translates to:
-  /// **'Encryption passphrase'**
-  String get syncPassphrase;
-
-  /// No description provided for @connect.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect'**
-  String get connect;
-
-  /// No description provided for @syncNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync now'**
-  String get syncNow;
-
-  /// No description provided for @restoreFromCloud.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore from cloud'**
-  String get restoreFromCloud;
-
-  /// No description provided for @disconnect.
-  ///
-  /// In en, this message translates to:
-  /// **'Disconnect'**
-  String get disconnect;
-
-  /// No description provided for @lastSynced.
-  ///
-  /// In en, this message translates to:
-  /// **'Last synced: {when}'**
-  String lastSynced(String when);
-
-  /// No description provided for @neverSynced.
-  ///
-  /// In en, this message translates to:
-  /// **'Never synced'**
-  String get neverSynced;
-
-  /// No description provided for @syncComplete.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync complete'**
-  String get syncComplete;
-
-  /// No description provided for @restoreComplete.
-  ///
-  /// In en, this message translates to:
-  /// **'Restored from cloud'**
-  String get restoreComplete;
-
-  /// No description provided for @nothingToRestore.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing to restore yet'**
-  String get nothingToRestore;
-
-  /// No description provided for @restoreWarningTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore from cloud?'**
-  String get restoreWarningTitle;
-
-  /// No description provided for @restoreWarningBody.
-  ///
-  /// In en, this message translates to:
-  /// **'This replaces all local data with the cloud copy.'**
-  String get restoreWarningBody;
-
-  /// No description provided for @restorePreviewCloud.
-  ///
-  /// In en, this message translates to:
-  /// **'Cloud backup: {periods} periods · {expenses} expenses'**
-  String restorePreviewCloud(int periods, int expenses);
-
-  /// No description provided for @restorePreviewLocal.
-  ///
-  /// In en, this message translates to:
-  /// **'Your data now: {periods} periods · {expenses} expenses — this will be replaced'**
-  String restorePreviewLocal(int periods, int expenses);
-
-  /// No description provided for @restoreSnapshotNote.
-  ///
-  /// In en, this message translates to:
-  /// **'A safety copy of your current data is saved first, so you can recover if the restore is wrong.'**
-  String get restoreSnapshotNote;
-
-  /// No description provided for @snapshotKept.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous data saved to {path}'**
-  String snapshotKept(String path);
-
-  /// No description provided for @syncFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync failed: {error}'**
-  String syncFailed(String error);
-
-  /// No description provided for @restore.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore'**
-  String get restore;
-
   /// No description provided for @general.
   ///
   /// In en, this message translates to:
@@ -866,12 +716,6 @@ abstract class AppLocalizations {
   /// **'Import from CSV'**
   String get importCsv;
 
-  /// No description provided for @noExportFound.
-  ///
-  /// In en, this message translates to:
-  /// **'No export file found'**
-  String get noExportFound;
-
   /// No description provided for @importResult.
   ///
   /// In en, this message translates to:
@@ -883,12 +727,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{, skipped 1 duplicate} other{, skipped {count} duplicates}}'**
   String importSkipped(int count);
-
-  /// No description provided for @backup.
-  ///
-  /// In en, this message translates to:
-  /// **'Backup'**
-  String get backup;
 
   /// No description provided for @about.
   ///
@@ -1021,6 +859,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{start} – {end}'**
   String periodRange(String start, String end);
+
+  /// No description provided for @errorUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t reach the server. Check your connection and try again.'**
+  String get errorUnreachable;
+
+  /// No description provided for @errorNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That data no longer exists. It may have been changed on another device.'**
+  String get errorNotFound;
+
+  /// No description provided for @errorConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'This conflicts with the data that is already there.'**
+  String get errorConflict;
+
+  /// No description provided for @errorInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The server did not accept these values. Check what you entered.'**
+  String get errorInvalid;
+
+  /// No description provided for @errorServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong on the server. Try again in a moment.'**
+  String get errorServer;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retry;
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load your data'**
+  String get loadFailed;
 }
 
 class _AppLocalizationsDelegate

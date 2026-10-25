@@ -1,16 +1,20 @@
+import 'dart:io';
+
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../../data/planner_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
-import '../../services/csv_exporter.dart';
-import '../../services/csv_importer.dart';
+
 import '../../state/app_settings.dart';
 import '../../state/planner_state.dart';
+import '../../util/api_errors.dart';
 import '../categories/categories_screen.dart';
-import 'backup_screen.dart';
 
 /// App settings: general, appearance, security, data.
 class SettingsScreen extends StatefulWidget {
@@ -90,38 +94,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _exportCsv() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final repository = context.read<PlannerRepository>();
+
+    String? csv;
+    final fetched = await attempt(
+      context,
+      () async => csv = await repository.exportCsv(),
+    );
+    if (!fetched) return;
+
+    final path = await _saveCsv(csv!);
+    if (path == null) return; // user cancelled the dialog
+    messenger.showSnackBar(SnackBar(content: Text(l10n.csvExported(path))));
+  }
+
+  /// Writes the file where the user says, or to the documents folder on
+  /// platforms without a save dialog (e.g. Android). Null when cancelled.
+  Future<String?> _saveCsv(String csv) async {
     String path;
     try {
       final location = await getSaveLocation(
         suggestedName: 'plning_export.csv',
         acceptedTypeGroups: const [_csvTypeGroup],
       );
-      if (location == null) return; // user cancelled the dialog
-      path = await CsvExporter().exportToPath(location.path);
+      if (location == null) return null;
+      path = location.path;
     } on UnimplementedError {
-      // Platform without a save dialog (e.g. Android): use the default file.
-      path = await CsvExporter().exportToFile();
+      final documents = await getApplicationDocumentsDirectory();
+      path = p.join(documents.path, 'money_planner_export.csv');
     }
-    messenger.showSnackBar(SnackBar(content: Text(l10n.csvExported(path))));
+    await File(path).writeAsString(csv);
+    return path;
   }
 
   Future<void> _importCsv() async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final repository = context.read<PlannerRepository>();
     final planner = context.read<PlannerState>();
 
     final file = await openFile(acceptedTypeGroups: const [_csvTypeGroup]);
     if (file == null) return; // user cancelled the dialog
+    final csv = await file.readAsString();
+    if (!mounted) return;
 
-    final result = await CsvImporter().importFromPath(file.path);
-    if (result == null) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.noExportFound)));
-      return;
-    }
+    ({int imported, int skipped})? result;
+    final imported = await attempt(
+      context,
+      () async => result = await repository.importCsv(csv),
+    );
+    if (!imported) return;
+
     await planner.load();
     final message =
-        l10n.importResult(result.imported) +
-        (result.skipped > 0 ? l10n.importSkipped(result.skipped) : '');
+        l10n.importResult(result!.imported) +
+        (result!.skipped > 0 ? l10n.importSkipped(result!.skipped) : '');
     messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -232,15 +259,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: Text(l10n.importCsv),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: _importCsv,
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.cloud_outlined),
-                title: Text(l10n.backup),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const BackupScreen())),
               ),
               const Divider(height: 1),
               ListTile(

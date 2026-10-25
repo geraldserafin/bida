@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../state/planner_state.dart';
+import '../../util/api_errors.dart';
 import '../../theme/category_visuals.dart';
 import 'category_editor.dart';
 
@@ -54,8 +55,11 @@ class CategoriesScreen extends StatelessWidget {
                       context,
                       existing: category,
                     );
-                    if (edited != null) {
-                      await planner.updateCategory(edited);
+                    if (edited != null && context.mounted) {
+                      await attempt(
+                        context,
+                        () => planner.updateCategory(edited),
+                      );
                     }
                   },
                 );
@@ -65,7 +69,8 @@ class CategoriesScreen extends StatelessWidget {
         onPressed: () async {
           final created = await showCategoryEditor(context);
           if (created != null && context.mounted) {
-            await context.read<PlannerState>().addCategory(created);
+            final state = context.read<PlannerState>();
+            await attempt(context, () => state.addCategory(created));
           }
         },
         icon: const Icon(Icons.add),
@@ -77,12 +82,16 @@ class CategoriesScreen extends StatelessWidget {
   Future<void> _delete(
     BuildContext context,
     PlannerState state,
-    int categoryId,
+    String categoryId,
   ) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final ok = await state.deleteCategory(categoryId);
-    if (!ok) {
+    var deleted = false;
+    final reached = await attempt(
+      context,
+      () async => deleted = await state.deleteCategory(categoryId),
+    );
+    if (reached && !deleted) {
       messenger.showSnackBar(SnackBar(content: Text(l10n.categoryInUse)));
     }
   }

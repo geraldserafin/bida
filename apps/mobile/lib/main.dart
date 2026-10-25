@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'app.dart';
-import 'data/database_helper.dart';
+import 'data/api_client.dart';
+import 'data/legacy_migrator.dart';
+import 'data/planner_repository.dart';
 import 'state/app_settings.dart';
 
 Future<void> main() async {
@@ -11,12 +13,17 @@ Future<void> main() async {
   // Load locale data so DateFormat('pl') works for names of months/days.
   await initializeDateFormatting('pl');
 
-  // Open (and create on first run) the local SQLite database up front so the
-  // first screen doesn't pay the initialisation cost.
-  await DatabaseHelper.instance.database;
-
   final settings = AppSettings();
   await settings.load();
 
-  runApp(MoneyPlannerApp(settings: settings));
+  final repository = PlannerRepository(createDio());
+
+  runApp(
+    MoneyPlannerApp(
+      settings: settings,
+      repository: repository,
+      // Data kept on the device by the offline version moves to the server.
+      migrator: LegacyMigrator(repository),
+    ),
+  );
 }

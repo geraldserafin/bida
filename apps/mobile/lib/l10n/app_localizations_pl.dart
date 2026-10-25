@@ -309,94 +309,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get lockDisabled => 'Blokada aplikacji wyłączona';
 
   @override
-  String get cloudSync => 'Synchronizacja w chmurze';
-
-  @override
-  String get syncSubtitle =>
-      'Zaszyfrowana kopia w prywatnym repozytorium GitHub';
-
-  @override
-  String get setUpSync => 'Skonfiguruj synchronizację GitHub';
-
-  @override
-  String get githubToken => 'Token GitHub';
-
-  @override
-  String get repoOwner => 'Właściciel (użytkownik lub organizacja)';
-
-  @override
-  String get repoName => 'Repozytorium';
-
-  @override
-  String get filePath => 'Ścieżka pliku';
-
-  @override
-  String get syncPassphrase => 'Hasło szyfrowania';
-
-  @override
-  String get connect => 'Połącz';
-
-  @override
-  String get syncNow => 'Synchronizuj teraz';
-
-  @override
-  String get restoreFromCloud => 'Przywróć z chmury';
-
-  @override
-  String get disconnect => 'Rozłącz';
-
-  @override
-  String lastSynced(String when) {
-    return 'Ostatnia synchronizacja: $when';
-  }
-
-  @override
-  String get neverSynced => 'Nigdy nie synchronizowano';
-
-  @override
-  String get syncComplete => 'Synchronizacja zakończona';
-
-  @override
-  String get restoreComplete => 'Przywrócono z chmury';
-
-  @override
-  String get nothingToRestore => 'Nie ma jeszcze czego przywracać';
-
-  @override
-  String get restoreWarningTitle => 'Przywrócić z chmury?';
-
-  @override
-  String get restoreWarningBody =>
-      'To zastąpi wszystkie lokalne dane kopią z chmury.';
-
-  @override
-  String restorePreviewCloud(int periods, int expenses) {
-    return 'Kopia w chmurze: $periods okresów · $expenses wydatków';
-  }
-
-  @override
-  String restorePreviewLocal(int periods, int expenses) {
-    return 'Twoje dane teraz: $periods okresów · $expenses wydatków — zostaną zastąpione';
-  }
-
-  @override
-  String get restoreSnapshotNote =>
-      'Najpierw zapisujemy kopię bezpieczeństwa Twoich obecnych danych, aby można je było odzyskać, jeśli przywracanie okaże się błędne.';
-
-  @override
-  String snapshotKept(String path) {
-    return 'Poprzednie dane zapisano w $path';
-  }
-
-  @override
-  String syncFailed(String error) {
-    return 'Synchronizacja nie powiodła się: $error';
-  }
-
-  @override
-  String get restore => 'Przywróć';
-
-  @override
   String get general => 'Ogólne';
 
   @override
@@ -430,9 +342,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get importCsv => 'Importuj z CSV';
 
   @override
-  String get noExportFound => 'Nie znaleziono pliku eksportu';
-
-  @override
   String importResult(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -458,9 +367,6 @@ class AppLocalizationsPl extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get backup => 'Kopia zapasowa';
 
   @override
   String get about => 'O aplikacji';
@@ -535,4 +441,30 @@ class AppLocalizationsPl extends AppLocalizations {
   String periodRange(String start, String end) {
     return '$start – $end';
   }
+
+  @override
+  String get errorUnreachable =>
+      'Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.';
+
+  @override
+  String get errorNotFound =>
+      'Tych danych już nie ma. Mogły zostać zmienione na innym urządzeniu.';
+
+  @override
+  String get errorConflict =>
+      'Ta operacja koliduje z danymi, które już istnieją.';
+
+  @override
+  String get errorInvalid =>
+      'Serwer nie przyjął tych wartości. Sprawdź, co zostało wpisane.';
+
+  @override
+  String get errorServer =>
+      'Coś poszło nie tak po stronie serwera. Spróbuj ponownie za chwilę.';
+
+  @override
+  String get retry => 'Spróbuj ponownie';
+
+  @override
+  String get loadFailed => 'Nie udało się wczytać danych';
 }

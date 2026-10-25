@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/category.dart';
 import '../../models/recurring_rule.dart';
 import '../../state/planner_state.dart';
+import '../../util/api_errors.dart';
 import '../../theme/category_visuals.dart';
 import '../../util/money_format.dart';
 import 'recurring_editor.dart';
@@ -72,13 +73,20 @@ class RecurringRulesScreen extends StatelessWidget {
       categories: state.categories,
       existing: existing,
     );
-    if (rule != null) await state.saveRecurringRule(rule);
+    if (rule != null && context.mounted) {
+      await attempt(context, () => state.saveRecurringRule(rule));
+    }
   }
 
   Future<void> _apply(BuildContext context, PlannerState state) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final added = await state.applyRecurringToCurrentPeriod();
+    var added = 0;
+    final applied = await attempt(
+      context,
+      () async => added = await state.applyRecurringToCurrentPeriod(),
+    );
+    if (!applied) return;
     messenger.showSnackBar(
       SnackBar(content: Text(l10n.recurringApplied(added))),
     );
@@ -121,7 +129,8 @@ class _RuleTile extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              onPressed: () => state.deleteRecurringRule(rule.id!),
+              onPressed: () =>
+                  attempt(context, () => state.deleteRecurringRule(rule.id!)),
             ),
           ],
         ),
@@ -131,7 +140,9 @@ class _RuleTile extends StatelessWidget {
             categories: state.categories,
             existing: rule,
           );
-          if (edited != null) await state.saveRecurringRule(edited);
+          if (edited != null && context.mounted) {
+            await attempt(context, () => state.saveRecurringRule(edited));
+          }
         },
       ),
     );

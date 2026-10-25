@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/transaction.dart';
 import '../../state/planner_state.dart';
+import '../../widgets/remote_data.dart';
 import '../../theme/category_visuals.dart';
 import '../../util/money_format.dart';
 import '../../util/pickers.dart';
@@ -20,7 +21,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  int? _categoryId; // null = all
+  String? _categoryId; // null = all
   DateTimeRange? _dateRange; // null = any date
   TimeOfDay _startTime = const TimeOfDay(hour: 0, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 23, minute: 59);
@@ -85,20 +86,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.history)),
-      body: FutureBuilder<List<Transaction>>(
-        key: ValueKey(state.totalSpent),
-        future: state.currentPeriodTransactions(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final all = snapshot.data!;
+      body: RemoteData<List<Transaction>>(
+        // fetched again when the period or what was spent changes, not on
+        // every filter tap
+        version: (state.currentPeriod?.id, state.totalSpent),
+        load: state.currentPeriodTransactions,
+        builder: (context, all) {
           if (all.isEmpty) {
             return Center(child: Text(l10n.noExpenses));
           }
 
           // Distinct categories for the filter row (first-seen order).
-          final categories = <int, String>{};
+          final categories = <String, String>{};
           for (final t in all) {
             categories.putIfAbsent(t.category.id!, () => t.category.name);
           }
@@ -284,9 +283,9 @@ class _FilterBar extends StatelessWidget {
     required this.onSelect,
   });
 
-  final Map<int, String> categories;
-  final int? selected;
-  final ValueChanged<int?> onSelect;
+  final Map<String, String> categories;
+  final String? selected;
+  final ValueChanged<String?> onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -430,7 +429,7 @@ class _TransactionTile extends StatelessWidget {
     return ListTile(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => AddExpenseScreen(existing: transaction.toExpense()),
+          builder: (_) => AddExpenseScreen(existing: transaction.expense),
         ),
       ),
       leading: Container(

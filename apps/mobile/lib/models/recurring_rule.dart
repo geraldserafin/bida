@@ -1,19 +1,16 @@
-/// How often a [RecurringRule] repeats.
-enum RecurrenceFrequency {
-  weekly,
-  monthly;
+import 'period.dart';
 
-  factory RecurrenceFrequency.fromName(String name) =>
-      RecurrenceFrequency.values.firstWhere((f) => f.name == name);
-}
+enum RecurrenceFrequency { weekly, monthly }
 
-/// A template for recurring income or expenses (e.g. "Rent", "Salary").
-///
-/// Used to pre-fill new periods and to auto-generate [Expense]s.
+/// An expense that repeats, e.g. rent. Applying the rule to a period adds one
+/// expense for it.
 class RecurringRule {
-  final int? id;
-  final int categoryId;
+  final String? id;
+  final String categoryId;
   final double amount;
+
+  /// ISO 4217 code. The rule only applies to periods in this currency.
+  final String currency;
   final RecurrenceFrequency frequency;
   final String? note;
   final bool active;
@@ -22,15 +19,17 @@ class RecurringRule {
     this.id,
     required this.categoryId,
     required this.amount,
+    this.currency = Period.defaultCurrency,
     required this.frequency,
     this.note,
     this.active = true,
   });
 
   RecurringRule copyWith({
-    int? id,
-    int? categoryId,
+    String? id,
+    String? categoryId,
     double? amount,
+    String? currency,
     RecurrenceFrequency? frequency,
     String? note,
     bool? active,
@@ -39,27 +38,10 @@ class RecurringRule {
       id: id ?? this.id,
       categoryId: categoryId ?? this.categoryId,
       amount: amount ?? this.amount,
+      currency: currency ?? this.currency,
       frequency: frequency ?? this.frequency,
       note: note ?? this.note,
       active: active ?? this.active,
     );
   }
-
-  factory RecurringRule.fromMap(Map<String, Object?> map) => RecurringRule(
-    id: map['id'] as int?,
-    categoryId: map['category_id'] as int,
-    amount: (map['amount'] as num).toDouble(),
-    frequency: RecurrenceFrequency.fromName(map['frequency'] as String),
-    note: map['note'] as String?,
-    active: (map['active'] as int) == 1,
-  );
-
-  Map<String, Object?> toMap() => {
-    'id': id,
-    'category_id': categoryId,
-    'amount': amount,
-    'frequency': frequency.name,
-    'note': note,
-    'active': active ? 1 : 0,
-  };
 }

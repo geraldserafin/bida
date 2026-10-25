@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../services/api_client.dart';
+import '../data/planner_repository.dart';
 
 /// Thin strip showing whether the backend `/health` endpoint is reachable.
 class ServerStatusBanner extends StatefulWidget {
@@ -14,8 +15,8 @@ class _ServerStatusBannerState extends State<ServerStatusBanner> {
   late Future<String> _status = _check();
 
   Future<String> _check() async {
-    final health = await api.system.systemHealth();
-    return 'Server: ${health.status.name} (uptime ${health.uptimeSeconds}s)';
+    final health = await context.read<PlannerRepository>().health();
+    return 'Server: ${health.status} (uptime ${health.uptimeSeconds}s)';
   }
 
   @override

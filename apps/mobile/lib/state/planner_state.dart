@@ -1,24 +1,38 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../data/api_exception.dart';
 import '../data/planner_repository.dart';
-import '../models/models.dart';
 import '../models/category_progress.dart';
+import '../models/models.dart';
 import '../models/period_summary.dart';
+
+/// The errors of the three requests `load` makes side by side.
+typedef _Failures = (AsyncError?, AsyncError?, AsyncError?);
 
 /// App-wide state for the current planning period.
 ///
-/// Wraps [PlannerRepository] and exposes the current period, its category
-/// progress, and the derived totals every screen reads (planned, spent,
-/// remaining, unallocated).
+/// Wraps [PlannerRepository] (the backend) and exposes the current period, its
+/// category progress, and the derived totals every screen reads (planned,
+/// spent, remaining, unallocated). The app needs the server, so a failed
+/// request surfaces as [loadError] while loading, and as an [ApiException]
+/// thrown from the method that was called otherwise.
 class PlannerState extends ChangeNotifier {
-  PlannerState({PlannerRepository? repository, FlutterSecureStorage? storage})
-    : _repo = repository ?? PlannerRepository(),
-      _storage = storage ?? const FlutterSecureStorage();
+  PlannerState({
+    required PlannerRepository repository,
+    this.beforeLoad,
+    FlutterSecureStorage? storage,
+  }) : _repo = repository,
+       _storage = storage ?? const FlutterSecureStorage();
 
   static const _kCurrentPeriod = 'current_period_id';
 
   final PlannerRepository _repo;
+
+  /// Runs first on every [load], e.g. to move old local data to the server.
+  final Future<void> Function()? beforeLoad;
   final FlutterSecureStorage _storage;
 
   Future<void> _persistCurrent() async {
@@ -26,12 +40,16 @@ class PlannerState extends ChangeNotifier {
     if (id == null) {
       await _storage.delete(key: _kCurrentPeriod);
     } else {
-      await _storage.write(key: _kCurrentPeriod, value: '$id');
+      await _storage.write(key: _kCurrentPeriod, value: id);
     }
   }
 
   bool _loading = true;
   bool get isLoading => _loading;
+
+  /// Why the last [load] failed, or null when it worked.
+  ApiException? _loadError;
+  ApiException? get loadError => _loadError;
 
   Period? _currentPeriod;
   Period? get currentPeriod => _currentPeriod;
@@ -68,34 +86,48 @@ class PlannerState extends ChangeNotifier {
 
   // ---- lifecycle ------------------------------------------------------------
 
+  /// Fetches everything from the server. Call again to retry after a failure.
   Future<void> load() async {
     _loading = true;
+    _loadError = null;
     notifyListeners();
 
-    _categories = await _repo.getCategories();
-    _recurringRules = await _repo.getRecurringRules();
-    _periods = await _repo.getPeriods();
+    try {
+      await beforeLoad?.call();
+      final (categories, rules, periods) = await (
+        _repo.categories(),
+        _repo.recurringRules(),
+        _repo.periods(),
+      ).wait;
+      _categories = categories;
+      _recurringRules = rules;
+      _periods = periods;
 
-    // Restore the last chosen set, falling back to the most recent one.
-    final storedId = int.tryParse(
-      await _storage.read(key: _kCurrentPeriod) ?? '',
-    );
-    Period? chosen;
-    for (final p in _periods) {
-      if (p.id == storedId) {
-        chosen = p;
-        break;
-      }
+      // Restore the last chosen period, falling back to the most recent one.
+      final storedId = await _storage.read(key: _kCurrentPeriod);
+      _currentPeriod =
+          _periods.where((p) => p.id == storedId).firstOrNull ??
+          _periods.firstOrNull;
+      await _refreshProgress();
+    } on ApiException catch (error) {
+      _loadError = error;
+    } on ParallelWaitError<Object?, _Failures> catch (error) {
+      // the requests ran side by side: report the first that failed
+      final (a, b, c) = error.errors;
+      _loadError = [
+        a?.error,
+        b?.error,
+        c?.error,
+      ].whereType<ApiException>().firstOrNull;
+      if (_loadError == null) rethrow;
     }
-    _currentPeriod = chosen ?? (_periods.isNotEmpty ? _periods.first : null);
-    await _refreshProgress();
 
     _loading = false;
     notifyListeners();
   }
 
   /// Switch the dashboard to another existing period, remembering the choice.
-  Future<void> selectPeriod(int periodId) async {
+  Future<void> selectPeriod(String periodId) async {
     final match = _periods.where((p) => p.id == periodId);
     if (match.isEmpty || match.first.id == _currentPeriod?.id) return;
     _currentPeriod = match.first;
@@ -106,43 +138,36 @@ class PlannerState extends ChangeNotifier {
 
   Future<void> _refreshProgress() async {
     final period = _currentPeriod;
-    _progress = period?.id == null
+    _progress = period == null
         ? const []
-        : await _repo.categoryProgress(period!.id!);
+        : await _repo.categoryProgress(period, _categoriesById);
   }
 
-  // ---- mutations ------------------------------------------------------------
+  Map<String, Category> get _categoriesById => {
+    for (final c in _categories) c.id!: c,
+  };
 
-  /// Creates a new period and its initial splits, then makes it current.
+  String get _currency => _currentPeriod?.currency ?? Period.defaultCurrency;
+
+  // ---- periods --------------------------------------------------------------
+
+  /// Creates a new period and its initial envelopes, then makes it current.
   Future<void> createPeriod({
     required String name,
     required DateTime startDate,
     required DateTime endDate,
     required double income,
-    required Map<int, double> plannedByCategory,
+    required Map<String, double> plannedByCategory,
   }) async {
-    final periodId = await _repo.insertPeriod(
-      Period(
-        name: name,
-        startDate: startDate,
-        endDate: endDate,
-        income: income,
-      ),
+    final created = await _repo.createPeriod(
+      name: name,
+      startDate: startDate,
+      endDate: endDate,
+      income: income,
+      plannedByCategory: plannedByCategory,
     );
-
-    for (final entry in plannedByCategory.entries) {
-      if (entry.value <= 0) continue;
-      await _repo.insertSplit(
-        Split(
-          periodId: periodId,
-          categoryId: entry.key,
-          plannedAmount: entry.value,
-        ),
-      );
-    }
-
-    _periods = await _repo.getPeriods();
-    _currentPeriod = await _repo.getCurrentPeriod();
+    _periods = await _repo.periods();
+    _currentPeriod = _periods.where((p) => p.id == created.id).firstOrNull;
     await _persistCurrent();
     await _refreshProgress();
     notifyListeners();
@@ -150,148 +175,126 @@ class PlannerState extends ChangeNotifier {
 
   /// Edits the current period's income and per-category allocations.
   ///
-  /// For each category: allocates/updates a split when the amount is positive;
-  /// when the amount is zero it removes the split — unless money was already
-  /// spent against it, in which case the split is kept at 0 so history stays
-  /// intact.
+  /// For each category: allocates/updates an envelope when the amount is
+  /// positive; when it is zero the envelope is removed — unless money was
+  /// already spent from it, in which case it stays at 0 so history stays
+  /// intact. The server applies those rules.
   Future<void> editCurrentPeriodPlan({
     required double income,
-    required Map<int, double> plannedByCategory,
+    required Map<String, double> plannedByCategory,
   }) async {
     final period = _currentPeriod;
-    if (period?.id == null) return;
+    if (period == null) return;
 
-    await _repo.updatePeriod(period!.copyWith(income: income));
-
-    final existing = {
-      for (final s in await _repo.getSplitsForPeriod(period.id!))
-        s.categoryId: s,
-    };
-
-    for (final entry in plannedByCategory.entries) {
-      final split = existing[entry.key];
-      if (entry.value > 0) {
-        if (split == null) {
-          await _repo.insertSplit(
-            Split(
-              periodId: period.id!,
-              categoryId: entry.key,
-              plannedAmount: entry.value,
-            ),
-          );
-        } else if (split.plannedAmount != entry.value) {
-          await _repo.updateSplit(split.copyWith(plannedAmount: entry.value));
-        }
-      } else if (split != null) {
-        final hasExpenses = (await _repo.getExpensesForSplit(
-          split.id!,
-        )).isNotEmpty;
-        if (hasExpenses) {
-          await _repo.updateSplit(split.copyWith(plannedAmount: 0));
-        } else {
-          await _repo.deleteSplit(split.id!);
-        }
-      }
-    }
-
-    _periods = await _repo.getPeriods();
-    _currentPeriod = _periods.firstWhere(
-      (p) => p.id == period.id,
-      orElse: () => period,
+    final updated = await _repo.setPlan(
+      period,
+      income: income,
+      plannedByCategory: plannedByCategory,
     );
+    _periods = [for (final p in _periods) p.id == updated.id ? updated : p];
+    _currentPeriod = updated;
     await _refreshProgress();
     notifyListeners();
   }
 
   /// Deletes a period and all its data. If it was the current one, falls back
   /// to the most recent remaining period.
-  Future<void> deletePeriod(int periodId) async {
+  Future<void> deletePeriod(String periodId) async {
     await _repo.deletePeriod(periodId);
-    _periods = await _repo.getPeriods();
+    _periods = await _repo.periods();
     if (_currentPeriod?.id == periodId) {
-      _currentPeriod = _periods.isNotEmpty ? _periods.first : null;
+      _currentPeriod = _periods.firstOrNull;
       await _persistCurrent();
     }
     await _refreshProgress();
     notifyListeners();
   }
 
+  Future<List<PeriodSummary>> periodSummaries() => _repo.periodSummaries();
+
+  /// Planned versus spent per envelope of any period.
+  Future<List<CategoryProgress>> progressForPeriod(Period period) =>
+      _repo.categoryProgress(period, _categoriesById);
+
+  // ---- expenses -------------------------------------------------------------
+
   Future<void> addExpense({
-    required int splitId,
+    required String envelopeId,
     required double amount,
     required DateTime date,
     String? note,
   }) async {
-    await _repo.insertExpense(
-      Expense(splitId: splitId, amount: amount, date: date, note: note),
+    await _repo.createExpense(
+      Expense(envelopeId: envelopeId, amount: amount, date: date, note: note),
+      _currency,
     );
     await _refreshProgress();
     notifyListeners();
   }
 
-  Future<List<Expense>> expensesForSplit(int splitId) =>
-      _repo.getExpensesForSplit(splitId);
-
-  Future<List<PeriodSummary>> periodSummaries() => _repo.periodSummaries();
-
-  /// Transactions (expenses + category) for the current period, newest first.
-  Future<List<Transaction>> currentPeriodTransactions() async {
-    final id = _currentPeriod?.id;
-    if (id == null) return const [];
-    final rows = await _repo.periodTransactions(id);
-    return rows.map(Transaction.fromMap).toList();
-  }
-
-  Future<List<CategoryProgress>> progressForPeriod(int periodId) =>
-      _repo.categoryProgress(periodId);
-
   Future<void> updateExpense(Expense expense) async {
-    await _repo.updateExpense(expense);
+    await _repo.updateExpense(expense, _currency);
     await _refreshProgress();
     notifyListeners();
   }
 
-  Future<void> deleteExpense(int expenseId) async {
+  Future<void> deleteExpense(String expenseId) async {
     await _repo.deleteExpense(expenseId);
     await _refreshProgress();
     notifyListeners();
   }
 
+  /// Expenses drawn from one envelope of the current period, newest first.
+  Future<List<Expense>> expensesForEnvelope(String envelopeId) {
+    final period = _currentPeriod;
+    return period == null
+        ? Future.value(const [])
+        : _repo.expenses(period, envelopeId: envelopeId);
+  }
+
+  /// Transactions (expenses + category) for the current period, newest first.
+  Future<List<Transaction>> currentPeriodTransactions() {
+    final period = _currentPeriod;
+    if (period == null) return Future.value(const []);
+    return _repo.transactions(period, {
+      for (final p in _progress) p.envelope.id!: p.category,
+    });
+  }
+
+  // ---- categories -----------------------------------------------------------
+
   Future<void> addCategory(Category category) async {
-    await _repo.insertCategory(category);
-    _categories = await _repo.getCategories();
+    await _repo.createCategory(category);
+    _categories = await _repo.categories();
     notifyListeners();
   }
 
   /// Creates a category and immediately makes it an envelope (planned 0) in the
   /// current period, so it can be spent against right away. Returns the new
-  /// split id, or null if there is no current period.
-  Future<int?> quickAddEnvelope(Category category) async {
+  /// envelope id, or null if there is no current period.
+  Future<String?> quickAddEnvelope(Category category) async {
     final period = _currentPeriod;
-    if (period?.id == null) return null;
-    final categoryId = await _repo.insertCategory(category);
-    final splitId = await _repo.insertSplit(
-      Split(periodId: period!.id!, categoryId: categoryId, plannedAmount: 0),
-    );
-    _categories = await _repo.getCategories();
+    if (period == null) return null;
+    final created = await _repo.createCategory(category);
+    final envelope = await _repo.addEnvelope(period, created.id!);
+    _categories = await _repo.categories();
     await _refreshProgress();
     notifyListeners();
-    return splitId;
+    return envelope.id;
   }
 
   Future<void> updateCategory(Category category) async {
     await _repo.updateCategory(category);
-    _categories = await _repo.getCategories();
+    _categories = await _repo.categories();
     await _refreshProgress();
     notifyListeners();
   }
 
-  /// Removes a category, refusing if it's still referenced by a split.
+  /// Removes a category, refusing if an envelope still uses it.
   /// Returns true on success, false if the category is in use.
-  Future<bool> deleteCategory(int categoryId) async {
-    if (await _repo.isCategoryInUse(categoryId)) return false;
-    await _repo.deleteCategory(categoryId);
-    _categories = await _repo.getCategories();
+  Future<bool> deleteCategory(String categoryId) async {
+    if (!await _repo.deleteCategory(categoryId)) return false;
+    _categories = await _repo.categories();
     notifyListeners();
     return true;
   }
@@ -299,72 +302,35 @@ class PlannerState extends ChangeNotifier {
   // ---- recurring rules ------------------------------------------------------
 
   Future<void> saveRecurringRule(RecurringRule rule) async {
-    if (rule.id == null) {
-      await _repo.insertRecurringRule(rule);
-    } else {
-      await _repo.updateRecurringRule(rule);
-    }
-    _recurringRules = await _repo.getRecurringRules();
+    await _repo.saveRecurringRule(rule);
+    _recurringRules = await _repo.recurringRules();
     notifyListeners();
   }
 
-  Future<void> deleteRecurringRule(int ruleId) async {
+  Future<void> deleteRecurringRule(String ruleId) async {
     await _repo.deleteRecurringRule(ruleId);
-    _recurringRules = await _repo.getRecurringRules();
+    _recurringRules = await _repo.recurringRules();
     notifyListeners();
   }
 
   /// Sum of active rules per category — used to pre-fill a new period's plan.
-  Map<int, double> plannedFromRecurring() {
-    final byCategory = <int, double>{};
+  Map<String, double> plannedFromRecurring() {
+    final byCategory = <String, double>{};
     for (final rule in activeRecurringRules) {
+      if (rule.currency != Period.defaultCurrency) continue;
       byCategory[rule.categoryId] =
           (byCategory[rule.categoryId] ?? 0) + rule.amount;
     }
     return byCategory;
   }
 
-  /// Generates an expense in the current period for each active rule that
-  /// hasn't been applied there yet, creating a split on demand. Returns the
-  /// number of expenses added.
+  /// Adds an expense to the current period for each active rule that hasn't
+  /// been applied there yet. Returns the number of expenses added.
   Future<int> applyRecurringToCurrentPeriod() async {
     final period = _currentPeriod;
-    if (period?.id == null) return 0;
+    if (period == null) return 0;
 
-    final applied = await _repo.appliedRecurringIds(period!.id!);
-    var added = 0;
-    for (final rule in activeRecurringRules) {
-      if (applied.contains(rule.id)) continue;
-
-      var split = await _repo.getSplitForCategory(period.id!, rule.categoryId);
-      if (split == null) {
-        final splitId = await _repo.insertSplit(
-          Split(
-            periodId: period.id!,
-            categoryId: rule.categoryId,
-            plannedAmount: rule.amount,
-          ),
-        );
-        split = Split(
-          id: splitId,
-          periodId: period.id!,
-          categoryId: rule.categoryId,
-          plannedAmount: rule.amount,
-        );
-      }
-
-      await _repo.insertExpense(
-        Expense(
-          splitId: split.id!,
-          amount: rule.amount,
-          date: DateTime.now(),
-          note: rule.note,
-          recurringId: rule.id,
-        ),
-      );
-      added++;
-    }
-
+    final added = await _repo.applyRecurringRules(period);
     if (added > 0) {
       await _refreshProgress();
       notifyListeners();

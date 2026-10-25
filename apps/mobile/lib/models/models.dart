@@ -4,7 +4,7 @@ library;
 
 export 'category.dart';
 export 'period.dart';
-export 'split.dart';
+export 'envelope.dart';
 export 'expense.dart';
 export 'recurring_rule.dart';
 export 'transaction.dart';

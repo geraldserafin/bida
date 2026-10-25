@@ -6,6 +6,7 @@ import '../../models/category_progress.dart';
 import '../../models/period.dart';
 import '../../state/planner_state.dart';
 import '../../theme/category_visuals.dart';
+import '../../widgets/remote_data.dart';
 import '../../util/money_format.dart';
 import '../dashboard/widgets/planned_pie_chart.dart';
 import '../dashboard/widgets/planned_vs_spent_chart.dart';
@@ -22,13 +23,10 @@ class PeriodDetailScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(period.name)),
-      body: FutureBuilder<List<CategoryProgress>>(
-        future: context.read<PlannerState>().progressForPeriod(period.id!),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final progress = snapshot.data!;
+      body: RemoteData<List<CategoryProgress>>(
+        version: period.id,
+        load: () => context.read<PlannerState>().progressForPeriod(period),
+        builder: (context, progress) {
           final planned = progress.fold<double>(0, (s, p) => s + p.planned);
           final spent = progress.fold<double>(0, (s, p) => s + p.spent);
 

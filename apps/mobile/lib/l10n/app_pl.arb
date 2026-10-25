@@ -1,25 +1,21 @@
 {
   "@@locale": "pl",
   "appTitle": "PLNing",
-
   "dashboardEmptyTitle": "Tutaj mieszka Twój budżet kopertowy.",
   "dashboardEmptyBody": "Utwórz okres i podziel swój dochód, aby zacząć.",
   "newPeriod": "Nowy okres",
   "addExpense": "Dodaj wydatek",
   "envelopes": "Koperty",
   "noEnvelopes": "Nie przydzielono jeszcze żadnych kategorii.",
-
   "income": "Dochód",
   "planned": "Zaplanowano",
   "spent": "Wydano",
   "unallocated": "Nieprzydzielone",
   "overAllocated": "Przydzielono za dużo",
-
   "remaining": "Pozostało",
   "remainingIn": "Pozostało · {period}",
   "amountLeft": "pozostało {amount}",
   "overBy": "przekroczono o {amount}",
-
   "periodName": "Nazwa okresu",
   "enterName": "Podaj nazwę",
   "start": "Początek",
@@ -31,7 +27,6 @@
   "createPeriod": "Utwórz okres",
   "editPlan": "Edytuj plan",
   "saveChanges": "Zapisz zmiany",
-
   "noEnvelopesForExpense": "Ten okres nie ma jeszcze żadnych kopert. Dodaj kategorie do okresu, zanim zapiszesz wydatki.",
   "envelope": "Koperta",
   "pickEnvelope": "Wybierz kopertę",
@@ -41,7 +36,6 @@
   "noteOptional": "Notatka (opcjonalnie)",
   "saveExpense": "Zapisz wydatek",
   "editExpense": "Edytuj wydatek",
-
   "categories": "Kategorie",
   "manageCategories": "Zarządzaj kategoriami",
   "newCategory": "Nowa kategoria",
@@ -54,21 +48,17 @@
   "addCategory": "Dodaj kategorię",
   "noCategories": "Brak kategorii. Dodaj swoją pierwszą.",
   "categoryInUse": "Nie można usunąć kategorii używanej w okresie.",
-
   "period": "Okres",
-
   "expenses": "Wydatki",
   "noExpenses": "Brak wydatków w tej kopercie.",
   "deleteExpense": "Usuń wydatek",
   "deleteExpenseConfirm": "Usunąć ten wydatek na {amount}?",
   "cancel": "Anuluj",
   "expenseDeleted": "Wydatek usunięty",
-
   "plannedSplit": "Podział planu",
   "plannedVsSpent": "Plan a wydatki",
   "spendingOverTime": "Wydatki w czasie",
   "notEnoughData": "Za mało danych.",
-
   "recurringRules": "Reguły cykliczne",
   "newRule": "Nowa reguła",
   "editRule": "Edytuj regułę",
@@ -84,7 +74,6 @@
   "applyRecurring": "Dodaj cykliczne do okresu",
   "recurringApplied": "{count, plural, =0{Wszystko jest już aktualne} =1{Dodano 1 wydatek cykliczny} few{Dodano {count} wydatki cykliczne} many{Dodano {count} wydatków cyklicznych} other{Dodano {count} wydatku cyklicznego}}",
   "needCategoryFirst": "Najpierw dodaj kategorię.",
-
   "settings": "Ustawienia",
   "security": "Bezpieczeństwo",
   "appLock": "Blokada aplikacji (PIN)",
@@ -103,48 +92,6 @@
   "biometricReason": "Uwierzytelnij, aby odblokować Money Planner",
   "pinSaved": "Zapisano PIN",
   "lockDisabled": "Blokada aplikacji wyłączona",
-
-  "cloudSync": "Synchronizacja w chmurze",
-  "syncSubtitle": "Zaszyfrowana kopia w prywatnym repozytorium GitHub",
-  "setUpSync": "Skonfiguruj synchronizację GitHub",
-  "githubToken": "Token GitHub",
-  "repoOwner": "Właściciel (użytkownik lub organizacja)",
-  "repoName": "Repozytorium",
-  "filePath": "Ścieżka pliku",
-  "syncPassphrase": "Hasło szyfrowania",
-  "connect": "Połącz",
-  "syncNow": "Synchronizuj teraz",
-  "restoreFromCloud": "Przywróć z chmury",
-  "disconnect": "Rozłącz",
-  "lastSynced": "Ostatnia synchronizacja: {when}",
-  "neverSynced": "Nigdy nie synchronizowano",
-  "syncComplete": "Synchronizacja zakończona",
-  "restoreComplete": "Przywrócono z chmury",
-  "nothingToRestore": "Nie ma jeszcze czego przywracać",
-  "restoreWarningTitle": "Przywrócić z chmury?",
-  "restoreWarningBody": "To zastąpi wszystkie lokalne dane kopią z chmury.",
-  "restorePreviewCloud": "Kopia w chmurze: {periods} okresów · {expenses} wydatków",
-  "@restorePreviewCloud": {
-    "placeholders": {
-      "periods": { "type": "int" },
-      "expenses": { "type": "int" }
-    }
-  },
-  "restorePreviewLocal": "Twoje dane teraz: {periods} okresów · {expenses} wydatków — zostaną zastąpione",
-  "@restorePreviewLocal": {
-    "placeholders": {
-      "periods": { "type": "int" },
-      "expenses": { "type": "int" }
-    }
-  },
-  "restoreSnapshotNote": "Najpierw zapisujemy kopię bezpieczeństwa Twoich obecnych danych, aby można je było odzyskać, jeśli przywracanie okaże się błędne.",
-  "snapshotKept": "Poprzednie dane zapisano w {path}",
-  "@snapshotKept": {
-    "placeholders": { "path": { "type": "String" } }
-  },
-  "syncFailed": "Synchronizacja nie powiodła się: {error}",
-  "restore": "Przywróć",
-
   "general": "Ogólne",
   "appearance": "Wygląd",
   "dataSection": "Dane",
@@ -156,17 +103,14 @@
   "themeAuto": "Auto",
   "exportCsv": "Eksportuj dane (CSV)",
   "importCsv": "Importuj z CSV",
-  "noExportFound": "Nie znaleziono pliku eksportu",
   "importResult": "{count, plural, =0{Brak wydatków do zaimportowania} =1{Zaimportowano 1 wydatek} few{Zaimportowano {count} wydatki} many{Zaimportowano {count} wydatków} other{Zaimportowano {count} wydatku}}",
   "importSkipped": "{count, plural, =1{, pominięto 1 duplikat} few{, pominięto {count} duplikaty} many{, pominięto {count} duplikatów} other{, pominięto {count} duplikatu}}",
-  "backup": "Kopia zapasowa",
   "about": "O aplikacji",
   "csvExported": "Wyeksportowano do {path}",
   "today": "Dziś",
   "noteHint": "np. Zakupy tygodniowe",
   "addNew": "Nowa",
   "remainingInCategory": "Pozostało w {category}",
-
   "history": "Historia",
   "periods": "Okresy",
   "all": "Wszystkie",
@@ -182,5 +126,12 @@
   "deletePeriodConfirm": "Usunąć „{name}” i wszystkie jego dane?",
   "periodDeleted": "Okres usunięty",
   "dashboard": "Pulpit",
-  "periodRange": "{start} – {end}"
+  "periodRange": "{start} – {end}",
+  "errorUnreachable": "Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.",
+  "errorNotFound": "Tych danych już nie ma. Mogły zostać zmienione na innym urządzeniu.",
+  "errorConflict": "Ta operacja koliduje z danymi, które już istnieją.",
+  "errorInvalid": "Serwer nie przyjął tych wartości. Sprawdź, co zostało wpisane.",
+  "errorServer": "Coś poszło nie tak po stronie serwera. Spróbuj ponownie za chwilę.",
+  "retry": "Spróbuj ponownie",
+  "loadFailed": "Nie udało się wczytać danych"
 }
