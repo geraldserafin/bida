@@ -72,6 +72,8 @@ services:
       - ./app:/srv/app:ro,z
       - ./docs:/srv/docs:ro,z
 YML
+chgrp docker "$STACK/compose.override.yml"
+chmod 640 "$STACK/compose.override.yml"
 
 # --- Caddy: the API block already exists, add the two static sites ----------
 CADDYFILE=$STACK/caddy/Caddyfile
