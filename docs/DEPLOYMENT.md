@@ -17,7 +17,7 @@ Po zielonym CI na `main` workflow `deploy.yml` buduje obraz API (`ghcr.io/gerald
 
    Baza `bida` i jej użytkownik muszą istnieć; migracje API wykonuje samo przy starcie.
 
-2. Pobieranie obrazu z ghcr: pakiet jest prywatny, więc jednorazowo `docker login ghcr.io` na VPS-ie (token z uprawnieniem `read:packages`) albo ustaw pakiet jako publiczny.
+2. Pobieranie obrazu z ghcr: po pierwszym przebiegu deployu ustaw pakiet `bida-api` jako publiczny (GitHub → Packages → `bida-api` → Package settings → Change visibility). Wtedy VPS nie musi się logować do ghcr.
 
 3. Caddy:
 
