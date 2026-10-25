@@ -6,13 +6,13 @@ import '../../l10n/app_localizations.dart';
 import '../../models/transaction.dart';
 import '../../state/planner_state.dart';
 import '../../widgets/remote_data.dart';
-import '../../theme/category_visuals.dart';
+import '../../theme/envelope_visuals.dart';
 import '../../util/money_format.dart';
 import '../../util/pickers.dart';
 import '../add_expense/add_expense_screen.dart';
 
-/// History (Historia): the current period's transactions grouped by day, with
-/// a category filter.
+/// History (Historia): the month's transactions grouped by day, with
+/// an envelope filter.
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
@@ -21,7 +21,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  String? _categoryId; // null = all
+  String? _envelopeId; // null = all
   DateTimeRange? _dateRange; // null = any date
   TimeOfDay _startTime = const TimeOfDay(hour: 0, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 23, minute: 59);
@@ -87,25 +87,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.history)),
       body: RemoteData<List<Transaction>>(
-        // fetched again when the period or what was spent changes, not on
+        // fetched again when the month or what was spent changes, not on
         // every filter tap
-        version: (state.currentPeriod?.id, state.totalSpent),
-        load: state.currentPeriodTransactions,
+        version: (state.month, state.spent),
+        load: state.monthTransactions,
         builder: (context, all) {
           if (all.isEmpty) {
             return Center(child: Text(l10n.noExpenses));
           }
 
-          // Distinct categories for the filter row (first-seen order).
-          final categories = <String, String>{};
+          // Distinct envelopes for the filter row (first-seen order).
+          final envelopes = <String, String>{};
           for (final t in all) {
-            categories.putIfAbsent(t.category.id!, () => t.category.name);
+            envelopes.putIfAbsent(t.envelope.id!, () => t.envelope.name);
           }
 
           final from = _from;
           final to = _to;
           final visible = all.where((t) {
-            if (_categoryId != null && t.category.id != _categoryId) {
+            if (_envelopeId != null && t.envelope.id != _envelopeId) {
               return false;
             }
             if (from != null && t.date.isBefore(from)) return false;
@@ -116,9 +116,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           return Column(
             children: [
               _FilterBar(
-                categories: categories,
-                selected: _categoryId,
-                onSelect: (id) => setState(() => _categoryId = id),
+                envelopes: envelopes,
+                selected: _envelopeId,
+                onSelect: (id) => setState(() => _envelopeId = id),
               ),
               _DateFilterBar(
                 range: _dateRange,
@@ -278,12 +278,12 @@ class _PillButton extends StatelessWidget {
 
 class _FilterBar extends StatelessWidget {
   const _FilterBar({
-    required this.categories,
+    required this.envelopes,
     required this.selected,
     required this.onSelect,
   });
 
-  final Map<String, String> categories;
+  final Map<String, String> envelopes;
   final String? selected;
   final ValueChanged<String?> onSelect;
 
@@ -301,7 +301,7 @@ class _FilterBar extends StatelessWidget {
             selected: selected == null,
             onTap: () => onSelect(null),
           ),
-          for (final entry in categories.entries)
+          for (final entry in envelopes.entries)
             _Chip(
               label: entry.value,
               selected: selected == entry.key,
@@ -423,7 +423,7 @@ class _TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final color = transaction.category.displayColor;
+    final color = transaction.envelope.displayColor;
     final timeFmt = DateFormat.Hm('pl');
 
     return ListTile(
@@ -439,10 +439,10 @@ class _TransactionTile extends StatelessWidget {
           color: color.withValues(alpha: 0.16),
           borderRadius: BorderRadius.circular(11),
         ),
-        child: Icon(transaction.category.displayIcon, color: color, size: 20),
+        child: Icon(transaction.envelope.displayIcon, color: color, size: 20),
       ),
       title: Text(
-        transaction.category.name,
+        transaction.envelope.name,
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: transaction.note == null || transaction.note!.isEmpty

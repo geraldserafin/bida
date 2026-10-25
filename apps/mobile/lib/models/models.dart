@@ -2,9 +2,13 @@
 /// domain entities at once.
 library;
 
-export 'category.dart';
-export 'period.dart';
+export 'allocation.dart';
+export 'budget_month.dart';
 export 'envelope.dart';
+export 'envelope_progress.dart';
 export 'expense.dart';
+export 'income.dart';
+export 'month_summary.dart';
+export 'overview.dart';
 export 'recurring_rule.dart';
 export 'transaction.dart';

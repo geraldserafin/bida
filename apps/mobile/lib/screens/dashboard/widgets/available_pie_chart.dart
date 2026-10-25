@@ -2,43 +2,43 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../../models/category_progress.dart';
-import '../../../theme/category_visuals.dart';
+import '../../../models/envelope_progress.dart';
+import '../../../theme/envelope_visuals.dart';
 import '../../../util/money_format.dart';
 import '../../../widgets/chart_card.dart';
 
-/// Donut chart of how the period's income is planned across categories, with
+/// Donut chart of how the money available this month is spread across envelopes, with
 /// the amount spent called out in the centre.
-class PlannedPieChart extends StatelessWidget {
-  const PlannedPieChart({
+class AvailablePieChart extends StatelessWidget {
+  const AvailablePieChart({
     super.key,
     required this.progress,
     this.spent = 0,
     this.onTap,
   });
 
-  final List<CategoryProgress> progress;
+  final List<EnvelopeProgress> progress;
   final double spent;
 
   /// Called when a slice or a legend entry is tapped.
-  final void Function(CategoryProgress)? onTap;
+  final void Function(EnvelopeProgress)? onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final items = progress.where((p) => p.planned > 0).toList();
-    final total = items.fold<double>(0, (sum, p) => sum + p.planned);
+    final items = progress.where((p) => p.available > 0).toList();
+    final total = items.fold<double>(0, (sum, p) => sum + p.available);
 
     if (items.isEmpty || total <= 0) {
       return ChartCard(
-        title: l10n.plannedSplit,
+        title: l10n.availableSplit,
         child: Text(l10n.notEnoughData),
       );
     }
 
     return ChartCard(
-      title: l10n.plannedSplit,
+      title: l10n.availableSplit,
       child: Column(
         children: [
           SizedBox(
@@ -64,8 +64,8 @@ class PlannedPieChart extends StatelessWidget {
                     sections: [
                       for (final p in items)
                         PieChartSectionData(
-                          value: p.planned,
-                          color: p.category.displayColor,
+                          value: p.available,
+                          color: p.envelope.displayColor,
                           showTitle: false,
                           radius: 26,
                         ),
@@ -107,8 +107,8 @@ class PlannedPieChart extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: LegendDot(
-                      color: p.category.displayColor,
-                      label: '${p.category.name} · ${formatZloty(p.planned)}',
+                      color: p.envelope.displayColor,
+                      label: '${p.envelope.name} · ${formatZloty(p.available)}',
                     ),
                   ),
                 ),

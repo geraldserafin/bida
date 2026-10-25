@@ -2,60 +2,16 @@
   "@@locale": "en",
   "appTitle": "PLNing",
   "dashboardEmptyTitle": "Your envelope budget lives here.",
-  "dashboardEmptyBody": "Create a period and split your income to get started.",
-  "newPeriod": "New period",
+  "dashboardEmptyBody": "Enter what came in and split the money into envelopes.",
   "addExpense": "Add expense",
   "envelopes": "Envelopes",
-  "noEnvelopes": "No categories allocated yet.",
+  "noEnvelopes": "No envelopes yet.",
   "income": "Income",
-  "planned": "Planned",
   "spent": "Spent",
   "unallocated": "Unallocated",
   "overAllocated": "Over-allocated",
-  "remaining": "Remaining",
-  "remainingIn": "Remaining · {period}",
-  "@remainingIn": {
-    "placeholders": {
-      "period": {
-        "type": "String"
-      }
-    }
-  },
-  "amountLeft": "{amount} left",
-  "@amountLeft": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "overBy": "Over by {amount}",
-  "@overBy": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "periodName": "Period name",
-  "enterName": "Enter a name",
-  "start": "Start",
-  "end": "End",
-  "incomeForPeriod": "Income for this period",
-  "enterIncome": "Enter your income",
-  "splitAcrossCategories": "Split across categories",
-  "overAllocationWarning": "You've allocated {amount} more than your income. You can still continue.",
-  "@overAllocationWarning": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "createPeriod": "Create period",
-  "editPlan": "Edit plan",
   "saveChanges": "Save changes",
-  "noEnvelopesForExpense": "This period has no envelopes yet. Add categories to the period before logging expenses.",
+  "noEnvelopesForExpense": "You have no envelopes yet. Add one before saving an expense.",
   "envelope": "Envelope",
   "pickEnvelope": "Pick an envelope",
   "amount": "Amount",
@@ -64,19 +20,11 @@
   "noteOptional": "Note (optional)",
   "saveExpense": "Save expense",
   "editExpense": "Edit expense",
-  "categories": "Categories",
-  "manageCategories": "Manage categories",
-  "newCategory": "New category",
-  "editCategory": "Edit category",
   "name": "Name",
   "icon": "Icon",
   "color": "Color",
   "save": "Save",
   "delete": "Delete",
-  "addCategory": "Add category",
-  "noCategories": "No categories yet. Add your first one.",
-  "categoryInUse": "Can't delete a category that's used in a period.",
-  "period": "Period",
   "expenses": "Expenses",
   "noExpenses": "No expenses in this envelope yet.",
   "deleteExpense": "Delete expense",
@@ -90,23 +38,19 @@
   },
   "cancel": "Cancel",
   "expenseDeleted": "Expense deleted",
-  "plannedSplit": "Planned split",
-  "plannedVsSpent": "Planned vs. spent",
   "spendingOverTime": "Spending over time",
   "notEnoughData": "Not enough data yet.",
   "recurringRules": "Recurring rules",
   "newRule": "New rule",
   "editRule": "Edit rule",
   "addRule": "Add rule",
-  "category": "Category",
   "note": "Note",
   "frequency": "Frequency",
   "weekly": "Weekly",
   "monthly": "Monthly",
   "active": "Active",
   "noRecurringRules": "No recurring rules yet. Add templates for regular income or expenses.",
-  "prefillFromRecurring": "Pre-fill from recurring",
-  "applyRecurring": "Add recurring to this period",
+  "applyRecurring": "Add recurring to this month",
   "recurringApplied": "{count, plural, =0{Everything is already up to date} =1{Added 1 recurring expense} other{Added {count} recurring expenses}}",
   "@recurringApplied": {
     "placeholders": {
@@ -115,7 +59,6 @@
       }
     }
   },
-  "needCategoryFirst": "Add a category first.",
   "settings": "Settings",
   "security": "Security",
   "appLock": "App lock (PIN)",
@@ -173,47 +116,13 @@
   "today": "Today",
   "noteHint": "e.g. Weekly groceries",
   "addNew": "New",
-  "remainingInCategory": "Remaining in {category}",
-  "@remainingInCategory": {
-    "placeholders": {
-      "category": {
-        "type": "String"
-      }
-    }
-  },
   "history": "History",
-  "periods": "Periods",
   "all": "All",
   "dateRange": "Date range",
   "noMatchingExpenses": "No expenses match the filters.",
   "yesterday": "Yesterday",
-  "noPeriodsYet": "No periods yet.",
-  "upcoming": "Upcoming",
-  "currentSet": "Current",
-  "earlier": "Earlier",
   "newExpense": "New expense",
-  "deletePeriod": "Delete period",
-  "deletePeriodConfirm": "Delete \"{name}\" and all its data?",
-  "@deletePeriodConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "periodDeleted": "Period deleted",
   "dashboard": "Dashboard",
-  "periodRange": "{start} – {end}",
-  "@periodRange": {
-    "placeholders": {
-      "start": {
-        "type": "String"
-      },
-      "end": {
-        "type": "String"
-      }
-    }
-  },
   "errorUnreachable": "Can't reach the server. Check your connection and try again.",
   "errorNotFound": "That data no longer exists. It may have been changed on another device.",
   "errorConflict": "This conflicts with the data that is already there.",
@@ -255,5 +164,130 @@
   "signOutConfirm": "Sign out of this device?",
   "signInWithGoogle": "Sign in with Google",
   "googleSignInFailed": "Google sign-in did not work. Try again or use the e-mail code.",
-  "orSeparator": "or"
+  "orSeparator": "or",
+  "addEnvelope": "Add envelope",
+  "addIncome": "Add income",
+  "addSubEnvelope": "Add sub-envelope",
+  "allocate": "Allocate",
+  "allocated": "Allocated",
+  "allocationDeleted": "Allocation deleted",
+  "allocations": "Allocations",
+  "available": "Available",
+  "availableSplit": "Where the money is",
+  "availableVsSpent": "Available vs spent",
+  "balance": "Balance",
+  "balanceOfEnvelope": "Balance of {envelope}",
+  "@balanceOfEnvelope": {
+    "placeholders": {
+      "envelope": {
+        "type": "String"
+      }
+    }
+  },
+  "canTakeBack": "Can take back: {amount}",
+  "@canTakeBack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteAllocation": "Delete allocation",
+  "deleteAllocationConfirm": "Delete the allocation of {amount}?",
+  "@deleteAllocationConfirm": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteEnvelope": "Delete envelope",
+  "deleteEnvelopeConfirm": "Delete “{name}” with its sub-envelopes, expenses and allocations? The money put into it goes back to the pool.",
+  "@deleteEnvelopeConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteIncome": "Delete income",
+  "deleteIncomeConfirm": "Delete the income of {amount}?",
+  "@deleteIncomeConfirm": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "editEnvelope": "Edit envelope",
+  "editIncome": "Edit income",
+  "envelopeDeleted": "Envelope deleted",
+  "firstDayOfMonthHint": "Budget months start on this day",
+  "freeInEnvelope": "Free in envelope",
+  "fromEarlierMonths": "From earlier months",
+  "incomeDeleted": "Income deleted",
+  "incomeNoteHint": "e.g. Salary",
+  "incomes": "Income",
+  "manageEnvelopes": "Manage envelopes",
+  "monthLine": "Income {income} · allocated {allocated}",
+  "@monthLine": {
+    "placeholders": {
+      "income": {
+        "type": "String"
+      },
+      "allocated": {
+        "type": "String"
+      }
+    }
+  },
+  "months": "Months",
+  "needEnvelopeFirst": "Add an envelope first.",
+  "newEnvelope": "New envelope",
+  "nextMonth": "Next month",
+  "noAllocations": "Nothing allocated yet.",
+  "noIncomes": "No income yet. Add your first payday, then split it between envelopes.",
+  "noMonthsYet": "No months yet.",
+  "noParent": "None (top-level envelope)",
+  "notEnoughMoney": "Not enough money. Available: {amount}.",
+  "@notEnoughMoney": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "parentEnvelope": "Parent envelope",
+  "parentFreeCaption": "Free in “{parent}”: {amount}",
+  "@parentFreeCaption": {
+    "placeholders": {
+      "parent": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "poolCaption": "Unallocated: {amount}",
+  "@poolCaption": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "previousMonth": "Previous month",
+  "spentOfAvailable": "Spent {spent} of {available}",
+  "@spentOfAvailable": {
+    "placeholders": {
+      "spent": {
+        "type": "String"
+      },
+      "available": {
+        "type": "String"
+      }
+    }
+  },
+  "subEnvelopes": "Sub-envelopes",
+  "takeBack": "Take back"
 }

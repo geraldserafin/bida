@@ -2,33 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/category_progress.dart';
-import '../../models/period.dart';
+import '../../models/models.dart';
 import '../../state/planner_state.dart';
-import '../../theme/category_visuals.dart';
+import '../../theme/envelope_visuals.dart';
 import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
+import '../../util/month_label.dart';
 import '../../widgets/error_view.dart';
 import '../add_expense/add_expense_screen.dart';
-import '../category_detail/category_detail_screen.dart';
+import '../envelope_detail/envelope_detail_screen.dart';
+import '../envelopes/envelope_editor.dart';
+import '../funding/fund_sheet.dart';
 import '../history/history_screen.dart';
-import '../period_setup/new_period_screen.dart';
-import '../periods/periods_screen.dart';
+import '../incomes/incomes_screen.dart';
+import '../incomes/income_sheet.dart';
+import '../months/months_screen.dart';
 import '../recurring/recurring_rules_screen.dart';
 import '../settings/settings_screen.dart';
-import 'widgets/planned_pie_chart.dart';
-import 'widgets/planned_vs_spent_chart.dart';
+import 'widgets/available_pie_chart.dart';
+import 'widgets/available_vs_spent_chart.dart';
 
-/// Opens an envelope's detail (expense) view for a tapped chart element.
-void _openEnvelope(BuildContext context, CategoryProgress progress) {
+/// Opens an envelope's detail view for a tapped chart element.
+void _openEnvelope(BuildContext context, EnvelopeProgress progress) {
   Navigator.of(context).push(
     MaterialPageRoute(
-      builder: (_) => CategoryDetailScreen(envelopeId: progress.envelope.id!),
+      builder: (_) => EnvelopeDetailScreen(envelopeId: progress.envelope.id!),
     ),
   );
 }
 
-/// Home screen — current-period overview with planned vs. spent per category.
+/// Home screen — the money of one month: what came in, what went into the
+/// envelopes, and how much is left in each.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -36,34 +40,34 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<PlannerState>();
-    final period = state.currentPeriod;
+    final hasData = !state.isLoading && state.loadError == null;
 
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 20,
-        title: period != null && state.periods.length > 1
-            ? _PeriodSwitcher(state: state)
-            : Row(
-                children: [
-                  const Icon(Icons.savings_outlined, size: 20),
-                  const SizedBox(width: 10),
-                  Text(
-                    l10n.appTitle,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-        actions: [
-          if (period != null)
-            IconButton(
-              tooltip: l10n.editPlan,
-              icon: const Icon(Icons.tune),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => NewPeriodScreen(editPeriod: period),
+        titleSpacing: 8,
+        title: hasData
+            ? _MonthSwitcher(state: state)
+            : Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.savings_outlined, size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      l10n.appTitle,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ],
                 ),
               ),
-            ),
+        actions: [
+          IconButton(
+            tooltip: l10n.incomes,
+            icon: const Icon(Icons.payments_outlined),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const IncomesScreen())),
+          ),
           IconButton(
             tooltip: l10n.recurringRules,
             icon: const Icon(Icons.repeat),
@@ -83,14 +87,14 @@ class DashboardScreen extends StatelessWidget {
           if (loadError != null) {
             return ErrorView(error: loadError, onRetry: state.load);
           }
-          if (period == null) {
-            return _EmptyState(onCreate: () => _openNewPeriod(context));
+          if (state.envelopes.isEmpty && state.isEmpty) {
+            return const _EmptyState();
           }
-          return _PeriodView(state: state);
+          return _MonthView(state: state);
         },
       ),
       bottomNavigationBar: const _BottomNav(),
-      floatingActionButton: period == null
+      floatingActionButton: state.envelopes.isEmpty
           ? null
           : FloatingActionButton.extended(
               onPressed: () => Navigator.of(context).push(
@@ -101,16 +105,10 @@ class DashboardScreen extends StatelessWidget {
             ),
     );
   }
-
-  void _openNewPeriod(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const NewPeriodScreen()));
-  }
 }
 
-/// Bottom navigation. The dashboard is index 0 ("Plan"); the other
-/// destinations push their screens and the bar snaps back to Plan.
+/// Bottom navigation. The dashboard is index 0; the other destinations push
+/// their screens and the bar snaps back to it.
 class _BottomNav extends StatelessWidget {
   const _BottomNav();
 
@@ -130,7 +128,7 @@ class _BottomNav extends StatelessWidget {
         onDestinationSelected: (i) {
           Widget? screen = switch (i) {
             1 => const HistoryScreen(),
-            2 => const PeriodsScreen(),
+            2 => const MonthsScreen(),
             3 => const SettingsScreen(),
             _ => null,
           };
@@ -153,7 +151,7 @@ class _BottomNav extends StatelessWidget {
           NavigationDestination(
             icon: const Icon(Icons.calendar_month_outlined),
             selectedIcon: const Icon(Icons.calendar_month),
-            label: l10n.periods,
+            label: l10n.months,
           ),
           NavigationDestination(
             icon: const Icon(Icons.settings_outlined),
@@ -165,44 +163,60 @@ class _BottomNav extends StatelessWidget {
   }
 }
 
-class _PeriodSwitcher extends StatelessWidget {
-  const _PeriodSwitcher({required this.state});
+/// The month on screen, with arrows to the neighbouring ones. Tapping the name
+/// opens the list of months.
+class _MonthSwitcher extends StatelessWidget {
+  const _MonthSwitcher({required this.state});
   final PlannerState state;
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonHideUnderline(
-      child: DropdownButton<String>(
-        value: state.currentPeriod!.id,
-        isExpanded: true,
-        borderRadius: BorderRadius.circular(12),
-        dropdownColor: Theme.of(context).colorScheme.surfaceContainer,
-        style: Theme.of(
-          context,
-        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        items: [
-          for (final Period p in state.periods)
-            DropdownMenuItem(value: p.id, child: Text(p.name)),
-        ],
-        onChanged: (id) {
-          if (id == null) return;
-          final state = context.read<PlannerState>();
-          attempt(context, () => state.selectPeriod(id));
-        },
-      ),
+    final l10n = AppLocalizations.of(context);
+    return Row(
+      children: [
+        IconButton(
+          tooltip: l10n.previousMonth,
+          icon: const Icon(Icons.chevron_left),
+          onPressed: () => attempt(context, state.previousMonth),
+        ),
+        Expanded(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const MonthsScreen())),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                monthLabel(state.month),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ),
+        IconButton(
+          tooltip: l10n.nextMonth,
+          icon: const Icon(Icons.chevron_right),
+          onPressed: () => attempt(context, state.nextMonth),
+        ),
+      ],
     );
   }
 }
 
+/// Nothing yet: the money comes in first, then goes into envelopes.
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onCreate});
-  final VoidCallback onCreate;
+  const _EmptyState();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -218,9 +232,15 @@ class _EmptyState extends StatelessWidget {
             Text(l10n.dashboardEmptyBody, textAlign: TextAlign.center),
             const SizedBox(height: 24),
             FilledButton.icon(
-              onPressed: onCreate,
+              onPressed: () => showIncomeSheet(context),
               icon: const Icon(Icons.add),
-              label: Text(l10n.newPeriod),
+              label: Text(l10n.addIncome),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => _addEnvelope(context),
+              icon: const Icon(Icons.add),
+              label: Text(l10n.addEnvelope),
             ),
           ],
         ),
@@ -229,43 +249,60 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _PeriodView extends StatelessWidget {
-  const _PeriodView({required this.state});
+Future<void> _addEnvelope(BuildContext context) async {
+  final created = await showEnvelopeEditor(context);
+  if (created == null || !context.mounted) return;
+  final state = context.read<PlannerState>();
+  await attempt(context, () => state.addEnvelope(created));
+}
+
+class _MonthView extends StatelessWidget {
+  const _MonthView({required this.state});
   final PlannerState state;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final top = state.topLevelProgress;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
       children: [
         _SummaryCard(state: state),
-        if (state.progress.isNotEmpty) ...[
+        if (top.any((p) => p.available > 0 || p.spent > 0)) ...[
           const SizedBox(height: 14),
-          PlannedPieChart(
-            progress: state.progress,
-            spent: state.totalSpent,
+          AvailablePieChart(
+            progress: top,
+            spent: state.spent,
             onTap: (p) => _openEnvelope(context, p),
           ),
           const SizedBox(height: 14),
-          PlannedVsSpentChart(
-            progress: state.progress,
+          AvailableVsSpentChart(
+            progress: top,
             onTap: (p) => _openEnvelope(context, p),
           ),
         ],
         const SizedBox(height: 20),
         _SectionLabel(l10n.envelopes),
         const SizedBox(height: 10),
-        if (state.progress.isEmpty)
+        if (top.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 24),
             child: Center(child: Text(l10n.noEnvelopes)),
           )
         else
-          for (final p in state.progress) ...[
-            _CategoryProgressTile(progress: p),
+          for (final p in top) ...[
+            _EnvelopeTile(progress: p),
             const SizedBox(height: 10),
           ],
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => _addEnvelope(context),
+            icon: const Icon(Icons.add),
+            label: Text(l10n.addEnvelope),
+          ),
+        ),
       ],
     );
   }
@@ -279,10 +316,10 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: Color(0xFFE4E4E7),
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
@@ -296,6 +333,7 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final negative = state.isOverAllocated;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
@@ -312,8 +350,14 @@ class _SummaryCard extends StatelessWidget {
                 ),
                 Expanded(
                   child: _Stat(
-                    label: l10n.planned,
-                    value: formatZloty(state.totalPlanned),
+                    label: l10n.allocated,
+                    value: formatZloty(state.allocated),
+                  ),
+                ),
+                Expanded(
+                  child: _Stat(
+                    label: l10n.spent,
+                    value: formatZloty(state.spent),
                   ),
                 ),
               ],
@@ -323,21 +367,39 @@ class _SummaryCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  state.isOverAllocated ? l10n.overAllocated : l10n.unallocated,
+                  negative ? l10n.overAllocated : l10n.unallocated,
                   style: TextStyle(
-                    color: state.isOverAllocated
-                        ? scheme.error
-                        : scheme.onSurfaceVariant,
+                    color: negative ? scheme.error : scheme.onSurfaceVariant,
                     fontSize: 13,
                   ),
                 ),
                 Text(
-                  formatZloty(state.unallocated),
+                  formatZloty(state.pool),
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: state.isOverAllocated
-                        ? scheme.error
-                        : scheme.onSurface,
+                    color: negative ? scheme.error : scheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => showIncomeSheet(context),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(l10n.addIncome),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: state.envelopes.isEmpty
+                        ? null
+                        : () => showFundSheet(context),
+                    icon: const Icon(Icons.south_west, size: 18),
+                    label: Text(l10n.allocate),
                   ),
                 ),
               ],
@@ -361,40 +423,41 @@ class _Stat extends StatelessWidget {
       children: [
         Text(
           label.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 11,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 10.5,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.4,
-            color: Color(0xFF71717A),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 5),
         Text(
           value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ],
     );
   }
 }
 
-class _CategoryProgressTile extends StatelessWidget {
-  const _CategoryProgressTile({required this.progress});
-  final CategoryProgress progress;
+class _EnvelopeTile extends StatelessWidget {
+  const _EnvelopeTile({required this.progress});
+  final EnvelopeProgress progress;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final color = progress.category.displayColor;
+    final envelope = progress.envelope;
+    final color = envelope.displayColor;
 
     return Card(
       child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) =>
-                CategoryDetailScreen(envelopeId: progress.envelope.id!),
-          ),
-        ),
+        onTap: () => _openEnvelope(context, progress),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(
@@ -409,16 +472,12 @@ class _CategoryProgressTile extends StatelessWidget {
                       color: color.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
-                      progress.category.displayIcon,
-                      size: 17,
-                      color: color,
-                    ),
+                    child: Icon(envelope.displayIcon, size: 17, color: color),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      progress.category.name,
+                      envelope.name,
                       style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
@@ -426,10 +485,11 @@ class _CategoryProgressTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${formatZloty(progress.spent)} / ${formatZloty(progress.planned)}',
+                    formatZloty(progress.balance),
                     style: TextStyle(
-                      fontSize: 12.5,
-                      color: scheme.onSurfaceVariant,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: progress.isOverspent ? scheme.error : null,
                     ),
                   ),
                 ],
@@ -443,6 +503,14 @@ class _CategoryProgressTile extends StatelessWidget {
                   backgroundColor: scheme.surfaceContainerHighest,
                   color: progress.isOverspent ? scheme.error : color,
                 ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.spentOfAvailable(
+                  formatZloty(progress.spent),
+                  formatZloty(progress.available),
+                ),
+                style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
               ),
             ],
           ),

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/category.dart';
+import '../../models/envelope.dart';
 import '../../models/recurring_rule.dart';
 import '../../state/planner_state.dart';
 import '../../util/api_errors.dart';
-import '../../theme/category_visuals.dart';
+import '../../theme/envelope_visuals.dart';
 import '../../util/money_format.dart';
 import 'recurring_editor.dart';
 
-/// Manage recurring income/expense templates and apply them to the current
-/// period in one tap.
+/// Manage recurring expense templates and apply them to the month on screen
+/// in one tap.
 class RecurringRulesScreen extends StatelessWidget {
   const RecurringRulesScreen({super.key});
 
@@ -20,13 +20,13 @@ class RecurringRulesScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<PlannerState>();
     final rules = state.recurringRules;
-    final categoriesById = {for (final c in state.categories) c.id: c};
+    final envelopesById = {for (final e in state.envelopes) e.id: e};
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.recurringRules),
         actions: [
-          if (rules.any((r) => r.active) && state.currentPeriod != null)
+          if (rules.any((r) => r.active))
             IconButton(
               tooltip: l10n.applyRecurring,
               icon: const Icon(Icons.playlist_add_check),
@@ -45,8 +45,8 @@ class RecurringRulesScreen extends StatelessWidget {
               itemCount: rules.length,
               itemBuilder: (context, i) {
                 final rule = rules[i];
-                final category = categoriesById[rule.categoryId];
-                return _RuleTile(rule: rule, category: category);
+                final envelope = envelopesById[rule.envelopeId];
+                return _RuleTile(rule: rule, envelope: envelope);
               },
             ),
       floatingActionButton: FloatingActionButton.extended(
@@ -64,13 +64,13 @@ class RecurringRulesScreen extends StatelessWidget {
   }) async {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    if (state.categories.isEmpty) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.needCategoryFirst)));
+    if (state.envelopes.isEmpty) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.needEnvelopeFirst)));
       return;
     }
     final rule = await showRecurringEditor(
       context,
-      categories: state.categories,
+      envelopes: state.envelopes,
       existing: existing,
     );
     if (rule != null && context.mounted) {
@@ -84,7 +84,7 @@ class RecurringRulesScreen extends StatelessWidget {
     var added = 0;
     final applied = await attempt(
       context,
-      () async => added = await state.applyRecurringToCurrentPeriod(),
+      () async => added = await state.applyRecurringToMonth(),
     );
     if (!applied) return;
     messenger.showSnackBar(
@@ -94,15 +94,15 @@ class RecurringRulesScreen extends StatelessWidget {
 }
 
 class _RuleTile extends StatelessWidget {
-  const _RuleTile({required this.rule, required this.category});
+  const _RuleTile({required this.rule, required this.envelope});
 
   final RecurringRule rule;
-  final Category? category;
+  final Envelope? envelope;
 
   @override
   Widget build(BuildContext context) {
     final state = context.read<PlannerState>();
-    final color = category?.displayColor ?? Theme.of(context).disabledColor;
+    final color = envelope?.displayColor ?? Theme.of(context).disabledColor;
 
     return Opacity(
       opacity: rule.active ? 1 : 0.5,
@@ -114,12 +114,12 @@ class _RuleTile extends StatelessWidget {
             color: color.withValues(alpha: 0.16),
             borderRadius: BorderRadius.circular(11),
           ),
-          child: Icon(category?.displayIcon ?? Icons.repeat, color: color),
+          child: Icon(envelope?.displayIcon ?? Icons.repeat, color: color),
         ),
         title: Text(
-          rule.note?.isNotEmpty == true ? rule.note! : category?.name ?? '—',
+          rule.note?.isNotEmpty == true ? rule.note! : envelope?.name ?? '—',
         ),
-        subtitle: Text(category?.name ?? ''),
+        subtitle: Text(envelope?.name ?? ''),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -137,7 +137,7 @@ class _RuleTile extends StatelessWidget {
         onTap: () async {
           final edited = await showRecurringEditor(
             context,
-            categories: state.categories,
+            envelopes: state.envelopes,
             existing: rule,
           );
           if (edited != null && context.mounted) {

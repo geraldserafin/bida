@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:money_planner/l10n/app_localizations.dart';
@@ -24,7 +23,6 @@ Widget app(PlannerState state, FakeBackend backend) => MultiProvider(
 
 void main() {
   setUpAll(() => initializeDateFormatting('pl'));
-  setUp(() => FlutterSecureStorage.setMockInitialValues({}));
 
   testWidgets('Dashboard shows a loading indicator before state loads', (
     tester,
@@ -45,9 +43,9 @@ void main() {
     tester,
   ) async {
     final backend = FakeBackend()
-      ..on('GET /categories', (_) => const Reply.unreachable())
+      ..on('GET /envelopes', (_) => const Reply.unreachable())
       ..on('GET /recurring-rules', (_) => const Reply.unreachable())
-      ..on('GET /periods', (_) => const Reply.unreachable());
+      ..on('GET /overview', (_) => const Reply.unreachable());
     final state = PlannerState(repository: backend.repository());
 
     await tester.pumpWidget(app(state, backend));
@@ -59,13 +57,74 @@ void main() {
 
     // the server comes back: retrying shows the app
     backend
-      ..on('GET /categories', (_) => const Reply([]))
+      ..on('GET /envelopes', (_) => const Reply([]))
       ..on('GET /recurring-rules', (_) => const Reply([]))
-      ..on('GET /periods', (_) => const Reply([]));
+      ..on('GET /overview', (_) => Reply(overviewJson()));
     await tester.tap(find.text('Spróbuj ponownie'));
     await tester.pumpAndSettle();
 
     expect(find.text('Nie udało się wczytać danych'), findsNothing);
     expect(state.loadError, isNull);
+  });
+
+  testWidgets('Dashboard of a new user asks for the first income', (
+    tester,
+  ) async {
+    final backend = FakeBackend()
+      ..on('GET /envelopes', (_) => const Reply([]))
+      ..on('GET /recurring-rules', (_) => const Reply([]))
+      ..on('GET /overview', (_) => Reply(overviewJson()));
+    final state = PlannerState(repository: backend.repository());
+
+    await tester.pumpWidget(app(state, backend));
+    await tester.runAsync(state.load);
+    await tester.pump();
+
+    expect(find.text('Dodaj wpływ'), findsOneWidget);
+    expect(find.text('Dodaj kopertę'), findsOneWidget);
+  });
+
+  testWidgets('Dashboard shows the month, the pool and the envelopes', (
+    tester,
+  ) async {
+    // tall enough that the list builds every envelope
+    tester.view.physicalSize = const Size(800, 4000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final backend = FakeBackend()
+      ..on(
+        'GET /envelopes',
+        (_) => Reply([envelopeJson('e1', 'Food'), envelopeJson('e2', 'Rent')]),
+      )
+      ..on('GET /recurring-rules', (_) => const Reply([]))
+      ..on(
+        'GET /overview',
+        (_) => Reply(
+          overviewJson(
+            income: 500000,
+            allocated: 300000,
+            spent: 4599,
+            pool: 200000,
+            envelopes: [
+              figuresJson('e1', allocated: 100000, spent: 4599),
+              figuresJson('e2', allocated: 200000),
+            ],
+          ),
+        ),
+      );
+    final state = PlannerState(
+      repository: backend.repository(),
+      clock: () => DateTime(2026, 8, 15),
+    );
+
+    await tester.pumpWidget(app(state, backend));
+    await tester.runAsync(state.load);
+    await tester.pump();
+
+    expect(find.text('Sierpień 2026'), findsOneWidget);
+    expect(find.text('Nieprzydzielone'), findsOneWidget);
+    expect(find.text('Food'), findsWidgets);
+    expect(find.text('Rent'), findsWidgets);
+    expect(find.text('Dodaj wydatek'), findsOneWidget);
   });
 }

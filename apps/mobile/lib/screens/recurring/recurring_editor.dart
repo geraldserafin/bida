@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/category.dart';
-import '../../models/period.dart';
+import '../../models/envelope.dart';
 import '../../models/recurring_rule.dart';
-import '../../theme/category_visuals.dart';
+import '../../theme/envelope_visuals.dart';
 
 /// Modal editor for creating or editing a [RecurringRule]. Returns the edited
 /// rule, or null if dismissed. Persistence is left to the caller.
 Future<RecurringRule?> showRecurringEditor(
   BuildContext context, {
-  required List<Category> categories,
+  required List<Envelope> envelopes,
   RecurringRule? existing,
 }) {
   return showModalBottomSheet<RecurringRule>(
@@ -18,14 +17,14 @@ Future<RecurringRule?> showRecurringEditor(
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) =>
-        _RecurringEditorSheet(categories: categories, existing: existing),
+        _RecurringEditorSheet(envelopes: envelopes, existing: existing),
   );
 }
 
 class _RecurringEditorSheet extends StatefulWidget {
-  const _RecurringEditorSheet({required this.categories, this.existing});
+  const _RecurringEditorSheet({required this.envelopes, this.existing});
 
-  final List<Category> categories;
+  final List<Envelope> envelopes;
   final RecurringRule? existing;
 
   @override
@@ -35,7 +34,7 @@ class _RecurringEditorSheet extends StatefulWidget {
 class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
   late final TextEditingController _amountController;
   late final TextEditingController _noteController;
-  late String _categoryId;
+  late String _envelopeId;
   late bool _active;
 
   @override
@@ -46,7 +45,7 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
       text: e == null ? '' : e.amount.toString().replaceAll('.', ','),
     );
     _noteController = TextEditingController(text: e?.note ?? '');
-    _categoryId = e?.categoryId ?? widget.categories.first.id!;
+    _envelopeId = e?.envelopeId ?? widget.envelopes.first.id!;
     _active = e?.active ?? true;
   }
 
@@ -65,9 +64,8 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
     Navigator.of(context).pop(
       RecurringRule(
         id: widget.existing?.id,
-        categoryId: _categoryId,
+        envelopeId: _envelopeId,
         amount: amount,
-        currency: widget.existing?.currency ?? Period.defaultCurrency,
         frequency: widget.existing?.frequency ?? RecurrenceFrequency.monthly,
         note: _noteController.text.trim().isEmpty
             ? null
@@ -95,14 +93,14 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              initialValue: _categoryId,
+              initialValue: _envelopeId,
               isExpanded: true,
               decoration: InputDecoration(
-                labelText: l10n.category,
+                labelText: l10n.envelope,
                 border: const OutlineInputBorder(),
               ),
               items: [
-                for (final c in widget.categories)
+                for (final c in widget.envelopes)
                   DropdownMenuItem(
                     value: c.id,
                     child: Row(
@@ -114,7 +112,7 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
                     ),
                   ),
               ],
-              onChanged: (v) => setState(() => _categoryId = v!),
+              onChanged: (v) => setState(() => _envelopeId = v!),
             ),
             const SizedBox(height: 12),
             TextField(

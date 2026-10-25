@@ -4,18 +4,14 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/category_progress.dart';
+import '../../models/envelope_progress.dart';
 import '../../models/expense.dart';
 import '../../state/planner_state.dart';
+import '../../theme/envelope_visuals.dart';
+import '../../util/amounts.dart';
 import '../../util/api_errors.dart';
-import '../../theme/category_visuals.dart';
 import '../../util/money_format.dart';
-import '../categories/category_editor.dart';
-
-String _amountText(double v) {
-  final s = v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
-  return s.replaceAll('.', ',');
-}
+import '../envelopes/envelope_editor.dart';
 
 /// Amount-first entry for logging a real expense against an envelope, or
 /// editing an existing one when [existing] is provided.
@@ -46,7 +42,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final e = widget.existing;
     if (e != null) {
       _envelopeId = e.envelopeId;
-      _amountController.text = _amountText(e.amount);
+      _amountController.text = amountText(e.amount);
       _date = e.date;
       _noteController.text = e.note ?? '';
     } else {
@@ -61,8 +57,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
-  double get _amount =>
-      double.tryParse(_amountController.text.trim().replaceAll(',', '.')) ?? 0;
+  double get _amount => parseAmount(_amountController.text) ?? 0;
 
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
@@ -159,14 +154,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (picked != null) setState(() => _date = picked);
   }
 
-  Future<void> _addNewCategory() async {
-    final created = await showCategoryEditor(context);
+  Future<void> _addNewEnvelope() async {
+    final created = await showEnvelopeEditor(context);
     if (created == null || !mounted) return;
     final state = context.read<PlannerState>();
     String? envelopeId;
     await attempt(
       context,
-      () async => envelopeId = await state.quickAddEnvelope(created),
+      () async => envelopeId = (await state.addEnvelope(created)).id,
     );
     if (mounted && envelopeId != null) {
       setState(() => _envelopeId = envelopeId);
@@ -187,8 +182,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final progress = context.watch<PlannerState>().progress;
-    CategoryProgress? selected;
+    final state = context.watch<PlannerState>();
+    // every envelope you can spend from, each followed by its sub-envelopes
+    final progress = [
+      for (final p in state.topLevelProgress) ...[
+        p,
+        ...state.childrenProgressOf(p.envelope.id!),
+      ],
+    ];
+    EnvelopeProgress? selected;
     for (final p in progress) {
       if (p.envelope.id == _envelopeId) {
         selected = p;
@@ -301,7 +303,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
           // ---- category grid ----
           Text(
-            l10n.category,
+            l10n.envelope,
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
@@ -314,14 +316,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               ),
             )
           else
-            _CategoryGrid(
+            _EnvelopeGrid(
               progress: progress,
               selectedEnvelopeId: _envelopeId,
               onSelect: (id) => setState(() {
                 _envelopeId = id;
                 _amountError = null;
               }),
-              onAddNew: _addNewCategory,
+              onAddNew: _addNewEnvelope,
             ),
           const SizedBox(height: 16),
 
@@ -334,16 +336,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      l10n.remainingInCategory(selected.category.name),
+                      l10n.balanceOfEnvelope(selected.envelope.name),
                       style: TextStyle(color: scheme.onSurfaceVariant),
                     ),
                     Text(
-                      formatZloty(selected.remaining),
+                      formatZloty(selected.balance),
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: selected.remaining < 0
+                        color: selected.balance < 0
                             ? scheme.error
-                            : selected.category.displayColor,
+                            : selected.envelope.displayColor,
                       ),
                     ),
                   ],
@@ -388,15 +390,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   }
 }
 
-class _CategoryGrid extends StatelessWidget {
-  const _CategoryGrid({
+class _EnvelopeGrid extends StatelessWidget {
+  const _EnvelopeGrid({
     required this.progress,
     required this.selectedEnvelopeId,
     required this.onSelect,
     required this.onAddNew,
   });
 
-  final List<CategoryProgress> progress;
+  final List<EnvelopeProgress> progress;
   final String? selectedEnvelopeId;
   final ValueChanged<String> onSelect;
   final VoidCallback onAddNew;
@@ -412,7 +414,7 @@ class _CategoryGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       children: [
         for (final p in progress)
-          _CategoryChip(
+          _EnvelopeChip(
             progress: p,
             selected: p.envelope.id == selectedEnvelopeId,
             onTap: () => onSelect(p.envelope.id!),
@@ -423,21 +425,21 @@ class _CategoryGrid extends StatelessWidget {
   }
 }
 
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
+class _EnvelopeChip extends StatelessWidget {
+  const _EnvelopeChip({
     required this.progress,
     required this.selected,
     required this.onTap,
   });
 
-  final CategoryProgress progress;
+  final EnvelopeProgress progress;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final color = progress.category.displayColor;
+    final color = progress.envelope.displayColor;
     return Column(
       children: [
         InkWell(
@@ -457,14 +459,14 @@ class _CategoryChip extends StatelessWidget {
               ),
             ),
             child: Icon(
-              progress.category.displayIcon,
+              progress.envelope.displayIcon,
               color: selected ? color : scheme.onSurfaceVariant,
             ),
           ),
         ),
         const SizedBox(height: 6),
         Text(
-          progress.category.name,
+          progress.envelope.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(

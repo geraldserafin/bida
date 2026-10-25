@@ -16,10 +16,7 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get dashboardEmptyBody =>
-      'Utwórz okres i podziel swój dochód, aby zacząć.';
-
-  @override
-  String get newPeriod => 'Nowy okres';
+      'Wpisz, ile wpłynęło, i podziel te pieniądze na koperty.';
 
   @override
   String get addExpense => 'Dodaj wydatek';
@@ -28,13 +25,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get envelopes => 'Koperty';
 
   @override
-  String get noEnvelopes => 'Nie przydzielono jeszcze żadnych kategorii.';
+  String get noEnvelopes => 'Nie ma jeszcze żadnych kopert.';
 
   @override
-  String get income => 'Dochód';
-
-  @override
-  String get planned => 'Zaplanowano';
+  String get income => 'Wpływy';
 
   @override
   String get spent => 'Wydano';
@@ -46,61 +40,11 @@ class AppLocalizationsPl extends AppLocalizations {
   String get overAllocated => 'Przydzielono za dużo';
 
   @override
-  String get remaining => 'Pozostało';
-
-  @override
-  String remainingIn(String period) {
-    return 'Pozostało · $period';
-  }
-
-  @override
-  String amountLeft(String amount) {
-    return 'pozostało $amount';
-  }
-
-  @override
-  String overBy(String amount) {
-    return 'przekroczono o $amount';
-  }
-
-  @override
-  String get periodName => 'Nazwa okresu';
-
-  @override
-  String get enterName => 'Podaj nazwę';
-
-  @override
-  String get start => 'Początek';
-
-  @override
-  String get end => 'Koniec';
-
-  @override
-  String get incomeForPeriod => 'Dochód w tym okresie';
-
-  @override
-  String get enterIncome => 'Podaj swój dochód';
-
-  @override
-  String get splitAcrossCategories => 'Podziel na kategorie';
-
-  @override
-  String overAllocationWarning(String amount) {
-    return 'Przydzielono o $amount więcej niż wynosi dochód. Możesz mimo to kontynuować.';
-  }
-
-  @override
-  String get createPeriod => 'Utwórz okres';
-
-  @override
-  String get editPlan => 'Edytuj plan';
-
-  @override
   String get saveChanges => 'Zapisz zmiany';
 
   @override
   String get noEnvelopesForExpense =>
-      'Ten okres nie ma jeszcze żadnych kopert. Dodaj kategorie do okresu, zanim zapiszesz wydatki.';
+      'Nie masz jeszcze żadnych kopert. Dodaj kopertę, zanim zapiszesz wydatek.';
 
   @override
   String get envelope => 'Koperta';
@@ -127,18 +71,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get editExpense => 'Edytuj wydatek';
 
   @override
-  String get categories => 'Kategorie';
-
-  @override
-  String get manageCategories => 'Zarządzaj kategoriami';
-
-  @override
-  String get newCategory => 'Nowa kategoria';
-
-  @override
-  String get editCategory => 'Edytuj kategorię';
-
-  @override
   String get name => 'Nazwa';
 
   @override
@@ -152,18 +84,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get delete => 'Usuń';
-
-  @override
-  String get addCategory => 'Dodaj kategorię';
-
-  @override
-  String get noCategories => 'Brak kategorii. Dodaj swoją pierwszą.';
-
-  @override
-  String get categoryInUse => 'Nie można usunąć kategorii używanej w okresie.';
-
-  @override
-  String get period => 'Okres';
 
   @override
   String get expenses => 'Wydatki';
@@ -186,12 +106,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get expenseDeleted => 'Wydatek usunięty';
 
   @override
-  String get plannedSplit => 'Podział planu';
-
-  @override
-  String get plannedVsSpent => 'Plan a wydatki';
-
-  @override
   String get spendingOverTime => 'Wydatki w czasie';
 
   @override
@@ -208,9 +122,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get addRule => 'Dodaj regułę';
-
-  @override
-  String get category => 'Kategoria';
 
   @override
   String get note => 'Notatka';
@@ -232,10 +143,7 @@ class AppLocalizationsPl extends AppLocalizations {
       'Brak reguł cyklicznych. Dodaj szablony dla stałych przychodów lub wydatków.';
 
   @override
-  String get prefillFromRecurring => 'Wypełnij z reguł';
-
-  @override
-  String get applyRecurring => 'Dodaj cykliczne do okresu';
+  String get applyRecurring => 'Dodaj cykliczne do miesiąca';
 
   @override
   String recurringApplied(int count) {
@@ -250,9 +158,6 @@ class AppLocalizationsPl extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get needCategoryFirst => 'Najpierw dodaj kategorię.';
 
   @override
   String get settings => 'Ustawienia';
@@ -386,15 +291,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get addNew => 'Nowa';
 
   @override
-  String remainingInCategory(String category) {
-    return 'Pozostało w $category';
-  }
-
-  @override
   String get history => 'Historia';
-
-  @override
-  String get periods => 'Okresy';
 
   @override
   String get all => 'Wszystkie';
@@ -409,38 +306,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get yesterday => 'Wczoraj';
 
   @override
-  String get noPeriodsYet => 'Brak okresów.';
-
-  @override
-  String get upcoming => 'Nadchodzące';
-
-  @override
-  String get currentSet => 'Bieżący';
-
-  @override
-  String get earlier => 'Wcześniejsze';
-
-  @override
   String get newExpense => 'Nowy wydatek';
 
   @override
-  String get deletePeriod => 'Usuń okres';
-
-  @override
-  String deletePeriodConfirm(String name) {
-    return 'Usunąć „$name” i wszystkie jego dane?';
-  }
-
-  @override
-  String get periodDeleted => 'Okres usunięty';
-
-  @override
   String get dashboard => 'Pulpit';
-
-  @override
-  String periodRange(String start, String end) {
-    return '$start – $end';
-  }
 
   @override
   String get errorUnreachable =>
@@ -537,4 +406,163 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get orSeparator => 'lub';
+
+  @override
+  String get addEnvelope => 'Dodaj kopertę';
+
+  @override
+  String get addIncome => 'Dodaj wpływ';
+
+  @override
+  String get addSubEnvelope => 'Dodaj podkopertę';
+
+  @override
+  String get allocate => 'Przydziel';
+
+  @override
+  String get allocated => 'Przydzielono';
+
+  @override
+  String get allocationDeleted => 'Przydział usunięty';
+
+  @override
+  String get allocations => 'Przydziały';
+
+  @override
+  String get available => 'Dostępne';
+
+  @override
+  String get availableSplit => 'Podział środków';
+
+  @override
+  String get availableVsSpent => 'Dostępne a wydatki';
+
+  @override
+  String get balance => 'Saldo';
+
+  @override
+  String balanceOfEnvelope(String envelope) {
+    return 'Saldo koperty $envelope';
+  }
+
+  @override
+  String canTakeBack(String amount) {
+    return 'Do wycofania: $amount';
+  }
+
+  @override
+  String get deleteAllocation => 'Usuń przydział';
+
+  @override
+  String deleteAllocationConfirm(String amount) {
+    return 'Usunąć przydział na $amount?';
+  }
+
+  @override
+  String get deleteEnvelope => 'Usuń kopertę';
+
+  @override
+  String deleteEnvelopeConfirm(String name) {
+    return 'Usunąć „$name” razem z podkopertami, wydatkami i przydziałami? Przydzielone pieniądze wrócą do puli.';
+  }
+
+  @override
+  String get deleteIncome => 'Usuń wpływ';
+
+  @override
+  String deleteIncomeConfirm(String amount) {
+    return 'Usunąć wpływ na $amount?';
+  }
+
+  @override
+  String get editEnvelope => 'Edytuj kopertę';
+
+  @override
+  String get editIncome => 'Edytuj wpływ';
+
+  @override
+  String get envelopeDeleted => 'Koperta usunięta';
+
+  @override
+  String get firstDayOfMonthHint => 'Od tego dnia liczy się miesiąc budżetowy';
+
+  @override
+  String get freeInEnvelope => 'Wolne w kopercie';
+
+  @override
+  String get fromEarlierMonths => 'Z poprzednich miesięcy';
+
+  @override
+  String get incomeDeleted => 'Wpływ usunięty';
+
+  @override
+  String get incomeNoteHint => 'np. Wypłata';
+
+  @override
+  String get incomes => 'Wpływy';
+
+  @override
+  String get manageEnvelopes => 'Zarządzaj kopertami';
+
+  @override
+  String monthLine(String income, String allocated) {
+    return 'Wpływy $income · przydzielono $allocated';
+  }
+
+  @override
+  String get months => 'Miesiące';
+
+  @override
+  String get needEnvelopeFirst => 'Najpierw dodaj kopertę.';
+
+  @override
+  String get newEnvelope => 'Nowa koperta';
+
+  @override
+  String get nextMonth => 'Następny miesiąc';
+
+  @override
+  String get noAllocations => 'Nic jeszcze nie przydzielono.';
+
+  @override
+  String get noIncomes =>
+      'Brak wpływów. Dodaj pierwszą wypłatę, a potem podziel ją na koperty.';
+
+  @override
+  String get noMonthsYet => 'Brak miesięcy.';
+
+  @override
+  String get noParent => 'Brak (koperta główna)';
+
+  @override
+  String notEnoughMoney(String amount) {
+    return 'Za mało środków. Dostępne: $amount.';
+  }
+
+  @override
+  String get parentEnvelope => 'Nadrzędna koperta';
+
+  @override
+  String parentFreeCaption(String parent, String amount) {
+    return 'Wolne w „$parent”: $amount';
+  }
+
+  @override
+  String poolCaption(String amount) {
+    return 'Nieprzydzielone: $amount';
+  }
+
+  @override
+  String get previousMonth => 'Poprzedni miesiąc';
+
+  @override
+  String spentOfAvailable(String spent, String available) {
+    return 'Wydano $spent z $available';
+  }
+
+  @override
+  String get subEnvelopes => 'Podkoperty';
+
+  @override
+  String get takeBack => 'Wycofaj';
 }

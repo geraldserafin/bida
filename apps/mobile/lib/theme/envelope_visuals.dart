@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../models/category.dart';
+import '../models/envelope.dart';
 
 /// Icon keys a user can choose from, mapped to their [IconData].
 ///
-/// Stored as a string key on [Category] so the database stays icon-library
+/// Stored as a string key on [Envelope] so the database stays icon-library
 /// agnostic and the choice survives export/import.
-const Map<String, IconData> categoryIcons = <String, IconData>{
+const Map<String, IconData> envelopeIcons = <String, IconData>{
   'home': Icons.home_outlined,
   'restaurant': Icons.restaurant_outlined,
   'directions_bus': Icons.directions_bus_outlined,
@@ -29,9 +29,9 @@ const Map<String, IconData> categoryIcons = <String, IconData>{
   'wallet': Icons.account_balance_wallet_outlined,
 };
 
-/// Default palette offered in the category color picker (shadcn/Tailwind hues
+/// Default palette offered in the envelope color picker (shadcn/Tailwind hues
 /// matching the app's dark design).
-const List<String> categoryColorPalette = <String>[
+const List<String> envelopeColorPalette = <String>[
   '#22C55E',
   '#EC4899',
   '#6366F1',
@@ -46,9 +46,9 @@ const List<String> categoryColorPalette = <String>[
   '#8B5CF6',
 ];
 
-/// Resolves the string `color`/`icon` stored on a [Category] into real Flutter
+/// Resolves the string `color`/`icon` stored on a [Envelope] into real Flutter
 /// values, with sensible fallbacks so bad data never crashes the UI.
-extension CategoryVisuals on Category {
+extension EnvelopeVisuals on Envelope {
   Color get displayColor {
     var hex = color.replaceFirst('#', '').trim();
     if (hex.length == 6) hex = 'FF$hex'; // add opaque alpha
@@ -56,5 +56,5 @@ extension CategoryVisuals on Category {
     return value == null ? Colors.blueGrey : Color(value);
   }
 
-  IconData get displayIcon => categoryIcons[icon] ?? Icons.label_outline;
+  IconData get displayIcon => envelopeIcons[icon] ?? Icons.label_outline;
 }

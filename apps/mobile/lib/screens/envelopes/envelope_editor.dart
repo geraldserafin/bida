@@ -1,44 +1,54 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/category.dart';
-import '../../theme/category_visuals.dart';
+import 'package:provider/provider.dart';
 
-/// Modal editor for creating or editing a [Category]: name, icon and color.
+import '../../models/envelope.dart';
+import '../../state/planner_state.dart';
+import '../../theme/envelope_visuals.dart';
+
+/// Modal editor for creating or editing an [Envelope]: name, icon and color,
+/// and for a new one also whether it is a sub-envelope.
 ///
-/// Returns the edited [Category] (id preserved when editing) or null if
-/// dismissed. Persistence is left to the caller.
-Future<Category?> showCategoryEditor(
+/// Returns the edited [Envelope] (id and parent preserved when editing) or
+/// null if dismissed. Persistence is left to the caller. [parentId] makes a
+/// new envelope a sub-envelope of that one from the start.
+Future<Envelope?> showEnvelopeEditor(
   BuildContext context, {
-  Category? existing,
+  Envelope? existing,
+  String? parentId,
 }) {
-  return showModalBottomSheet<Category>(
+  return showModalBottomSheet<Envelope>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _CategoryEditorSheet(existing: existing),
+    builder: (_) =>
+        _EnvelopeEditorSheet(existing: existing, parentId: parentId),
   );
 }
 
-class _CategoryEditorSheet extends StatefulWidget {
-  const _CategoryEditorSheet({this.existing});
-  final Category? existing;
+class _EnvelopeEditorSheet extends StatefulWidget {
+  const _EnvelopeEditorSheet({this.existing, this.parentId});
+  final Envelope? existing;
+  final String? parentId;
 
   @override
-  State<_CategoryEditorSheet> createState() => _CategoryEditorSheetState();
+  State<_EnvelopeEditorSheet> createState() => _EnvelopeEditorSheetState();
 }
 
-class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
+class _EnvelopeEditorSheetState extends State<_EnvelopeEditorSheet> {
   late final TextEditingController _nameController;
   late String _iconKey;
   late String _colorHex;
+  String? _parentId;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.existing?.name ?? '');
-    _iconKey = widget.existing?.icon ?? categoryIcons.keys.first;
-    _colorHex = widget.existing?.color ?? categoryColorPalette.first;
+    _iconKey = widget.existing?.icon ?? envelopeIcons.keys.first;
+    _colorHex = widget.existing?.color ?? envelopeColorPalette.first;
+    _parentId = widget.existing?.parentId ?? widget.parentId;
   }
 
   @override
@@ -56,8 +66,9 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
     Navigator.of(context).pop(
-      Category(
+      Envelope(
         id: widget.existing?.id,
+        parentId: _parentId,
         name: name,
         color: _colorHex,
         icon: _iconKey,
@@ -78,17 +89,24 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.existing == null ? l10n.newCategory : l10n.editCategory,
+              widget.existing == null ? l10n.newEnvelope : l10n.editEnvelope,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
+            if (widget.existing == null) ...[
+              _ParentPicker(
+                selected: _parentId,
+                onSelected: (id) => setState(() => _parentId = id),
+              ),
+              const SizedBox(height: 12),
+            ],
             TextField(
               controller: _nameController,
               autofocus: true,
               textCapitalization: TextCapitalization.sentences,
               decoration: InputDecoration(
                 labelText: l10n.name,
-                prefixIcon: Icon(categoryIcons[_iconKey], color: _color),
+                prefixIcon: Icon(envelopeIcons[_iconKey], color: _color),
                 border: const OutlineInputBorder(),
               ),
               onSubmitted: (_) => _submit(),
@@ -142,7 +160,7 @@ class _IconPicker extends StatelessWidget {
       spacing: 8,
       runSpacing: 8,
       children: [
-        for (final entry in categoryIcons.entries)
+        for (final entry in envelopeIcons.entries)
           InkWell(
             onTap: () => onSelected(entry.key),
             borderRadius: BorderRadius.circular(10),
@@ -182,7 +200,7 @@ class _ColorPicker extends StatelessWidget {
       spacing: 10,
       runSpacing: 10,
       children: [
-        for (final hex in categoryColorPalette)
+        for (final hex in envelopeColorPalette)
           GestureDetector(
             onTap: () => onSelected(hex),
             child: Container(
@@ -206,6 +224,44 @@ class _ColorPicker extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Whether a new envelope is a top-level one or sits inside another.
+class _ParentPicker extends StatelessWidget {
+  const _ParentPicker({required this.selected, required this.onSelected});
+
+  final String? selected;
+  final ValueChanged<String?> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final parents = context.read<PlannerState>().topLevel;
+    if (parents.isEmpty) return const SizedBox.shrink();
+    return DropdownButtonFormField<String?>(
+      initialValue: selected,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: l10n.parentEnvelope,
+        border: const OutlineInputBorder(),
+      ),
+      items: [
+        DropdownMenuItem<String?>(value: null, child: Text(l10n.noParent)),
+        for (final e in parents)
+          DropdownMenuItem<String?>(
+            value: e.id,
+            child: Row(
+              children: [
+                Icon(e.displayIcon, size: 18, color: e.displayColor),
+                const SizedBox(width: 8),
+                Flexible(child: Text(e.name, overflow: TextOverflow.ellipsis)),
+              ],
+            ),
+          ),
+      ],
+      onChanged: onSelected,
     );
   }
 }

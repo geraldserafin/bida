@@ -2,43 +2,45 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import '../../../l10n/app_localizations.dart';
-import '../../../models/category_progress.dart';
-import '../../../theme/category_visuals.dart';
+import '../../../models/envelope_progress.dart';
+import '../../../theme/envelope_visuals.dart';
 import '../../../util/money_format.dart';
 import '../../../widgets/chart_card.dart';
 
-/// Grouped bars comparing planned vs. spent for each envelope.
+/// Grouped bars comparing what was available with what was spent for each envelope.
 ///
-/// For every category the left (translucent) bar is the plan and the right
-/// (solid) bar is what's been spent, both tinted with the category's color.
-class PlannedVsSpentChart extends StatelessWidget {
-  const PlannedVsSpentChart({super.key, required this.progress, this.onTap});
+/// For every envelope the left (translucent) bar is what was available and the right
+/// (solid) bar is what has been spent, both tinted with the envelope's color.
+class AvailableVsSpentChart extends StatelessWidget {
+  const AvailableVsSpentChart({super.key, required this.progress, this.onTap});
 
-  final List<CategoryProgress> progress;
+  final List<EnvelopeProgress> progress;
 
-  /// Called when a category's bar group is tapped.
-  final void Function(CategoryProgress)? onTap;
+  /// Called when an envelope's bar group is tapped.
+  final void Function(EnvelopeProgress)? onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final items = progress.where((p) => p.planned > 0 || p.spent > 0).toList();
+    final items = progress
+        .where((p) => p.available > 0 || p.spent > 0)
+        .toList();
 
     if (items.isEmpty) {
       return ChartCard(
-        title: l10n.plannedVsSpent,
+        title: l10n.availableVsSpent,
         child: Text(l10n.notEnoughData),
       );
     }
 
     final maxValue = items
-        .map((p) => p.planned > p.spent ? p.planned : p.spent)
+        .map((p) => p.available > p.spent ? p.available : p.spent)
         .reduce((a, b) => a > b ? a : b);
     final maxY = maxValue <= 0 ? 1.0 : maxValue * 1.2;
     final scheme = Theme.of(context).colorScheme;
 
     return ChartCard(
-      title: l10n.plannedVsSpent,
+      title: l10n.availableVsSpent,
       child: Column(
         children: [
           SizedBox(
@@ -62,9 +64,9 @@ class PlannedVsSpentChart extends StatelessWidget {
                     ),
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final item = items[group.x];
-                      final label = rodIndex == 0 ? l10n.planned : l10n.spent;
+                      final label = rodIndex == 0 ? l10n.available : l10n.spent;
                       return BarTooltipItem(
-                        '${item.category.name}\n',
+                        '${item.envelope.name}\n',
                         TextStyle(
                           color: scheme.onSurface,
                           fontWeight: FontWeight.w700,
@@ -105,7 +107,7 @@ class PlannedVsSpentChart extends StatelessWidget {
                         if (i < 0 || i >= items.length) {
                           return const SizedBox.shrink();
                         }
-                        final name = items[i].category.name;
+                        final name = items[i].envelope.name;
                         return Padding(
                           padding: const EdgeInsets.only(top: 6),
                           child: Text(
@@ -124,8 +126,8 @@ class PlannedVsSpentChart extends StatelessWidget {
                       barsSpace: 4,
                       barRods: [
                         BarChartRodData(
-                          toY: items[i].planned,
-                          color: items[i].category.displayColor.withValues(
+                          toY: items[i].available,
+                          color: items[i].envelope.displayColor.withValues(
                             alpha: 0.35,
                           ),
                           width: 10,
@@ -137,7 +139,7 @@ class PlannedVsSpentChart extends StatelessWidget {
                           toY: items[i].spent,
                           color: items[i].isOverspent
                               ? scheme.error
-                              : items[i].category.displayColor,
+                              : items[i].envelope.displayColor,
                           width: 10,
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(3),
@@ -155,7 +157,7 @@ class PlannedVsSpentChart extends StatelessWidget {
             children: [
               LegendDot(
                 color: scheme.onSurfaceVariant.withValues(alpha: 0.35),
-                label: l10n.planned,
+                label: l10n.available,
               ),
               LegendDot(color: scheme.onSurfaceVariant, label: l10n.spent),
             ],

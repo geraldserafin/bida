@@ -5,7 +5,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/expense.dart';
 import '../../../widgets/chart_card.dart';
 
-/// Cumulative spending for one envelope over the period.
+/// Cumulative spending for one envelope over the month.
 ///
 /// Expenses are aggregated per day and summed running-total, so the line only
 /// ever climbs — making it easy to see how fast an envelope is being drained.

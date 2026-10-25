@@ -6,7 +6,7 @@ enum ApiFailure {
   unreachable,
   notFound,
 
-  /// The request clashes with the current data (e.g. category still in use).
+  /// The request clashes with the current data (e.g. not enough money in an envelope).
   conflict,
 
   /// The server refused the values that were sent.
@@ -21,13 +21,24 @@ enum ApiFailure {
 }
 
 class ApiException implements Exception {
-  const ApiException(this.failure, {this.tag, this.status});
+  const ApiException(
+    this.failure, {
+    this.tag,
+    this.status,
+    this.details = const {},
+  });
 
   final ApiFailure failure;
 
-  /// The `_tag` of the API's error body, e.g. `CategoryInUse`.
+  /// The `_tag` of the API's error body, e.g. `NotEnoughMoney`.
   final String? tag;
   final int? status;
+
+  /// The other fields of the error body, e.g. `availableMinor` of `NotEnoughMoney`.
+  final Map<String, Object?> details;
+
+  /// For `NotEnoughMoney`: how much the envelope can give, in grosze.
+  int? get availableMinor => details['availableMinor'] as int?;
 
   factory ApiException.from(DioException error) {
     final status = error.response?.statusCode;
@@ -42,7 +53,12 @@ class ApiException implements Exception {
       400 || 422 => ApiFailure.invalid,
       _ => ApiFailure.server,
     };
-    return ApiException(failure, tag: tag, status: status);
+    return ApiException(
+      failure,
+      tag: tag,
+      status: status,
+      details: body is Map ? body.cast<String, Object?>() : const {},
+    );
   }
 
   @override

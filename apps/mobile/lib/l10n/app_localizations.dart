@@ -113,14 +113,8 @@ abstract class AppLocalizations {
   /// No description provided for @dashboardEmptyBody.
   ///
   /// In en, this message translates to:
-  /// **'Create a period and split your income to get started.'**
+  /// **'Enter what came in and split the money into envelopes.'**
   String get dashboardEmptyBody;
-
-  /// No description provided for @newPeriod.
-  ///
-  /// In en, this message translates to:
-  /// **'New period'**
-  String get newPeriod;
 
   /// No description provided for @addExpense.
   ///
@@ -137,7 +131,7 @@ abstract class AppLocalizations {
   /// No description provided for @noEnvelopes.
   ///
   /// In en, this message translates to:
-  /// **'No categories allocated yet.'**
+  /// **'No envelopes yet.'**
   String get noEnvelopes;
 
   /// No description provided for @income.
@@ -145,12 +139,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Income'**
   String get income;
-
-  /// No description provided for @planned.
-  ///
-  /// In en, this message translates to:
-  /// **'Planned'**
-  String get planned;
 
   /// No description provided for @spent.
   ///
@@ -170,90 +158,6 @@ abstract class AppLocalizations {
   /// **'Over-allocated'**
   String get overAllocated;
 
-  /// No description provided for @remaining.
-  ///
-  /// In en, this message translates to:
-  /// **'Remaining'**
-  String get remaining;
-
-  /// No description provided for @remainingIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Remaining · {period}'**
-  String remainingIn(String period);
-
-  /// No description provided for @amountLeft.
-  ///
-  /// In en, this message translates to:
-  /// **'{amount} left'**
-  String amountLeft(String amount);
-
-  /// No description provided for @overBy.
-  ///
-  /// In en, this message translates to:
-  /// **'Over by {amount}'**
-  String overBy(String amount);
-
-  /// No description provided for @periodName.
-  ///
-  /// In en, this message translates to:
-  /// **'Period name'**
-  String get periodName;
-
-  /// No description provided for @enterName.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a name'**
-  String get enterName;
-
-  /// No description provided for @start.
-  ///
-  /// In en, this message translates to:
-  /// **'Start'**
-  String get start;
-
-  /// No description provided for @end.
-  ///
-  /// In en, this message translates to:
-  /// **'End'**
-  String get end;
-
-  /// No description provided for @incomeForPeriod.
-  ///
-  /// In en, this message translates to:
-  /// **'Income for this period'**
-  String get incomeForPeriod;
-
-  /// No description provided for @enterIncome.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your income'**
-  String get enterIncome;
-
-  /// No description provided for @splitAcrossCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'Split across categories'**
-  String get splitAcrossCategories;
-
-  /// No description provided for @overAllocationWarning.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'ve allocated {amount} more than your income. You can still continue.'**
-  String overAllocationWarning(String amount);
-
-  /// No description provided for @createPeriod.
-  ///
-  /// In en, this message translates to:
-  /// **'Create period'**
-  String get createPeriod;
-
-  /// No description provided for @editPlan.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit plan'**
-  String get editPlan;
-
   /// No description provided for @saveChanges.
   ///
   /// In en, this message translates to:
@@ -263,7 +167,7 @@ abstract class AppLocalizations {
   /// No description provided for @noEnvelopesForExpense.
   ///
   /// In en, this message translates to:
-  /// **'This period has no envelopes yet. Add categories to the period before logging expenses.'**
+  /// **'You have no envelopes yet. Add one before saving an expense.'**
   String get noEnvelopesForExpense;
 
   /// No description provided for @envelope.
@@ -314,30 +218,6 @@ abstract class AppLocalizations {
   /// **'Edit expense'**
   String get editExpense;
 
-  /// No description provided for @categories.
-  ///
-  /// In en, this message translates to:
-  /// **'Categories'**
-  String get categories;
-
-  /// No description provided for @manageCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'Manage categories'**
-  String get manageCategories;
-
-  /// No description provided for @newCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'New category'**
-  String get newCategory;
-
-  /// No description provided for @editCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit category'**
-  String get editCategory;
-
   /// No description provided for @name.
   ///
   /// In en, this message translates to:
@@ -367,30 +247,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get delete;
-
-  /// No description provided for @addCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'Add category'**
-  String get addCategory;
-
-  /// No description provided for @noCategories.
-  ///
-  /// In en, this message translates to:
-  /// **'No categories yet. Add your first one.'**
-  String get noCategories;
-
-  /// No description provided for @categoryInUse.
-  ///
-  /// In en, this message translates to:
-  /// **'Can\'t delete a category that\'s used in a period.'**
-  String get categoryInUse;
-
-  /// No description provided for @period.
-  ///
-  /// In en, this message translates to:
-  /// **'Period'**
-  String get period;
 
   /// No description provided for @expenses.
   ///
@@ -428,18 +284,6 @@ abstract class AppLocalizations {
   /// **'Expense deleted'**
   String get expenseDeleted;
 
-  /// No description provided for @plannedSplit.
-  ///
-  /// In en, this message translates to:
-  /// **'Planned split'**
-  String get plannedSplit;
-
-  /// No description provided for @plannedVsSpent.
-  ///
-  /// In en, this message translates to:
-  /// **'Planned vs. spent'**
-  String get plannedVsSpent;
-
   /// No description provided for @spendingOverTime.
   ///
   /// In en, this message translates to:
@@ -475,12 +319,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add rule'**
   String get addRule;
-
-  /// No description provided for @category.
-  ///
-  /// In en, this message translates to:
-  /// **'Category'**
-  String get category;
 
   /// No description provided for @note.
   ///
@@ -518,16 +356,10 @@ abstract class AppLocalizations {
   /// **'No recurring rules yet. Add templates for regular income or expenses.'**
   String get noRecurringRules;
 
-  /// No description provided for @prefillFromRecurring.
-  ///
-  /// In en, this message translates to:
-  /// **'Pre-fill from recurring'**
-  String get prefillFromRecurring;
-
   /// No description provided for @applyRecurring.
   ///
   /// In en, this message translates to:
-  /// **'Add recurring to this period'**
+  /// **'Add recurring to this month'**
   String get applyRecurring;
 
   /// No description provided for @recurringApplied.
@@ -535,12 +367,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{Everything is already up to date} =1{Added 1 recurring expense} other{Added {count} recurring expenses}}'**
   String recurringApplied(int count);
-
-  /// No description provided for @needCategoryFirst.
-  ///
-  /// In en, this message translates to:
-  /// **'Add a category first.'**
-  String get needCategoryFirst;
 
   /// No description provided for @settings.
   ///
@@ -758,23 +584,11 @@ abstract class AppLocalizations {
   /// **'New'**
   String get addNew;
 
-  /// No description provided for @remainingInCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'Remaining in {category}'**
-  String remainingInCategory(String category);
-
   /// No description provided for @history.
   ///
   /// In en, this message translates to:
   /// **'History'**
   String get history;
-
-  /// No description provided for @periods.
-  ///
-  /// In en, this message translates to:
-  /// **'Periods'**
-  String get periods;
 
   /// No description provided for @all.
   ///
@@ -800,65 +614,17 @@ abstract class AppLocalizations {
   /// **'Yesterday'**
   String get yesterday;
 
-  /// No description provided for @noPeriodsYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No periods yet.'**
-  String get noPeriodsYet;
-
-  /// No description provided for @upcoming.
-  ///
-  /// In en, this message translates to:
-  /// **'Upcoming'**
-  String get upcoming;
-
-  /// No description provided for @currentSet.
-  ///
-  /// In en, this message translates to:
-  /// **'Current'**
-  String get currentSet;
-
-  /// No description provided for @earlier.
-  ///
-  /// In en, this message translates to:
-  /// **'Earlier'**
-  String get earlier;
-
   /// No description provided for @newExpense.
   ///
   /// In en, this message translates to:
   /// **'New expense'**
   String get newExpense;
 
-  /// No description provided for @deletePeriod.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete period'**
-  String get deletePeriod;
-
-  /// No description provided for @deletePeriodConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete \"{name}\" and all its data?'**
-  String deletePeriodConfirm(String name);
-
-  /// No description provided for @periodDeleted.
-  ///
-  /// In en, this message translates to:
-  /// **'Period deleted'**
-  String get periodDeleted;
-
   /// No description provided for @dashboard.
   ///
   /// In en, this message translates to:
   /// **'Dashboard'**
   String get dashboard;
-
-  /// No description provided for @periodRange.
-  ///
-  /// In en, this message translates to:
-  /// **'{start} – {end}'**
-  String periodRange(String start, String end);
 
   /// No description provided for @errorUnreachable.
   ///
@@ -1027,6 +793,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'or'**
   String get orSeparator;
+
+  /// No description provided for @addEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Add envelope'**
+  String get addEnvelope;
+
+  /// No description provided for @addIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Add income'**
+  String get addIncome;
+
+  /// No description provided for @addSubEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Add sub-envelope'**
+  String get addSubEnvelope;
+
+  /// No description provided for @allocate.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocate'**
+  String get allocate;
+
+  /// No description provided for @allocated.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocated'**
+  String get allocated;
+
+  /// No description provided for @allocationDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocation deleted'**
+  String get allocationDeleted;
+
+  /// No description provided for @allocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocations'**
+  String get allocations;
+
+  /// No description provided for @available.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get available;
+
+  /// No description provided for @availableSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Where the money is'**
+  String get availableSplit;
+
+  /// No description provided for @availableVsSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Available vs spent'**
+  String get availableVsSpent;
+
+  /// No description provided for @balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get balance;
+
+  /// No description provided for @balanceOfEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance of {envelope}'**
+  String balanceOfEnvelope(String envelope);
+
+  /// No description provided for @canTakeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Can take back: {amount}'**
+  String canTakeBack(String amount);
+
+  /// No description provided for @deleteAllocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete allocation'**
+  String get deleteAllocation;
+
+  /// No description provided for @deleteAllocationConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the allocation of {amount}?'**
+  String deleteAllocationConfirm(String amount);
+
+  /// No description provided for @deleteEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete envelope'**
+  String get deleteEnvelope;
+
+  /// No description provided for @deleteEnvelopeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}” with its sub-envelopes, expenses and allocations? The money put into it goes back to the pool.'**
+  String deleteEnvelopeConfirm(String name);
+
+  /// No description provided for @deleteIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete income'**
+  String get deleteIncome;
+
+  /// No description provided for @deleteIncomeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the income of {amount}?'**
+  String deleteIncomeConfirm(String amount);
+
+  /// No description provided for @editEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit envelope'**
+  String get editEnvelope;
+
+  /// No description provided for @editIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit income'**
+  String get editIncome;
+
+  /// No description provided for @envelopeDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Envelope deleted'**
+  String get envelopeDeleted;
+
+  /// No description provided for @firstDayOfMonthHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget months start on this day'**
+  String get firstDayOfMonthHint;
+
+  /// No description provided for @freeInEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Free in envelope'**
+  String get freeInEnvelope;
+
+  /// No description provided for @fromEarlierMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'From earlier months'**
+  String get fromEarlierMonths;
+
+  /// No description provided for @incomeDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Income deleted'**
+  String get incomeDeleted;
+
+  /// No description provided for @incomeNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Salary'**
+  String get incomeNoteHint;
+
+  /// No description provided for @incomes.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get incomes;
+
+  /// No description provided for @manageEnvelopes.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage envelopes'**
+  String get manageEnvelopes;
+
+  /// No description provided for @monthLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Income {income} · allocated {allocated}'**
+  String monthLine(String income, String allocated);
+
+  /// No description provided for @months.
+  ///
+  /// In en, this message translates to:
+  /// **'Months'**
+  String get months;
+
+  /// No description provided for @needEnvelopeFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an envelope first.'**
+  String get needEnvelopeFirst;
+
+  /// No description provided for @newEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'New envelope'**
+  String get newEnvelope;
+
+  /// No description provided for @nextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Next month'**
+  String get nextMonth;
+
+  /// No description provided for @noAllocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing allocated yet.'**
+  String get noAllocations;
+
+  /// No description provided for @noIncomes.
+  ///
+  /// In en, this message translates to:
+  /// **'No income yet. Add your first payday, then split it between envelopes.'**
+  String get noIncomes;
+
+  /// No description provided for @noMonthsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No months yet.'**
+  String get noMonthsYet;
+
+  /// No description provided for @noParent.
+  ///
+  /// In en, this message translates to:
+  /// **'None (top-level envelope)'**
+  String get noParent;
+
+  /// No description provided for @notEnoughMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough money. Available: {amount}.'**
+  String notEnoughMoney(String amount);
+
+  /// No description provided for @parentEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Parent envelope'**
+  String get parentEnvelope;
+
+  /// No description provided for @parentFreeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Free in “{parent}”: {amount}'**
+  String parentFreeCaption(String parent, String amount);
+
+  /// No description provided for @poolCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Unallocated: {amount}'**
+  String poolCaption(String amount);
+
+  /// No description provided for @previousMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous month'**
+  String get previousMonth;
+
+  /// No description provided for @spentOfAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent {spent} of {available}'**
+  String spentOfAvailable(String spent, String available);
+
+  /// No description provided for @subEnvelopes.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-envelopes'**
+  String get subEnvelopes;
+
+  /// No description provided for @takeBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Take back'**
+  String get takeBack;
 }
 
 class _AppLocalizationsDelegate

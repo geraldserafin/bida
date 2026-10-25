@@ -1,48 +1,31 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' hide Category;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 
 import '../data/api_exception.dart';
 import '../data/planner_repository.dart';
-import '../models/category_progress.dart';
 import '../models/models.dart';
-import '../models/period_summary.dart';
 
-/// The errors of the three requests `load` makes side by side.
-typedef _Failures = (AsyncError?, AsyncError?, AsyncError?);
-
-/// App-wide state for the current planning period.
+/// App-wide state for the month on screen.
 ///
-/// Wraps [PlannerRepository] (the backend) and exposes the current period, its
-/// category progress, and the derived totals every screen reads (planned,
-/// spent, remaining, unallocated). The app needs the server, so a failed
-/// request surfaces as [loadError] while loading, and as an [ApiException]
-/// thrown from the method that was called otherwise.
+/// Wraps [PlannerRepository] (the backend) and exposes the envelopes, the
+/// figures of the selected month and the totals every screen reads. The app
+/// needs the server, so a failed request surfaces as [loadError] while
+/// loading, and as an [ApiException] thrown from the method that was called
+/// otherwise.
 class PlannerState extends ChangeNotifier {
   PlannerState({
     required PlannerRepository repository,
     this.beforeLoad,
-    FlutterSecureStorage? storage,
+    DateTime Function()? clock,
   }) : _repo = repository,
-       _storage = storage ?? const FlutterSecureStorage();
-
-  static const _kCurrentPeriod = 'current_period_id';
+       _clock = clock ?? DateTime.now;
 
   final PlannerRepository _repo;
+  final DateTime Function() _clock;
 
   /// Runs first on every [load], e.g. to move old local data to the server.
   final Future<void> Function()? beforeLoad;
-  final FlutterSecureStorage _storage;
-
-  Future<void> _persistCurrent() async {
-    final id = _currentPeriod?.id;
-    if (id == null) {
-      await _storage.delete(key: _kCurrentPeriod);
-    } else {
-      await _storage.write(key: _kCurrentPeriod, value: id);
-    }
-  }
 
   bool _loading = true;
   bool get isLoading => _loading;
@@ -51,40 +34,83 @@ class PlannerState extends ChangeNotifier {
   ApiException? _loadError;
   ApiException? get loadError => _loadError;
 
-  Period? _currentPeriod;
-  Period? get currentPeriod => _currentPeriod;
+  List<Envelope> _envelopes = const [];
 
-  List<Period> _periods = const [];
-  List<Period> get periods => _periods;
+  /// Every envelope, by name: top-level ones and sub-envelopes together.
+  List<Envelope> get envelopes => _envelopes;
 
-  List<Category> _categories = const [];
-  List<Category> get categories => _categories;
+  List<Envelope> get topLevel => [
+    for (final e in _envelopes)
+      if (e.isTopLevel) e,
+  ];
+
+  List<Envelope> childrenOf(String envelopeId) => [
+    for (final e in _envelopes)
+      if (e.parentId == envelopeId) e,
+  ];
+
+  Envelope? envelopeById(String? id) =>
+      _envelopes.where((e) => e.id == id).firstOrNull;
+
+  Map<String, Envelope> get _envelopesById => {
+    for (final e in _envelopes) e.id!: e,
+  };
 
   List<RecurringRule> _recurringRules = const [];
   List<RecurringRule> get recurringRules => _recurringRules;
-  List<RecurringRule> get activeRecurringRules =>
-      _recurringRules.where((r) => r.active).toList();
 
-  List<CategoryProgress> _progress = const [];
-  List<CategoryProgress> get progress => _progress;
+  // ---- the month on screen ---------------------------------------------------
 
-  // ---- derived totals -------------------------------------------------------
+  int _firstDay = 1;
+  BudgetMonth? _month;
 
-  double get income => _currentPeriod?.income ?? 0;
+  /// The month the figures are for. Today's month until another is chosen.
+  BudgetMonth get month =>
+      _month ?? BudgetMonth.containing(_clock(), firstDay: _firstDay);
 
-  double get totalPlanned => _progress.fold(0, (sum, p) => sum + p.planned);
+  bool get isCurrentMonth =>
+      month == BudgetMonth.containing(_clock(), firstDay: _firstDay);
 
-  double get totalSpent => _progress.fold(0, (sum, p) => sum + p.spent);
+  Overview _overview = Overview.empty(BudgetMonth.containing(DateTime.now()));
+  Overview get overview => _overview;
 
-  double get totalRemaining => totalPlanned - totalSpent;
+  /// The figures of every envelope, top-level ones and sub-envelopes together.
+  List<EnvelopeProgress> get progress => _overview.envelopes;
 
-  /// Income not yet assigned to any envelope — grows when a category is
-  /// removed, shrinks as you allocate more. Can go negative if over-allocated.
-  double get unallocated => income - totalPlanned;
+  EnvelopeProgress? progressOf(String? envelopeId) =>
+      progress.where((p) => p.envelope.id == envelopeId).firstOrNull;
 
-  bool get isOverAllocated => unallocated < 0;
+  /// The figures of the top-level envelopes.
+  List<EnvelopeProgress> get topLevelProgress => [
+    for (final p in progress)
+      if (p.envelope.isTopLevel) p,
+  ];
 
-  // ---- lifecycle ------------------------------------------------------------
+  List<EnvelopeProgress> childrenProgressOf(String envelopeId) => [
+    for (final p in progress)
+      if (p.envelope.parentId == envelopeId) p,
+  ];
+
+  // ---- derived totals --------------------------------------------------------
+
+  /// Income received in the month.
+  double get income => _overview.income;
+
+  /// What was put into envelopes in the month.
+  double get allocated => _overview.allocated;
+
+  double get spent => _overview.spent;
+
+  /// Income not yet put into any envelope. Negative when more was put in than
+  /// came in.
+  double get pool => _overview.pool;
+
+  bool get isOverAllocated => pool < 0;
+
+  /// Whether there is anything to show yet.
+  bool get isEmpty => _envelopes.isEmpty && income == 0 && pool == 0;
+
+  // ---- lifecycle -------------------------------------------------------------
 
   bool _signedIn = false;
 
@@ -97,15 +123,21 @@ class PlannerState extends ChangeNotifier {
     scheduleMicrotask(() => value ? load() : _forget());
   }
 
+  /// Tells the state which day of the month the user's months start on.
+  void useFirstDay(int day) {
+    if (day == _firstDay) return;
+    _firstDay = day;
+    _month = null;
+    if (_signedIn) scheduleMicrotask(() => _reloadOverview());
+  }
+
   Future<void> _forget() async {
-    _categories = const [];
+    _envelopes = const [];
     _recurringRules = const [];
-    _periods = const [];
-    _progress = const [];
-    _currentPeriod = null;
+    _overview = Overview.empty(month);
+    _month = null;
     _loadError = null;
     _loading = true;
-    await _storage.delete(key: _kCurrentPeriod);
     notifyListeners();
   }
 
@@ -117,31 +149,19 @@ class PlannerState extends ChangeNotifier {
 
     try {
       await beforeLoad?.call();
-      final (categories, rules, periods) = await (
-        _repo.categories(),
+      final (envelopes, rules) = await (
+        _repo.envelopes(),
         _repo.recurringRules(),
-        _repo.periods(),
       ).wait;
-      _categories = categories;
+      _envelopes = envelopes;
       _recurringRules = rules;
-      _periods = periods;
-
-      // Restore the last chosen period, falling back to the most recent one.
-      final storedId = await _storage.read(key: _kCurrentPeriod);
-      _currentPeriod =
-          _periods.where((p) => p.id == storedId).firstOrNull ??
-          _periods.firstOrNull;
-      await _refreshProgress();
+      _overview = await _repo.overview(month, _envelopesById);
     } on ApiException catch (error) {
       _loadError = error;
-    } on ParallelWaitError<Object?, _Failures> catch (error) {
+    } on ParallelWaitError<Object?, (AsyncError?, AsyncError?)> catch (error) {
       // the requests ran side by side: report the first that failed
-      final (a, b, c) = error.errors;
-      _loadError = [
-        a?.error,
-        b?.error,
-        c?.error,
-      ].whereType<ApiException>().firstOrNull;
+      final (a, b) = error.errors;
+      _loadError = [a?.error, b?.error].whereType<ApiException>().firstOrNull;
       if (_loadError == null) rethrow;
     }
 
@@ -149,97 +169,104 @@ class PlannerState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Switch the dashboard to another existing period, remembering the choice.
-  Future<void> selectPeriod(String periodId) async {
-    final match = _periods.where((p) => p.id == periodId);
-    if (match.isEmpty || match.first.id == _currentPeriod?.id) return;
-    _currentPeriod = match.first;
-    await _persistCurrent();
-    await _refreshProgress();
-    notifyListeners();
-  }
-
-  Future<void> _refreshProgress() async {
-    final period = _currentPeriod;
-    _progress = period == null
-        ? const []
-        : await _repo.categoryProgress(period, _categoriesById);
-  }
-
-  Map<String, Category> get _categoriesById => {
-    for (final c in _categories) c.id!: c,
-  };
-
-  String get _currency => _currentPeriod?.currency ?? Period.defaultCurrency;
-
-  // ---- periods --------------------------------------------------------------
-
-  /// Creates a new period and its initial envelopes, then makes it current.
-  Future<void> createPeriod({
-    required String name,
-    required DateTime startDate,
-    required DateTime endDate,
-    required double income,
-    required Map<String, double> plannedByCategory,
-  }) async {
-    final created = await _repo.createPeriod(
-      name: name,
-      startDate: startDate,
-      endDate: endDate,
-      income: income,
-      plannedByCategory: plannedByCategory,
-    );
-    _periods = await _repo.periods();
-    _currentPeriod = _periods.where((p) => p.id == created.id).firstOrNull;
-    await _persistCurrent();
-    await _refreshProgress();
-    notifyListeners();
-  }
-
-  /// Edits the current period's income and per-category allocations.
-  ///
-  /// For each category: allocates/updates an envelope when the amount is
-  /// positive; when it is zero the envelope is removed — unless money was
-  /// already spent from it, in which case it stays at 0 so history stays
-  /// intact. The server applies those rules.
-  Future<void> editCurrentPeriodPlan({
-    required double income,
-    required Map<String, double> plannedByCategory,
-  }) async {
-    final period = _currentPeriod;
-    if (period == null) return;
-
-    final updated = await _repo.setPlan(
-      period,
-      income: income,
-      plannedByCategory: plannedByCategory,
-    );
-    _periods = [for (final p in _periods) p.id == updated.id ? updated : p];
-    _currentPeriod = updated;
-    await _refreshProgress();
-    notifyListeners();
-  }
-
-  /// Deletes a period and all its data. If it was the current one, falls back
-  /// to the most recent remaining period.
-  Future<void> deletePeriod(String periodId) async {
-    await _repo.deletePeriod(periodId);
-    _periods = await _repo.periods();
-    if (_currentPeriod?.id == periodId) {
-      _currentPeriod = _periods.firstOrNull;
-      await _persistCurrent();
+  Future<void> _reloadOverview() async {
+    try {
+      _overview = await _repo.overview(month, _envelopesById);
+    } on ApiException {
+      // the numbers on screen stay as they were
     }
-    await _refreshProgress();
     notifyListeners();
   }
 
-  Future<List<PeriodSummary>> periodSummaries() => _repo.periodSummaries();
+  /// Fetches the envelopes and the figures again.
+  Future<void> _reloadAll() async {
+    _envelopes = await _repo.envelopes();
+    _overview = await _repo.overview(month, _envelopesById);
+    notifyListeners();
+  }
 
-  /// Planned versus spent per envelope of any period.
-  Future<List<CategoryProgress>> progressForPeriod(Period period) =>
-      _repo.categoryProgress(period, _categoriesById);
+  /// Fetches the figures again, e.g. after something was changed elsewhere.
+  Future<void> reloadOverview() async {
+    _overview = await _repo.overview(month, _envelopesById);
+    notifyListeners();
+  }
 
-  // ---- expenses -------------------------------------------------------------
+  // ---- months ----------------------------------------------------------------
+
+  /// Shows another month.
+  Future<void> selectMonth(BudgetMonth month) async {
+    if (month == this.month) return;
+    _overview = await _repo.overview(month, _envelopesById);
+    _month = month;
+    notifyListeners();
+  }
+
+  Future<void> previousMonth() => selectMonth(month.previous);
+
+  Future<void> nextMonth() => selectMonth(month.next);
+
+  Future<void> goToCurrentMonth() =>
+      selectMonth(BudgetMonth.containing(_clock(), firstDay: _firstDay));
+
+  /// Every month with something in it, newest first.
+  Future<List<MonthSummary>> monthSummaries() =>
+      _repo.months(firstDay: _firstDay);
+
+  // ---- envelopes ---------------------------------------------------------------
+
+  /// Creates an envelope and returns it.
+  Future<Envelope> addEnvelope(Envelope envelope) async {
+    final created = await _repo.createEnvelope(envelope);
+    await _reloadAll();
+    return created;
+  }
+
+  Future<void> updateEnvelope(Envelope envelope) async {
+    await _repo.updateEnvelope(envelope);
+    await _reloadAll();
+  }
+
+  /// Deletes the envelope with its sub-envelopes, expenses and allocations.
+  Future<void> deleteEnvelope(String envelopeId) async {
+    await _repo.deleteEnvelope(envelopeId);
+    _recurringRules = await _repo.recurringRules();
+    await _reloadAll();
+  }
+
+  // ---- income ------------------------------------------------------------------
+
+  /// Everything that came in, newest first.
+  Future<List<Income>> incomes() => _repo.incomes();
+
+  Future<void> saveIncome(Income income) async {
+    await _repo.saveIncome(income);
+    await reloadOverview();
+  }
+
+  Future<void> deleteIncome(String incomeId) async {
+    await _repo.deleteIncome(incomeId);
+    await reloadOverview();
+  }
+
+  // ---- allocations -------------------------------------------------------------
+
+  /// What was put into the envelope (and its sub-envelopes), newest first.
+  Future<List<Allocation>> allocationsFor(String envelopeId) =>
+      _repo.allocations(envelopeId: envelopeId);
+
+  /// Puts money into an envelope, or takes it out when the amount is negative.
+  /// Throws an [ApiException] tagged `NotEnoughMoney` when it cannot.
+  Future<void> saveAllocation(Allocation allocation) async {
+    await _repo.saveAllocation(allocation);
+    await reloadOverview();
+  }
+
+  Future<void> deleteAllocation(String allocationId) async {
+    await _repo.deleteAllocation(allocationId);
+    await reloadOverview();
+  }
+
+  // ---- expenses ----------------------------------------------------------------
 
   Future<void> addExpense({
     required String envelopeId,
@@ -249,80 +276,29 @@ class PlannerState extends ChangeNotifier {
   }) async {
     await _repo.createExpense(
       Expense(envelopeId: envelopeId, amount: amount, date: date, note: note),
-      _currency,
     );
-    await _refreshProgress();
-    notifyListeners();
+    await reloadOverview();
   }
 
   Future<void> updateExpense(Expense expense) async {
-    await _repo.updateExpense(expense, _currency);
-    await _refreshProgress();
-    notifyListeners();
+    await _repo.updateExpense(expense);
+    await reloadOverview();
   }
 
   Future<void> deleteExpense(String expenseId) async {
     await _repo.deleteExpense(expenseId);
-    await _refreshProgress();
-    notifyListeners();
+    await reloadOverview();
   }
 
-  /// Expenses drawn from one envelope of the current period, newest first.
-  Future<List<Expense>> expensesForEnvelope(String envelopeId) {
-    final period = _currentPeriod;
-    return period == null
-        ? Future.value(const [])
-        : _repo.expenses(period, envelopeId: envelopeId);
-  }
+  /// Expenses of one envelope (and its sub-envelopes) in the month, newest first.
+  Future<List<Expense>> expensesForEnvelope(String envelopeId) =>
+      _repo.expenses(month: month, envelopeId: envelopeId);
 
-  /// Transactions (expenses + category) for the current period, newest first.
-  Future<List<Transaction>> currentPeriodTransactions() {
-    final period = _currentPeriod;
-    if (period == null) return Future.value(const []);
-    return _repo.transactions(period, {
-      for (final p in _progress) p.envelope.id!: p.category,
-    });
-  }
+  /// Expenses of the month joined with their envelope, newest first.
+  Future<List<Transaction>> monthTransactions() =>
+      _repo.transactions(month, _envelopesById);
 
-  // ---- categories -----------------------------------------------------------
-
-  Future<void> addCategory(Category category) async {
-    await _repo.createCategory(category);
-    _categories = await _repo.categories();
-    notifyListeners();
-  }
-
-  /// Creates a category and immediately makes it an envelope (planned 0) in the
-  /// current period, so it can be spent against right away. Returns the new
-  /// envelope id, or null if there is no current period.
-  Future<String?> quickAddEnvelope(Category category) async {
-    final period = _currentPeriod;
-    if (period == null) return null;
-    final created = await _repo.createCategory(category);
-    final envelope = await _repo.addEnvelope(period, created.id!);
-    _categories = await _repo.categories();
-    await _refreshProgress();
-    notifyListeners();
-    return envelope.id;
-  }
-
-  Future<void> updateCategory(Category category) async {
-    await _repo.updateCategory(category);
-    _categories = await _repo.categories();
-    await _refreshProgress();
-    notifyListeners();
-  }
-
-  /// Removes a category, refusing if an envelope still uses it.
-  /// Returns true on success, false if the category is in use.
-  Future<bool> deleteCategory(String categoryId) async {
-    if (!await _repo.deleteCategory(categoryId)) return false;
-    _categories = await _repo.categories();
-    notifyListeners();
-    return true;
-  }
-
-  // ---- recurring rules ------------------------------------------------------
+  // ---- recurring rules ---------------------------------------------------------
 
   Future<void> saveRecurringRule(RecurringRule rule) async {
     await _repo.saveRecurringRule(rule);
@@ -336,28 +312,11 @@ class PlannerState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Sum of active rules per category — used to pre-fill a new period's plan.
-  Map<String, double> plannedFromRecurring() {
-    final byCategory = <String, double>{};
-    for (final rule in activeRecurringRules) {
-      if (rule.currency != Period.defaultCurrency) continue;
-      byCategory[rule.categoryId] =
-          (byCategory[rule.categoryId] ?? 0) + rule.amount;
-    }
-    return byCategory;
-  }
-
-  /// Adds an expense to the current period for each active rule that hasn't
-  /// been applied there yet. Returns the number of expenses added.
-  Future<int> applyRecurringToCurrentPeriod() async {
-    final period = _currentPeriod;
-    if (period == null) return 0;
-
-    final added = await _repo.applyRecurringRules(period);
-    if (added > 0) {
-      await _refreshProgress();
-      notifyListeners();
-    }
+  /// Adds an expense to the month for each active rule that hasn't been
+  /// applied there yet. Returns the number of expenses added.
+  Future<int> applyRecurringToMonth() async {
+    final added = await _repo.applyRecurringRules(month);
+    if (added > 0) await reloadOverview();
     return added;
   }
 }

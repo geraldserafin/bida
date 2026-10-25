@@ -95,8 +95,8 @@ void main() {
 
   void serverIsEmpty() {
     backend
-      ..on('GET /categories', (_) => const Reply([]))
-      ..on('GET /periods', (_) => const Reply([]));
+      ..on('GET /envelopes', (_) => const Reply([]))
+      ..on('GET /incomes', (_) => const Reply([]));
   }
 
   test('without an old database there is nothing to do', () async {
@@ -110,9 +110,9 @@ void main() {
     backend.on(
       'POST /import/legacy',
       (_) => const Reply({
-        'categories': 1,
-        'periods': 1,
         'envelopes': 1,
+        'allocations': 1,
+        'incomes': 1,
         'expenses': 1,
         'recurringRules': 1,
       }),
@@ -176,8 +176,8 @@ void main() {
   test('never overwrites data the server already has', () async {
     await createDatabase(fill: oneOfEverything);
     backend
-      ..on('GET /categories', (_) => Reply([categoryJson('c1', 'Food')]))
-      ..on('GET /periods', (_) => const Reply([]));
+      ..on('GET /envelopes', (_) => Reply([envelopeJson('e1', 'Food')]))
+      ..on('GET /incomes', (_) => const Reply([]));
 
     expect(await migrator.migrateIfNeeded(), MigrationOutcome.serverHasData);
 
@@ -189,7 +189,7 @@ void main() {
     'an unreachable server keeps the database for the next launch',
     () async {
       await createDatabase(fill: oneOfEverything);
-      backend.on('GET /categories', (_) => const Reply.unreachable());
+      backend.on('GET /envelopes', (_) => const Reply.unreachable());
 
       await expectLater(
         migrator.migrateIfNeeded(),
