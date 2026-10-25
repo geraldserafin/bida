@@ -893,6 +893,238 @@
         "description": "Totals for the period and for each envelope.",
         "summary": "Planned versus spent"
       }
+    },
+    "/recurring-rules": {
+      "get": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "recurring.list",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecurringRule"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Newest first.",
+        "summary": "List recurring rules"
+      },
+      "post": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "recurring.create",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "RecurringRule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringRule"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "CategoryNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a recurring rule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveRecurringRule"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/recurring-rules/{id}": {
+      "put": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "recurring.update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "RecurringRule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringRule"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RecurringRuleNotFound | CategoryNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RecurringRuleNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CategoryNotFoundEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Setting `active` to false pauses the rule.",
+        "summary": "Edit a recurring rule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveRecurringRule"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "recurring.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "404": {
+            "description": "RecurringRuleNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringRuleNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Expenses it already generated are kept.",
+        "summary": "Delete a recurring rule"
+      }
+    },
+    "/recurring-rules/suggested-plan": {
+      "get": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "recurring.suggestedPlan",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EnvelopePlan"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Sum of the active rules per category, to prefill a new period's plan.",
+        "summary": "Suggested envelope amounts"
+      }
+    },
+    "/periods/{periodId}/recurring/apply": {
+      "post": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "recurring.apply",
+        "parameters": [
+          {
+            "name": "periodId",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "ApplyResult",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PeriodNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Adds one expense for every active rule not applied in this period yet, creating a missing envelope with the rule's amount as its plan. Safe to call repeatedly.",
+        "summary": "Apply recurring rules to a period"
+      }
     }
   },
   "components": {
@@ -913,6 +1145,171 @@
         "required": [
           "_tag",
           "id"
+        ],
+        "additionalProperties": false
+      },
+      "ApplyResult": {
+        "type": "object",
+        "properties": {
+          "added": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "added"
+        ],
+        "additionalProperties": false
+      },
+      "EnvelopePlan": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string"
+          },
+          "plannedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "categoryId",
+          "plannedMinor"
+        ],
+        "additionalProperties": false
+      },
+      "RecurringRuleNotFoundEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "RecurringRuleNotFound"
+            ]
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "CategoryNotFoundEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "CategoryNotFound"
+            ]
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "RecurringRule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 9007199254740991,
+            "exclusiveMinimum": 0
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly"
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "categoryId",
+          "amountMinor",
+          "frequency",
+          "note",
+          "active",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "title": "RecurringRule.json"
+      },
+      "SaveRecurringRule": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 9007199254740991,
+            "exclusiveMinimum": 0
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly"
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "categoryId",
+          "amountMinor",
+          "frequency",
+          "note",
+          "active"
         ],
         "additionalProperties": false
       },
@@ -1029,6 +1426,16 @@
               }
             ]
           },
+          "recurringId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "createdAt": {
             "type": "string"
           },
@@ -1043,6 +1450,7 @@
           "amountMinor",
           "spentAt",
           "note",
+          "recurringId",
           "createdAt",
           "updatedAt"
         ],
@@ -1176,25 +1584,6 @@
         ],
         "additionalProperties": false
       },
-      "CategoryNotFoundEncoded": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "CategoryNotFound"
-            ]
-          },
-          "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "_tag",
-          "id"
-        ],
-        "additionalProperties": false
-      },
       "Envelope": {
         "type": "object",
         "properties": {
@@ -1229,24 +1618,6 @@
         ],
         "additionalProperties": false,
         "title": "Envelope.json"
-      },
-      "EnvelopePlan": {
-        "type": "object",
-        "properties": {
-          "categoryId": {
-            "type": "string"
-          },
-          "plannedMinor": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "categoryId",
-          "plannedMinor"
-        ],
-        "additionalProperties": false
       },
       "PeriodDetail": {
         "type": "object",
@@ -1567,6 +1938,9 @@
     },
     {
       "name": "Expenses"
+    },
+    {
+      "name": "Recurring"
     }
   ]
 }
