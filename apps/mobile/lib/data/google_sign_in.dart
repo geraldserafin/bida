@@ -1,13 +1,25 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'google_credential.dart';
+
 /// OAuth client id of the *web* application in the Google Cloud project, set
-/// with `--dart-define=GOOGLE_CLIENT_ID=...`. The server checks ID tokens
-/// against it; on Android it is also what makes Google issue an ID token.
-/// Without it signing in with Google is not offered.
+/// with `--dart-define=GOOGLE_CLIENT_ID=...`. The server checks what Google
+/// hands out against it; on Android it is also what makes Google issue an ID
+/// token. Without it signing in with Google is not offered.
 const googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
 
 bool get googleSignInConfigured => googleClientId.isNotEmpty;
+
+/// Google could not sign the user in (not because they cancelled).
+class GoogleSignInFailed implements Exception {
+  const GoogleSignInFailed(this.cause);
+
+  final Object cause;
+
+  @override
+  String toString() => 'GoogleSignInFailed($cause)';
+}
 
 /// Prepares Google sign-in once at startup. A failure only turns the feature
 /// off: the e-mail code still works.
@@ -20,6 +32,31 @@ Future<void> initGoogleSignIn() async {
     );
   } on Object catch (error) {
     debugPrint('Google sign-in is not available: $error');
+  }
+}
+
+/// Lets the user pick a Google account. Null when they cancel. Call it from a
+/// tap: a browser only opens the popup for one.
+///
+/// A browser cannot get an ID token without Google's own button, so there the
+/// popup asks for access to the profile and an access token comes back; the
+/// server checks it with Google. Devices get the ID token directly.
+Future<GoogleCredential?> signInToGoogle() async {
+  try {
+    if (kIsWeb) {
+      final authorization = await GoogleSignIn.instance.authorizationClient
+          .authorizeScopes(const ['openid', 'email', 'profile']);
+      return GoogleAccessToken(authorization.accessToken);
+    }
+    final account = await GoogleSignIn.instance.authenticate();
+    final idToken = account.authentication.idToken;
+    return idToken == null ? null : GoogleIdToken(idToken);
+  } on GoogleSignInException catch (error) {
+    if (error.code == GoogleSignInExceptionCode.canceled ||
+        error.code == GoogleSignInExceptionCode.interrupted) {
+      return null;
+    }
+    throw GoogleSignInFailed(error);
   }
 }
 

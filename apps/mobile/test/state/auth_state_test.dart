@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:money_planner/data/api_exception.dart';
 import 'package:money_planner/data/auth_repository.dart';
+import 'package:money_planner/data/google_credential.dart';
 import 'package:money_planner/data/session_store.dart';
 import 'package:money_planner/state/auth_state.dart';
 
@@ -100,7 +101,7 @@ void main() {
       (_) => Reply({'user': userJson('ann@example.com'), 'token': 'secret'}),
     );
 
-    await auth.signInWithGoogle('g' * 30);
+    await auth.signInWithGoogle(GoogleIdToken('g' * 30));
 
     expect(auth.isSignedIn, isTrue);
     expect(auth.email, 'ann@example.com');

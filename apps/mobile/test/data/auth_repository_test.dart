@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:money_planner/data/api_client.dart';
 import 'package:money_planner/data/api_exception.dart';
 import 'package:money_planner/data/auth_repository.dart';
+import 'package:money_planner/data/google_credential.dart';
 import 'package:money_planner/data/session_store.dart';
 
 import '../support/fake_backend.dart';
@@ -53,12 +54,29 @@ void main() {
       (_) => Reply({'user': userJson('ann@example.com'), 'token': 'secret'}),
     );
 
-    final email = await repository.signInWithGoogle('g' * 30);
+    final email = await repository.signInWithGoogle(GoogleIdToken('g' * 30));
 
     expect(email, 'ann@example.com');
     expect(await session.token(), 'secret');
     expect(backend.sent('POST /auth/google').single.body, {
       'idToken': 'g' * 30,
+      'transport': 'token',
+    });
+  });
+
+  test('a browser signs in with the access token from Google', () async {
+    backend.on(
+      'POST /auth/google/access-token',
+      (_) => Reply({'user': userJson('ann@example.com'), 'token': 'secret'}),
+    );
+
+    final email = await repository.signInWithGoogle(
+      GoogleAccessToken('a' * 30),
+    );
+
+    expect(email, 'ann@example.com');
+    expect(backend.sent('POST /auth/google/access-token').single.body, {
+      'accessToken': 'a' * 30,
       'transport': 'token',
     });
   });

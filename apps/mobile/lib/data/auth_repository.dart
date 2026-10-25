@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import 'api_exception.dart';
+import 'google_credential.dart';
 import 'session_store.dart';
 
 /// Signing in and out, in the app's own terms. Every method either returns or
@@ -30,11 +31,18 @@ class AuthRepository {
     return _keep(result);
   });
 
-  /// Signs in with the ID token the app got from Google sign-in.
-  Future<String> signInWithGoogle(String idToken) => guard(() async {
-    final result = await _api.auth.authGoogleSignIn(
-      body: api.GoogleSignIn(idToken: idToken, transport: _transport),
-    );
+  /// Signs in with what Google gave the app.
+  Future<String> signInWithGoogle(
+    GoogleCredential credential,
+  ) => guard(() async {
+    final result = switch (credential) {
+      GoogleIdToken(:final token) => await _api.auth.authGoogleSignIn(
+        body: api.GoogleSignIn(idToken: token, transport: _transport),
+      ),
+      GoogleAccessToken(:final token) => await _api.auth.authGoogleAccessToken(
+        body: api.GoogleAccessToken(accessToken: token, transport: _transport),
+      ),
+    };
     return _keep(result);
   });
 

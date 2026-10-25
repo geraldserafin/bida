@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../data/api_exception.dart';
 import '../data/auth_repository.dart';
+import '../data/google_credential.dart';
 
 enum AuthStatus {
   /// Not known yet: the server is being asked.
@@ -71,8 +72,8 @@ class AuthState extends ChangeNotifier {
   }
 
   /// Throws [ApiException].
-  Future<void> signInWithGoogle(String idToken) async {
-    _email = await _repo.signInWithGoogle(idToken);
+  Future<void> signInWithGoogle(GoogleCredential credential) async {
+    _email = await _repo.signInWithGoogle(credential);
     _status = AuthStatus.signedIn;
     notifyListeners();
   }

@@ -3,11 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/api_exception.dart';
+import '../../data/google_credential.dart';
 import '../../data/google_sign_in.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/auth_state.dart';
+import '../../widgets/google_button.dart';
 import '../../util/api_errors.dart';
-import 'google_button.dart';
 
 final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
@@ -83,9 +84,19 @@ class _LoginScreenState extends State<LoginScreen> {
     await _run(() => auth.signInWithCode(email, code));
   }
 
-  Future<void> _signInWithGoogle(String idToken) async {
+  Future<void> _signInWithGoogle() async {
+    final l10n = AppLocalizations.of(context);
     final auth = context.read<AuthState>();
-    await _run(() => auth.signInWithGoogle(idToken));
+    final GoogleCredential? credential;
+    try {
+      credential = await signInToGoogle();
+    } on GoogleSignInFailed {
+      if (mounted) setState(() => _error = l10n.googleSignInFailed);
+      return;
+    }
+    // null: the user closed Google's window
+    if (credential == null || !mounted) return;
+    await _run(() => auth.signInWithGoogle(credential!));
   }
 
   @override
@@ -117,9 +128,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
                   if (sentTo == null) ...[
                     if (googleSignInConfigured) ...[
-                      GoogleSignInButton(
-                        onIdToken: _signInWithGoogle,
-                        enabled: !_busy,
+                      GoogleButton(
+                        label: l10n.signInWithGoogle,
+                        onPressed: _busy ? null : _signInWithGoogle,
                       ),
                       const SizedBox(height: 16),
                       Row(
