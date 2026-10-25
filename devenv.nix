@@ -1,6 +1,9 @@
 { pkgs, ... }:
 {
-  packages = [ pkgs.pnpm ];
+  packages = [
+    pkgs.pnpm
+    pkgs.psmisc # fuser, used by the shutdown cleanup below
+  ];
 
   env.DATABASE_URL = "postgres://bida@127.0.0.1:5432/bida";
   env.TEST_DATABASE_URL = "postgres://bida@127.0.0.1:5432/bida_test";
@@ -16,12 +19,38 @@
     initialScript = "CREATE ROLE bida SUPERUSER LOGIN;";
   };
 
+  # Every process cleans up after itself when it is stopped, so nothing is left
+  # holding a port or the database (strict_ports in devenv.yaml makes a busy
+  # port an error instead of silently moving to the next one).
   process.manager.implementation = "process-compose";
-  processes.api = {
-    exec = "pnpm --filter @bida/api dev";
-    process-compose.depends_on.postgres.condition = "process_healthy";
+
+  # Fast shutdown disconnects clients (the api, tests) instead of waiting for
+  # them, so the postmaster really exits and releases port 5432 and the data dir.
+  processes.postgres.process-compose.shutdown = {
+    command = ''pg_ctl -D "$PGDATA" stop -m fast -w -t 20 || true'';
+    timeout_seconds = 30;
   };
-  processes.docs.exec = "pnpm --filter @bida/docs dev";
+
+  # tsx is started directly (not through pnpm and sh) so the signal reaches it;
+  # the port kill is the safety net for anything it left behind.
+  processes.api = {
+    exec = ''
+      cd "$DEVENV_ROOT/apps/api"
+      exec ./node_modules/.bin/tsx watch src/main.ts
+    '';
+    process-compose = {
+      depends_on.postgres.condition = "process_healthy";
+      shutdown.command = "fuser -k -TERM 3000/tcp || true";
+    };
+  };
+
+  processes.docs = {
+    exec = ''
+      cd "$DEVENV_ROOT/apps/docs"
+      exec ./node_modules/.bin/vite --port 5174
+    '';
+    process-compose.shutdown.command = "fuser -k -TERM 5174/tcp || true";
+  };
 
   # The emulator runs in the foreground (`emu` ends with `exec emulator`), so
   # stopping or restarting this process stops or restarts the emulator. It is
@@ -31,6 +60,8 @@
     exec = "emu";
     process-compose = {
       is_tty = true;
+      # graceful stop, saves the quickboot snapshot
+      shutdown.command = "adb -e emu kill || true";
       readiness_probe = {
         exec.command = ''[ "$(adb -e shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]'';
         initial_delay_seconds = 10;

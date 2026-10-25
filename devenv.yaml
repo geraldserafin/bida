@@ -5,3 +5,4 @@ nixpkgs:
   allowUnfree: true
   android_sdk:
     accept_license: true
+strict_ports: true
