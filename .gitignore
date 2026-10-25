@@ -5,3 +5,5 @@ dist/
 .pnpm-store/
 .android/
 local.properties
+.dart_tool/
+packages/api-client-dart/pubspec.lock

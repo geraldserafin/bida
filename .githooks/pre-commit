@@ -14,3 +14,8 @@ if [ -n "$dart_files" ]; then
   dart format --output=none --set-exit-if-changed $dart_files
   (cd apps/mobile && flutter analyze --no-pub)
 fi
+
+# Contract changed: the generated Dart client must be regenerated and staged
+if git diff --cached --name-only | grep -Eq '^packages/api-contract/(src|scripts)/'; then
+  pnpm check:dart-client
+fi
