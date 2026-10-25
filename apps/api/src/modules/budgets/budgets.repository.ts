@@ -31,6 +31,7 @@ export class BudgetsRepository extends Context.Service<
     deletePeriod(id: PeriodId): Effect.Effect<boolean>;
 
     listEnvelopes(periodId: PeriodId): Effect.Effect<ReadonlyArray<Envelope>>;
+    findEnvelopeById(id: EnvelopeId): Effect.Effect<Option.Option<Envelope>>;
     findEnvelope(
       periodId: PeriodId,
       categoryId: CategoryId,
@@ -103,6 +104,12 @@ export class BudgetsRepository extends Context.Service<
           sql`SELECT ${envelopeColumns} FROM envelopes
             WHERE period_id = ${periodId} ORDER BY created_at, id`,
       });
+      const findEnvelopeById = SqlSchema.findOneOption({
+        Request: Schema.String,
+        Result: Envelope,
+        execute: (id) =>
+          sql`SELECT ${envelopeColumns} FROM envelopes WHERE id = ${id}`,
+      });
       const findEnvelope = SqlSchema.findOneOption({
         Request: Schema.Struct({
           periodId: Schema.String,
@@ -151,6 +158,7 @@ export class BudgetsRepository extends Context.Service<
           ),
 
         listEnvelopes: (periodId) => listEnvelopes(periodId).pipe(Effect.orDie),
+        findEnvelopeById: (id) => findEnvelopeById(id).pipe(Effect.orDie),
         findEnvelope: (periodId, categoryId) =>
           findEnvelope({ periodId, categoryId }).pipe(Effect.orDie),
         insertEnvelope: (input) => insertEnvelope(input).pipe(Effect.orDie),
