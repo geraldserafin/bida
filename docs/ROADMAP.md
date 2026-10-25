@@ -66,7 +66,7 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 ## Etap 8 – Dalej
 
 - Konta i logowanie przez link i kod z e-maila: zrobione (sesje, członkostwo w przestrzeniach)
-- Logowanie przez Google (OAuth2)
+- Logowanie przez Google: zrobione (token ID weryfikowany po stronie serwera)
 - Zaproszenia i role w przestrzeniach, przeniesienie okresu do wspólnej przestrzeni
 - Zarządzanie sesjami (lista urządzeń, wylogowanie ze wszystkich), usuwanie konta
 - Pilnowanie zmian niekompatybilnych kontraktu (np. sprawdzanie diffa `openapi.json` w CI)
