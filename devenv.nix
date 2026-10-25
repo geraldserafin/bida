@@ -2,7 +2,6 @@
 {
   packages = [
     pkgs.pnpm
-    pkgs.psmisc # fuser, used by the shutdown cleanup below
   ];
 
   env.DATABASE_URL = "postgres://bida@127.0.0.1:5432/bida";
@@ -31,8 +30,11 @@
     timeout_seconds = 30;
   };
 
-  # tsx is started directly (not through pnpm and sh) so the signal reaches it;
-  # the port kill is the safety net for anything it left behind.
+  # tsx and vite are started with `exec`, so process-compose's SIGTERM reaches
+  # them directly and they exit at once. Do not kill them by port from a
+  # shutdown command: that only kills the child, `tsx watch` then keeps waiting
+  # for file changes and never exits, and fuser also hits every client that is
+  # connected to the port. The short timeout is only a safety net.
   processes.api = {
     exec = ''
       cd "$DEVENV_ROOT/apps/api"
@@ -40,7 +42,7 @@
     '';
     process-compose = {
       depends_on.postgres.condition = "process_healthy";
-      shutdown.command = "fuser -k -TERM 3000/tcp || true";
+      shutdown.timeout_seconds = 5;
     };
   };
 
@@ -49,7 +51,7 @@
       cd "$DEVENV_ROOT/apps/docs"
       exec ./node_modules/.bin/vite --port 5174
     '';
-    process-compose.shutdown.command = "fuser -k -TERM 5174/tcp || true";
+    process-compose.shutdown.timeout_seconds = 5;
   };
 
   # The emulator runs in the foreground (`emu` ends with `exec emulator`), so
