@@ -1029,6 +1029,529 @@
         "summary": "Leave a shared space"
       }
     },
+    "/spaces/{id}/invitations": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.invite",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Invitation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invitation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PersonalSpace | AlreadyMember",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PersonalSpace"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AlreadyMember"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "LimitReached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LimitReached"
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only, to shared spaces. The address gets an e-mail and sees the invitation once signed in with it. Inviting an address again renews its invitation and sets the new role.",
+        "summary": "Invite somebody by e-mail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Invite"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "get": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.forSpace",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Invitation"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpaceNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only: those waiting for an answer and those waiting for approval.",
+        "summary": "List the open invitations of a space"
+      }
+    },
+    "/spaces/{id}/invitations/{invitationId}": {
+      "delete": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "name": "invitationId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound | InvitationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvitationNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only.",
+        "summary": "Revoke an invitation, or turn down an accepted one"
+      }
+    },
+    "/spaces/{id}/invitations/{invitationId}/approve": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.approve",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "name": "invitationId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SpaceNotFound | InvitationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SpaceNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvitationNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "LimitReached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LimitReached"
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only. The person becomes a member.",
+        "summary": "Let in somebody who accepted an invitation"
+      }
+    },
+    "/invitations": {
+      "get": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.mine",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Invitation"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          }
+        },
+        "description": "Only those still waiting for my answer.",
+        "summary": "Invitations for my address"
+      }
+    },
+    "/invitations/{invitationId}/accept": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.accept",
+        "parameters": [
+          {
+            "name": "invitationId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invitation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "InvitationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Does not give access yet: an owner of the space has to approve it, and is told by e-mail.",
+        "summary": "Accept an invitation"
+      }
+    },
+    "/invitations/{invitationId}/decline": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.decline",
+        "parameters": [
+          {
+            "name": "invitationId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "InvitationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationNotFound"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Decline an invitation"
+      }
+    },
     "/categories": {
       "get": {
         "tags": [
@@ -4754,33 +5277,154 @@
         "additionalProperties": false,
         "title": "Category.jsonCreate"
       },
-      "PersonalSpace": {
+      "InvitationNotFound": {
         "type": "object",
         "properties": {
           "_tag": {
             "type": "string",
             "enum": [
-              "PersonalSpace"
+              "InvitationNotFound"
             ]
+          },
+          "id": {
+            "type": "string"
           }
         },
         "required": [
-          "_tag"
+          "_tag",
+          "id"
         ],
         "additionalProperties": false
       },
-      "LastOwner": {
+      "Invitation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "spaceId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "spaceName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InvitationStatus"
+          },
+          "invitedBy": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "$ref": "#/components/schemas/Email"
+                  },
+                  "name": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "email",
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "acceptedBy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "spaceId",
+          "spaceName",
+          "email",
+          "role",
+          "status",
+          "invitedBy",
+          "acceptedBy",
+          "expiresAt",
+          "createdAt"
+        ],
+        "additionalProperties": false
+      },
+      "Email": {
+        "type": "string",
+        "maxLength": 254
+      },
+      "InvitationStatus": {
+        "type": "string",
+        "enum": [
+          "invited",
+          "accepted"
+        ]
+      },
+      "Role": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "member"
+        ],
+        "description": "`owner` manages the space and its members; `member` works with the budget."
+      },
+      "LimitReached": {
         "type": "object",
         "properties": {
           "_tag": {
             "type": "string",
             "enum": [
-              "LastOwner"
+              "LimitReached"
             ]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           }
         },
         "required": [
-          "_tag"
+          "_tag",
+          "limit"
         ],
         "additionalProperties": false
       },
@@ -4796,25 +5440,6 @@
         },
         "required": [
           "_tag"
-        ],
-        "additionalProperties": false
-      },
-      "MemberNotFound": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "MemberNotFound"
-            ]
-          },
-          "userId": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "_tag",
-          "userId"
         ],
         "additionalProperties": false
       },
@@ -4857,17 +5482,85 @@
         ],
         "additionalProperties": false
       },
-      "Role": {
-        "type": "string",
-        "enum": [
-          "owner",
-          "member"
+      "AlreadyMember": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "AlreadyMember"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
         ],
-        "description": "`owner` manages the space and its members; `member` works with the budget."
+        "additionalProperties": false
       },
-      "Email": {
-        "type": "string",
-        "maxLength": 254
+      "PersonalSpace": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "PersonalSpace"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "Invite": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "email",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "LastOwner": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "LastOwner"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "MemberNotFound": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "MemberNotFound"
+            ]
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "userId"
+        ],
+        "additionalProperties": false
       },
       "SetRole": {
         "type": "object",
@@ -4977,27 +5670,6 @@
         "required": [
           "name",
           "defaultCurrency"
-        ],
-        "additionalProperties": false
-      },
-      "LimitReached": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "LimitReached"
-            ]
-          },
-          "limit": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "_tag",
-          "limit"
         ],
         "additionalProperties": false
       },
@@ -5241,6 +5913,9 @@
     },
     {
       "name": "Spaces"
+    },
+    {
+      "name": "Invitations"
     },
     {
       "name": "Categories"

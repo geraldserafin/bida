@@ -87,6 +87,8 @@ export class SpacesService extends Context.Service<
      * somebody does.
      */
     claimDefault(userId: string): Effect.Effect<Option.Option<Space>>;
+    /** The owners of the space, for telling them something. */
+    ownersOf(spaceId: SpaceId): Effect.Effect<ReadonlyArray<Member>>;
     /** Adds a member to a shared space, refusing past the member limit. */
     addMember(
       spaceId: SpaceId,
@@ -320,6 +322,10 @@ export class SpacesService extends Context.Service<
         leaveFor,
         resolveFor,
         claimDefault,
+        ownersOf: (spaceId) =>
+          repo
+            .members(spaceId)
+            .pipe(Effect.map((rows) => rows.filter((m) => m.role === "owner"))),
         addMember,
       });
     }),

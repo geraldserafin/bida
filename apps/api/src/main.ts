@@ -23,6 +23,10 @@ import {
   ExpensesModule,
 } from "./modules/expenses/expenses.module.ts";
 import {
+  InvitationsHttp,
+  InvitationsModule,
+} from "./modules/invitations/invitations.module.ts";
+import {
   RecurringHttp,
   RecurringModule,
 } from "./modules/recurring/recurring.module.ts";
@@ -50,6 +54,7 @@ const Modules = Layer.mergeAll(
   TransferModule,
   SpacesModule,
   AuthModule,
+  InvitationsModule,
 );
 
 // The handlers of every space-scoped group are wrapped in the SpaceContext
@@ -63,6 +68,7 @@ const Handlers = Layer.mergeAll(
   RecurringHttp,
   TransferHttp,
   SpacesHttp,
+  InvitationsHttp,
 ).pipe(
   Layer.provideMerge(SpaceContextModule),
   Layer.provideMerge(AuthenticatedModule),

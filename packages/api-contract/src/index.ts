@@ -5,6 +5,7 @@ export * from "./categories/index.ts";
 export * from "./currency/index.ts";
 export * from "./errors.ts";
 export * from "./expenses/index.ts";
+export * from "./invitations/index.ts";
 export * from "./recurring/index.ts";
 export * from "./spaces/index.ts";
 export * from "./system/index.ts";
