@@ -26,3 +26,9 @@ export class EnvelopeAlreadyExists extends Schema.TaggedError<EnvelopeAlreadyExi
   { periodId: PeriodId, categoryId: CategoryId },
   { httpApiStatus: 409 },
 ) {}
+
+export class EnvelopeNotFound extends Schema.TaggedError<EnvelopeNotFound>()(
+  "EnvelopeNotFound",
+  { id: Schema.String },
+  { httpApiStatus: 404 },
+) {}
