@@ -127,6 +127,31 @@ const ApiRoutes = HttpApiBuilder.layer(Api).pipe(
 
 Runner: `vitest` z `@effect/vitest`.
 
+## Klient Dart
+
+Z `Api` generujemy klienta Dart, żeby aplikacje w monorepo nie pisały zapytań ręcznie.
+
+```
+Api (Effect) → openapi.json → generator → packages/api-client-dart → zależność path
+```
+
+1. **Spec:** skrypt zapisuje `OpenApi.fromApi(Api)` do `openapi.json` i commitujemy go. Plik jest jedynym wejściem generatora i pokazuje zmiany kontraktu w diffie.
+2. **Generator:** [`swagger_parser`](https://github.com/artflutter/swagger_parser). Czyta OpenAPI 3.1 i generuje klienta na `dio` + `retrofit` oraz klasy danych. Uruchamiany w devenv (Dart jest w toolchainie Fluttera).
+3. **Paczka:** `packages/api-client-dart` (np. `bida_api_client`). **Wygenerowany kod jest commitowany**, żeby konsument nie musiał niczego generować.
+4. **CI:** po wygenerowaniu klienta `git diff --exit-code` musi być czysty. Zmiana kontraktu bez regeneracji klienta zatrzymuje build.
+5. **Dystrybucja:** paczka leży w monorepo, więc nie ma rejestru, publikowania ani tagów. Aplikacja Dart importuje ją przez zależność `path`:
+
+   ```yaml
+   dependencies:
+     bida_api_client:
+       path: ../../packages/api-client-dart
+   ```
+
+   Backend i klient zmieniają się w jednym commicie, więc kontrakt i jego konsument nie rozjeżdżają się wersjami.
+6. **Zmiany niekompatybilne** (usunięty endpoint lub pole, zmieniony typ) wymagają w tym samym PR poprawienia aplikacji, która klienta używa. Osobne wersjonowanie paczki nie jest potrzebne.
+
+**Ryzyko:** Effect generuje OpenAPI 3.1, a część generatorów obsługuje je niepełnie. Przed budową pipeline'u robimy spike na realnym specu (patrz `ROADMAP.md`, etap 3). Wymagania wobec kontraktu, które ułatwiają generowanie: jawne `operationId` (nazwy endpointów), brandowane ID widoczne w specu jako `string`, błędy zadeklarowane w `error` każdego endpointu.
+
 ## Jak dodać nową domenę
 
 1. Kontrakt: `<module>/<entity>.model.ts`, `<module>.errors.ts`, `<module>.api.ts`, dopisać grupę w `Api.ts`.
