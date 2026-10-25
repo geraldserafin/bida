@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:money_planner/models/models.dart';
 import 'package:money_planner/models/category_progress.dart';
+import 'package:money_planner/models/models.dart';
 
 CategoryProgress build({required double planned, required double spent}) {
   return CategoryProgress(
     category: const Category(name: 'Food', color: '#66BB6A'),
-    split: Split(periodId: 1, categoryId: 1, plannedAmount: planned),
+    envelope: Envelope(periodId: "p", categoryId: "c", plannedAmount: planned),
     spent: spent,
   );
 }
