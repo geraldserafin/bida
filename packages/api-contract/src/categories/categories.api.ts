@@ -1,26 +1,31 @@
 import { Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 import { CategoryInUse, CategoryNotFound } from "./categories.errors.ts";
-import { Category, CategoryId } from "./category.model.ts";
+import {
+  CategoryId,
+  CategoryJson,
+  CreateCategory,
+  UpdateCategory,
+} from "./category.model.ts";
 
 export class CategoriesApi extends HttpApiGroup.make("categories")
   .add(
     HttpApiEndpoint.get("list", "/", {
-      success: Schema.Array(Category.json),
+      success: Schema.Array(CategoryJson),
     }).annotateMerge(OpenApi.annotations({ summary: "List categories" })),
     HttpApiEndpoint.get("get", "/:id", {
       params: { id: CategoryId },
-      success: Category.json,
+      success: CategoryJson,
       error: CategoryNotFound,
     }).annotateMerge(OpenApi.annotations({ summary: "Get a category" })),
     HttpApiEndpoint.post("create", "/", {
-      payload: Category.jsonCreate,
-      success: Category.json,
+      payload: CreateCategory,
+      success: CategoryJson,
     }).annotateMerge(OpenApi.annotations({ summary: "Create a category" })),
     HttpApiEndpoint.patch("update", "/:id", {
       params: { id: CategoryId },
-      payload: Category.jsonUpdate,
-      success: Category.json,
+      payload: UpdateCategory,
+      success: CategoryJson,
       error: CategoryNotFound,
     }).annotateMerge(OpenApi.annotations({ summary: "Update a category" })),
     HttpApiEndpoint.delete("delete", "/:id", {

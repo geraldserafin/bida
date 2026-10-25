@@ -9,7 +9,9 @@
     "build": "pnpm -r build",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "format:dart": "cd apps/mobile && dart format lib test"
+    "format:dart": "cd apps/mobile && dart format lib test",
+    "gen:dart-client": "pnpm --filter @bida/api-contract openapi && cd packages/api-client-dart && rm -rf lib/src && dart run swagger_parser && dart run build_runner build --delete-conflicting-outputs && dart format lib",
+    "check:dart-client": "pnpm gen:dart-client && git diff --exit-code -- packages/api-contract/openapi.json packages/api-client-dart/lib"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.2"
