@@ -1,13 +1,21 @@
 # Runs on the VPS. The deploy workflow copies this file there and runs
 # `docker compose pull && docker compose up -d` next to a `.env` that holds
-# DATABASE_URL and CORS_ORIGINS (see docs/DEPLOYMENT.md).
+# DATABASE_URL and CORS_ORIGINS (see docs/VPS_SETUP.md).
 services:
   api:
     image: ghcr.io/geraldserafin/bida-api:${TAG:-latest}
+    container_name: bida-api
     restart: unless-stopped
-    # host network: Postgres and Caddy run on the host and reach the API on
-    # 127.0.0.1:3000
-    network_mode: host
     env_file: .env
     environment:
       PORT: 3000
+    networks: [proxy]
+    # lets DATABASE_URL reach a Postgres running on the host itself
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  # the network Caddy runs in, so it can reach the API as bida-api:3000
+  proxy:
+    external: true
+    name: ${PROXY_NETWORK:-caddy}

@@ -112,8 +112,8 @@ jobs:
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-          printf 'Host vps\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_deploy\n' \
-            "${{ secrets.VPS_HOST }}" "${{ secrets.VPS_USER }}" > ~/.ssh/config
+          printf 'Host vps\n  HostName %s\n  User %s\n  Port %s\n  IdentityFile ~/.ssh/id_deploy\n' \
+            "${{ secrets.VPS_HOST }}" "${{ secrets.VPS_USER }}" "${{ vars.VPS_PORT || 22 }}" > ~/.ssh/config
       - name: Upload the web app, the docs and the compose file
         run: |
           rsync -az --delete web/ vps:${{ vars.VPS_DIR }}/web/
