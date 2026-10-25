@@ -1,0 +1,17 @@
+{
+  "name": "bida",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "api": "pnpm --filter @bida/api dev",
+    "docs": "pnpm --filter @bida/docs dev",
+    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm -r build",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "format:dart": "cd apps/mobile && dart format lib test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.2"
+  }
+}

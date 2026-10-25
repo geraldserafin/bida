@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+# JS/TS/JSON: biome on staged files
+if git diff --cached --name-only --diff-filter=ACM | grep -Eq '\.(js|ts|tsx|json|jsonc|css)$'; then
+  pnpm exec biome check --staged --no-errors-on-unmatched
+fi
+
+# Dart: formatting + analyzer on the Flutter app
+dart_files=$(git diff --cached --name-only --diff-filter=ACM -- 'apps/mobile/*.dart' | grep -v '^apps/mobile/lib/l10n/app_localizations' || true)
+if [ -n "$dart_files" ]; then
+  # shellcheck disable=SC2086
+  dart format --output=none --set-exit-if-changed $dart_files
+  (cd apps/mobile && flutter analyze --no-pub)
+fi

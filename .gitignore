@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.devenv*
+.direnv/
+.pnpm-store/
+.android/
+local.properties
