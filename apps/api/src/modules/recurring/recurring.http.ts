@@ -16,7 +16,9 @@ export const RecurringHttp = HttpApiBuilder.group(
         recurring.update(params.id, payload),
       )
       .handle("delete", ({ params }) => recurring.remove(params.id))
-      .handle("suggestedPlan", () => recurring.suggestedPlan)
+      .handle("suggestedPlan", ({ query }) =>
+        recurring.suggestedPlan(query.currency),
+      )
       .handle("apply", ({ params }) =>
         recurring.applyToPeriod(params.periodId),
       );

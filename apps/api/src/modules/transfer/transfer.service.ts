@@ -1,11 +1,13 @@
 import {
   type Counts,
   type CsvImportResult,
+  DEFAULT_CURRENCY,
   type EnvelopeId,
   type ExportDocument,
+  exponentOf,
   type ImportLegacy,
   type ImportPreview,
-  type InvalidCsv,
+  InvalidCsv,
   InvalidImport,
   type PeriodId,
 } from "@bida/api-contract";
@@ -14,7 +16,7 @@ import { SqlClient } from "effect/sql";
 import { BudgetsService } from "../budgets/budgets.module.ts";
 import { CategoriesService } from "../categories/categories.module.ts";
 import { ExpensesService } from "../expenses/expenses.module.ts";
-import { type CsvRow, formatCsv, parseCsv } from "./csv.ts";
+import { type CsvRow, formatCsv, parseAmount, parseCsv } from "./csv.ts";
 import { convertLegacy } from "./legacy.ts";
 import { type Snapshot, TransferRepository } from "./transfer.repository.ts";
 
@@ -166,6 +168,9 @@ export class TransferService extends Context.Service<
       const exportCsv = Effect.gen(function* () {
         const snapshot = yield* repo.snapshot;
         const periodName = new Map(snapshot.periods.map((p) => [p.id, p.name]));
+        const periodCurrency = new Map(
+          snapshot.periods.map((p) => [p.id, p.currency]),
+        );
         const categoryName = new Map(
           snapshot.categories.map((c) => [c.id, c.name]),
         );
@@ -183,6 +188,7 @@ export class TransferService extends Context.Service<
                 envelopeCategory.get(expense.envelopeId) ?? ("" as never),
               ) ?? "",
             amountMinor: expense.amountMinor,
+            currency: periodCurrency.get(expense.periodId) ?? DEFAULT_CURRENCY,
             date: day(expense.spentAt),
             note: expense.note,
           }));
@@ -222,6 +228,35 @@ export class TransferService extends Context.Service<
       ) {
         const rows: ReadonlyArray<CsvRow> = yield* parseCsv(text);
 
+        // Everything that can be wrong with the file is found here, before
+        // anything is written: amounts depend on the currency of the period.
+        const existing = new Map(
+          (yield* budgets.listPeriods).map(
+            (p) => [p.name, p.currency] as const,
+          ),
+        );
+        const currencyOf = new Map(existing);
+        const prepared: Array<{ row: CsvRow; amountMinor: number }> = [];
+        for (const row of rows) {
+          const currency =
+            currencyOf.get(row.period) ?? row.currency ?? DEFAULT_CURRENCY;
+          currencyOf.set(row.period, currency);
+          if (row.currency !== undefined && row.currency !== currency) {
+            return yield* new InvalidCsv({
+              line: row.line,
+              reason: `period "${row.period}" is in ${currency}, not ${row.currency}`,
+            });
+          }
+          const amountMinor = parseAmount(row.amount, exponentOf(currency));
+          if (amountMinor === undefined) {
+            return yield* new InvalidCsv({
+              line: row.line,
+              reason: `amount "${row.amount}" is not positive in ${currency}`,
+            });
+          }
+          prepared.push({ row, amountMinor });
+        }
+
         return yield* Effect.gen(function* () {
           const periods = new Map(
             (yield* budgets.listPeriods).map((p) => [p.name, p] as const),
@@ -236,7 +271,7 @@ export class TransferService extends Context.Service<
           let imported = 0;
           let skipped = 0;
 
-          for (const row of rows) {
+          for (const { row, amountMinor } of prepared) {
             let period = periods.get(row.period);
             if (period === undefined) {
               const created = yield* budgets
@@ -244,6 +279,7 @@ export class TransferService extends Context.Service<
                   name: row.period,
                   ...monthOf(row.date),
                   incomeMinor: 0,
+                  currency: currencyOf.get(row.period) ?? DEFAULT_CURRENCY,
                   envelopes: [],
                 })
                 .pipe(Effect.orDie);
@@ -267,11 +303,11 @@ export class TransferService extends Context.Service<
               const detail = yield* budgets
                 .getPeriod(period.id)
                 .pipe(Effect.orDie);
-              const existing = detail.envelopes.find(
+              const found = detail.envelopes.find(
                 (e) => e.categoryId === category.id,
               );
               envelopeId = (
-                existing ??
+                found ??
                 (yield* budgets
                   .addEnvelope(period.id, {
                     categoryId: category.id,
@@ -287,7 +323,7 @@ export class TransferService extends Context.Service<
               seen = yield* fingerprints(period.id, envelopeId);
               seenByEnvelope.set(envelopeKey, seen);
             }
-            const fingerprint = `${row.amountMinor}|${row.date}|${row.note}`;
+            const fingerprint = `${amountMinor}|${row.date}|${row.note}`;
             if (seen.has(fingerprint)) {
               skipped++;
               continue;
@@ -297,7 +333,7 @@ export class TransferService extends Context.Service<
             yield* expenses
               .create({
                 envelopeId,
-                amountMinor: row.amountMinor,
+                amountMinor,
                 spentAt: DateTime.makeUnsafe(`${row.date}T00:00:00Z`),
                 note: row.note === "" ? null : row.note,
               })

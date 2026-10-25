@@ -1,38 +1,45 @@
-import { InvalidCsv } from "@bida/api-contract";
-import { Effect } from "effect";
+import { Currency, exponentOf, InvalidCsv } from "@bida/api-contract";
+import { Effect, Schema } from "effect";
 
 export interface CsvRow {
   /** 1-based line in the file, for error messages. */
   readonly line: number;
   readonly period: string;
   readonly category: string;
-  readonly amountMinor: number;
+  /** The amount as written, e.g. `12.34`. Turn it into minor units with {@link parseAmount}. */
+  readonly amount: string;
   /** `YYYY-MM-DD`. */
   readonly date: string;
   readonly note: string;
+  /** From the optional sixth column. */
+  readonly currency: Currency | undefined;
 }
 
 export interface CsvExportRow {
   readonly period: string;
   readonly category: string;
   readonly amountMinor: number;
+  readonly currency: Currency;
   readonly date: string;
   readonly note: string | null;
 }
 
-export const HEADER = "Period,Category,Amount,Date,Note";
+export const HEADER = "Period,Category,Amount,Date,Note,Currency";
 
 const field = (value: string): string =>
   /[",\n\r]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
 
-/** 123456 -> "1234.56" */
-export const formatAmount = (minor: number): string => (minor / 100).toFixed(2);
+/** 123456 with 2 decimals -> "1234.56" */
+export const formatAmount = (minor: number, exponent = 2): string =>
+  (minor / 10 ** exponent).toFixed(exponent);
 
-/** "12.34" or "12,34" -> 1234. `undefined` unless it is a positive amount. */
-export const parseAmount = (text: string): number | undefined => {
+const AMOUNT = /^\d+([.,]\d+)?$/;
+
+/** "12.34" or "12,34" -> 1234 (with 2 decimals). `undefined` unless positive. */
+export const parseAmount = (text: string, exponent = 2): number | undefined => {
   const normalized = text.trim().replace(",", ".");
-  if (!/^\d+(\.\d+)?$/.test(normalized)) return undefined;
-  const minor = Math.round(Number(normalized) * 100);
+  if (!AMOUNT.test(text.trim())) return undefined;
+  const minor = Math.round(Number(normalized) * 10 ** exponent);
   return minor > 0 ? minor : undefined;
 };
 
@@ -43,9 +50,10 @@ export const formatCsv = (rows: ReadonlyArray<CsvExportRow>): string =>
       [
         field(row.period),
         field(row.category),
-        formatAmount(row.amountMinor),
+        formatAmount(row.amountMinor, exponentOf(row.currency)),
         row.date,
         field(row.note ?? ""),
+        row.currency,
       ].join(","),
     ),
   ].join("\n")}\n`;
@@ -93,6 +101,8 @@ const validDate = (text: string): string | undefined => {
     : undefined;
 };
 
+const isCurrency = Schema.is(Currency);
+
 /** Parses the whole file before anything is written, so errors are atomic. */
 export const parseCsv = (
   text: string,
@@ -112,16 +122,21 @@ export const parseCsv = (
           reason: "expected at least 4 columns",
         });
       }
-      const [period = "", category = "", amount = "", date = "", note = ""] =
-        columns;
+      const [
+        period = "",
+        category = "",
+        amount = "",
+        date = "",
+        note = "",
+        currency = "",
+      ] = columns;
       if (period.trim() === "" || category.trim() === "") {
         return yield* new InvalidCsv({
           line,
           reason: "period and category are required",
         });
       }
-      const amountMinor = parseAmount(amount);
-      if (amountMinor === undefined) {
+      if (parseAmount(amount, 6) === undefined) {
         return yield* new InvalidCsv({
           line,
           reason: `invalid amount "${amount}"`,
@@ -134,13 +149,21 @@ export const parseCsv = (
           reason: `invalid date "${date}"`,
         });
       }
+      const code = currency.trim().toUpperCase();
+      if (code !== "" && !isCurrency(code)) {
+        return yield* new InvalidCsv({
+          line,
+          reason: `unsupported currency "${currency}"`,
+        });
+      }
       rows.push({
         line,
         period: period.trim(),
         category: category.trim(),
-        amountMinor,
+        amount: amount.trim(),
         date: day,
         note: note.trim(),
+        currency: code === "" ? undefined : (code as Currency),
       });
     }
     return rows;

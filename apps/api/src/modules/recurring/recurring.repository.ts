@@ -1,5 +1,6 @@
 import {
   type CategoryId,
+  type Currency,
   type Frequency,
   RecurringRule,
   type RecurringRuleId,
@@ -10,6 +11,7 @@ import { SqlClient, SqlSchema } from "effect/sql";
 export interface RuleChanges {
   readonly categoryId: CategoryId;
   readonly amountMinor: number;
+  readonly currency: Currency;
   readonly frequency: Frequency;
   readonly note: string | null;
   readonly active: boolean;
@@ -39,7 +41,7 @@ export class RecurringRepository extends Context.Service<
       const sql = yield* SqlClient.SqlClient;
 
       // bigint comes back from pg as a string, so cast it
-      const columns = sql`id, category_id, amount_minor::float8 AS amount_minor,
+      const columns = sql`id, category_id, amount_minor::float8 AS amount_minor, currency,
         frequency, note, active, created_at, updated_at`;
 
       const list = SqlSchema.findAll({
@@ -60,14 +62,23 @@ export class RecurringRepository extends Context.Service<
           id: Schema.String,
           categoryId: Schema.String,
           amountMinor: Schema.Int,
+          currency: Schema.String,
           frequency: Schema.String,
           note: Schema.NullOr(Schema.String),
           active: Schema.Boolean,
         }),
         Result: RecurringRule,
-        execute: ({ id, categoryId, amountMinor, frequency, note, active }) =>
+        execute: ({
+          id,
+          categoryId,
+          amountMinor,
+          currency,
+          frequency,
+          note,
+          active,
+        }) =>
           sql`UPDATE recurring_rules SET category_id = ${categoryId},
-            amount_minor = ${amountMinor}, frequency = ${frequency},
+            amount_minor = ${amountMinor}, currency = ${currency}, frequency = ${frequency},
             note = ${note}, active = ${active}, updated_at = now()
             WHERE id = ${id} RETURNING ${columns}`,
       });

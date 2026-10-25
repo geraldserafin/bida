@@ -1,6 +1,7 @@
 import {
   CategoryNotFound,
   type CreatePeriod,
+  DEFAULT_CURRENCY,
   Envelope,
   EnvelopeAlreadyExists,
   type EnvelopeId,
@@ -132,6 +133,7 @@ export class BudgetsService extends Context.Service<
               startDate: input.startDate,
               endDate: input.endDate,
               incomeMinor: input.incomeMinor,
+              currency: input.currency ?? DEFAULT_CURRENCY,
             })
             .pipe(Effect.orDie);
           const period = yield* repo.insertPeriod(row);

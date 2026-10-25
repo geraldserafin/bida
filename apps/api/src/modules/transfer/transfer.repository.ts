@@ -58,7 +58,7 @@ export class TransferRepository extends Context.Service<
       const periods = selectAll(
         Period,
         `SELECT id, name, start_date::text AS start_date, end_date::text AS end_date,
-          income_minor::float8 AS income_minor, created_at, updated_at
+          income_minor::float8 AS income_minor, currency, created_at, updated_at
           FROM periods ORDER BY start_date, created_at, id`,
       );
       const envelopes = selectAll(
@@ -69,12 +69,13 @@ export class TransferRepository extends Context.Service<
       const expenses = selectAll(
         Expense,
         `SELECT id, period_id, envelope_id, amount_minor::float8 AS amount_minor,
+          original_amount_minor::float8 AS original_amount_minor, original_currency,
           spent_at, note, recurring_id, created_at, updated_at
           FROM expenses ORDER BY spent_at, id`,
       );
       const recurringRules = selectAll(
         RecurringRule,
-        `SELECT id, category_id, amount_minor::float8 AS amount_minor, frequency,
+        `SELECT id, category_id, amount_minor::float8 AS amount_minor, currency, frequency,
           note, active, created_at, updated_at FROM recurring_rules ORDER BY created_at, id`,
       );
 

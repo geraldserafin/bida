@@ -28,6 +28,8 @@ export interface ExpenseFilter {
 export interface ExpenseChanges {
   readonly envelopeId: EnvelopeId;
   readonly amountMinor: number;
+  readonly originalAmountMinor: number | null;
+  readonly originalCurrency: string | null;
   readonly spentAt: DateTime.Utc;
   readonly note: string | null;
 }
@@ -64,7 +66,9 @@ export class ExpensesRepository extends Context.Service<
 
       // bigint comes back from pg as a string, so cast it
       const columns = sql`id, period_id, envelope_id,
-        amount_minor::float8 AS amount_minor, spent_at, note, recurring_id,
+        amount_minor::float8 AS amount_minor,
+        original_amount_minor::float8 AS original_amount_minor, original_currency,
+        spent_at, note, recurring_id,
         created_at, updated_at`;
 
       const insert = SqlSchema.findOne({
@@ -83,13 +87,26 @@ export class ExpensesRepository extends Context.Service<
           id: Schema.String,
           envelopeId: Schema.String,
           amountMinor: Schema.Int,
+          originalAmountMinor: Schema.NullOr(Schema.Int),
+          originalCurrency: Schema.NullOr(Schema.String),
           spentAt: Schema.DateTimeUtcFromDate,
           note: Schema.NullOr(Schema.String),
         }),
         Result: Expense,
-        execute: ({ id, envelopeId, amountMinor, spentAt, note }) =>
+        execute: ({
+          id,
+          envelopeId,
+          amountMinor,
+          originalAmountMinor,
+          originalCurrency,
+          spentAt,
+          note,
+        }) =>
           sql`UPDATE expenses SET envelope_id = ${envelopeId},
-            amount_minor = ${amountMinor}, spent_at = ${spentAt}, note = ${note},
+            amount_minor = ${amountMinor},
+            original_amount_minor = ${originalAmountMinor},
+            original_currency = ${originalCurrency},
+            spent_at = ${spentAt}, note = ${note},
             updated_at = now() WHERE id = ${id} RETURNING ${columns}`,
       });
       const remove = SqlSchema.findAll({

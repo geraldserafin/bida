@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import {
   Category,
   type CategoryId,
+  DEFAULT_CURRENCY,
   Envelope,
   type EnvelopeId,
   Expense,
@@ -81,6 +82,7 @@ export const convertLegacy = (
           startDate: row.start_date.slice(0, 10),
           endDate: row.end_date.slice(0, 10),
           incomeMinor: toMinor(row.income),
+          currency: DEFAULT_CURRENCY,
           createdAt: now,
           updatedAt: now,
         }),
@@ -98,6 +100,7 @@ export const convertLegacy = (
           id: ruleIds.get(row.id) as RecurringRuleId,
           categoryId: yield* lookup(categoryIds, row.category_id, "category"),
           amountMinor: toMinor(row.amount),
+          currency: DEFAULT_CURRENCY,
           frequency: row.frequency,
           note: row.note,
           active: row.active === 1,
@@ -145,6 +148,8 @@ export const convertLegacy = (
           envelopeId: yield* lookup(envelopeIds, row.split_id, "split"),
           periodId: periodOfEnvelope.get(row.split_id) as PeriodId,
           amountMinor,
+          originalAmountMinor: null,
+          originalCurrency: null,
           spentAt: DateTime.toUtc(zoned),
           note: row.note,
           recurringId:

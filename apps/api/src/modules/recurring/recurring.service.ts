@@ -1,6 +1,8 @@
 import {
   type ApplyResult,
   CategoryNotFound,
+  type Currency,
+  DEFAULT_CURRENCY,
   type EnvelopePlan,
   type PeriodId,
   type PeriodNotFound,
@@ -30,7 +32,9 @@ export class RecurringService extends Context.Service<
     ): Effect.Effect<RecurringRule, RecurringRuleNotFound | CategoryNotFound>;
     remove(id: RecurringRuleId): Effect.Effect<void, RecurringRuleNotFound>;
     /** Sum of the active rules per category. */
-    suggestedPlan: Effect.Effect<ReadonlyArray<EnvelopePlan>>;
+    suggestedPlan(
+      currency?: Currency,
+    ): Effect.Effect<ReadonlyArray<EnvelopePlan>>;
     applyToPeriod(
       periodId: PeriodId,
     ): Effect.Effect<ApplyResult, PeriodNotFound>;
@@ -59,7 +63,10 @@ export class RecurringService extends Context.Service<
       ) {
         yield* requireCategory(input);
         const row = yield* RecurringRule.insert
-          .makeEffect(input)
+          .makeEffect({
+            ...input,
+            currency: input.currency ?? DEFAULT_CURRENCY,
+          })
           .pipe(Effect.orDie);
         return yield* repo.insert(row);
       });
@@ -69,7 +76,10 @@ export class RecurringService extends Context.Service<
         input: SaveRecurringRule,
       ) {
         yield* requireCategory(input);
-        const updated = yield* repo.update(id, input);
+        const updated = yield* repo.update(id, {
+          ...input,
+          currency: input.currency ?? DEFAULT_CURRENCY,
+        });
         return yield* Option.match(updated, {
           onNone: () => Effect.fail(new RecurringRuleNotFound({ id })),
           onSome: Effect.succeed,
@@ -83,27 +93,34 @@ export class RecurringService extends Context.Service<
         if (!removed) return yield* new RecurringRuleNotFound({ id });
       });
 
-      const suggestedPlan = Effect.gen(function* () {
-        const totals = new Map<EnvelopePlan["categoryId"], number>();
-        for (const rule of yield* repo.list) {
-          if (!rule.active) continue;
-          totals.set(
-            rule.categoryId,
-            (totals.get(rule.categoryId) ?? 0) + rule.amountMinor,
-          );
-        }
-        return [...totals].map(([categoryId, plannedMinor]) => ({
-          categoryId,
-          plannedMinor,
-        }));
-      }).pipe(Effect.withSpan("RecurringService.suggestedPlan"));
+      const suggestedPlan = Effect.fn("RecurringService.suggestedPlan")(
+        function* (currency: Currency = DEFAULT_CURRENCY) {
+          const totals = new Map<EnvelopePlan["categoryId"], number>();
+          for (const rule of yield* repo.list) {
+            if (!rule.active || rule.currency !== currency) continue;
+            totals.set(
+              rule.categoryId,
+              (totals.get(rule.categoryId) ?? 0) + rule.amountMinor,
+            );
+          }
+          return [...totals].map(([categoryId, plannedMinor]) => ({
+            categoryId,
+            plannedMinor,
+          }));
+        },
+      );
 
       const applyToPeriod = Effect.fn("RecurringService.applyToPeriod")(
         function* (periodId: PeriodId) {
           const detail = yield* budgets.getPeriod(periodId);
           const applied = yield* expenses.appliedRecurringIds(periodId);
           const rules = (yield* repo.list)
-            .filter((rule) => rule.active && !applied.has(rule.id))
+            .filter(
+              (rule) =>
+                rule.active &&
+                rule.currency === detail.period.currency &&
+                !applied.has(rule.id),
+            )
             .reverse(); // oldest first
           const spentAt = yield* DateTime.now;
 

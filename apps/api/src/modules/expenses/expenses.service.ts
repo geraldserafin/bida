@@ -6,6 +6,7 @@ import {
   Expense,
   type ExpenseId,
   ExpenseNotFound,
+  type OriginalAmount,
   type PeriodId,
   type PeriodNotFound,
   type PeriodProgress,
@@ -59,6 +60,26 @@ export class ExpensesService extends Context.Service<
       const repo = yield* ExpensesRepository;
       const budgets = yield* BudgetsService;
 
+      // Records what was paid in another currency. A payment in the currency
+      // of the period is just an ordinary expense, so it stays null.
+      const originalOf = Effect.fn("ExpensesService.originalOf")(function* (
+        periodId: PeriodId,
+        original: OriginalAmount | undefined,
+      ) {
+        if (original === undefined) {
+          return { originalAmountMinor: null, originalCurrency: null };
+        }
+        const { period } = yield* budgets
+          .getPeriod(periodId)
+          .pipe(Effect.orDie);
+        return original.currency === period.currency
+          ? { originalAmountMinor: null, originalCurrency: null }
+          : {
+              originalAmountMinor: original.amountMinor,
+              originalCurrency: original.currency,
+            };
+      });
+
       const insert = Effect.fn("ExpensesService.insert")(function* (
         input: CreateExpense,
         recurringId: RecurringRuleId | null,
@@ -69,6 +90,7 @@ export class ExpensesService extends Context.Service<
             envelopeId: envelope.id,
             periodId: envelope.periodId,
             amountMinor: input.amountMinor,
+            ...(yield* originalOf(envelope.periodId, input.original)),
             spentAt: input.spentAt,
             note: input.note,
             recurringId,
@@ -101,7 +123,13 @@ export class ExpensesService extends Context.Service<
         if (envelope.periodId !== existing.periodId) {
           return yield* new EnvelopeNotFound({ id: input.envelopeId });
         }
-        const updated = yield* repo.update(id, input);
+        const updated = yield* repo.update(id, {
+          envelopeId: input.envelopeId,
+          amountMinor: input.amountMinor,
+          spentAt: input.spentAt,
+          note: input.note,
+          ...(yield* originalOf(existing.periodId, input.original)),
+        });
         return yield* Option.match(updated, {
           onNone: () => Effect.fail(new ExpenseNotFound({ id })),
           onSome: Effect.succeed,

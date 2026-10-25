@@ -52,7 +52,7 @@ export class BudgetsRepository extends Context.Service<
       // `date` columns are read as text so they stay calendar dates and bigint
       // amounts are cast, because pg hands bigint back as a string
       const periodColumns = sql`id, name, start_date::text AS start_date,
-        end_date::text AS end_date, income_minor::float8 AS income_minor,
+        end_date::text AS end_date, income_minor::float8 AS income_minor, currency,
         created_at, updated_at`;
       const envelopeColumns = sql`id, period_id, category_id,
         planned_minor::float8 AS planned_minor,
