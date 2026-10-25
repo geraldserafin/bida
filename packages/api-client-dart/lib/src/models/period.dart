@@ -4,6 +4,8 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
+import 'currency.dart';
+
 part 'period.g.dart';
 
 @JsonSerializable()
@@ -14,6 +16,7 @@ class Period {
     required this.startDate,
     required this.endDate,
     required this.incomeMinor,
+    required this.currency,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -25,6 +28,7 @@ class Period {
   final String startDate;
   final String endDate;
   final int incomeMinor;
+  final Currency currency;
   final String createdAt;
   final String updatedAt;
 

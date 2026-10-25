@@ -2,6 +2,7 @@ import { Schema } from "effect";
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api";
 import { EnvelopePlan, PeriodId, PeriodNotFound } from "../budgets/index.ts";
 import { CategoryNotFound } from "../categories/index.ts";
+import { Currency } from "../currency/index.ts";
 import { RecurringRuleNotFound } from "./recurring.errors.ts";
 import {
   ApplyResult,
@@ -48,12 +49,13 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
       }),
     ),
     HttpApiEndpoint.get("suggestedPlan", "/recurring-rules/suggested-plan", {
+      query: { currency: Schema.optional(Currency) },
       success: Schema.Array(EnvelopePlan),
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Suggested envelope amounts",
         description:
-          "Sum of the active rules per category, to prefill a new period's plan.",
+          "Sum of the active rules in one currency per category, to prefill a new period's plan.",
       }),
     ),
     HttpApiEndpoint.post("apply", "/periods/:periodId/recurring/apply", {

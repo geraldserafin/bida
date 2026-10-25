@@ -2,12 +2,13 @@ import { Schema } from "effect";
 import { Model } from "effect/schema";
 import { EnvelopeId, Money, PeriodId } from "../budgets/index.ts";
 import { CategoryId } from "../categories/index.ts";
+import { Currency } from "../currency/index.ts";
 import { RecurringRuleId } from "../recurring/recurring.model.ts";
 
 export const ExpenseId = Schema.String.pipe(Schema.brand("ExpenseId"));
 export type ExpenseId = typeof ExpenseId.Type;
 
-/** Amount of an expense in minor units (grosze), always positive. */
+/** Amount of an expense in minor units, always positive. */
 export const Cost = Schema.Int.check(Schema.isGreaterThan(0));
 
 // Client-provided instant: a Date in the database, an ISO string in JSON.
@@ -26,7 +27,14 @@ export class Expense extends Model.Class<Expense>("Expense")({
   envelopeId: EnvelopeId,
   /** The period of the envelope, kept on the expense for fast queries. */
   periodId: PeriodId,
+  /** In the currency of the period, this is what counts against the envelope. */
   amountMinor: Cost,
+  /**
+   * What was actually paid when it was in another currency than the period's.
+   * Both are null for an ordinary expense.
+   */
+  originalAmountMinor: Schema.NullOr(Cost),
+  originalCurrency: Schema.NullOr(Currency),
   spentAt: SpentAt,
   note: Schema.NullOr(Schema.String),
   /** Set when the expense was generated from a recurring rule. */
@@ -37,11 +45,21 @@ export class Expense extends Model.Class<Expense>("Expense")({
 
 export const ExpenseJson = Expense.json.annotate({ identifier: "Expense" });
 
+/** What was actually paid, when it was not in the currency of the period. */
+export const OriginalAmount = Schema.Struct({
+  amountMinor: Cost,
+  currency: Currency,
+}).annotate({ identifier: "OriginalAmount" });
+export type OriginalAmount = typeof OriginalAmount.Type;
+
 export const CreateExpense = Schema.Struct({
   envelopeId: EnvelopeId,
+  /** In the currency of the period. */
   amountMinor: Cost,
   spentAt: Schema.DateTimeUtcFromString,
   note: Schema.NullOr(Schema.String),
+  /** Set to record a payment in another currency. Ignored when it is the period's currency. */
+  original: Schema.optional(OriginalAmount),
 }).annotate({ identifier: "CreateExpense" });
 export type CreateExpense = typeof CreateExpense.Type;
 
@@ -51,6 +69,7 @@ export const UpdateExpense = Schema.Struct({
   amountMinor: Cost,
   spentAt: Schema.DateTimeUtcFromString,
   note: Schema.NullOr(Schema.String),
+  original: Schema.optional(OriginalAmount),
 }).annotate({ identifier: "UpdateExpense" });
 export type UpdateExpense = typeof UpdateExpense.Type;
 

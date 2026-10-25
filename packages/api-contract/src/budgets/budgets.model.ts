@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 import { Model } from "effect/schema";
 import { CategoryId } from "../categories/index.ts";
+import { Currency } from "../currency/index.ts";
 
 export const PeriodId = Schema.String.pipe(Schema.brand("PeriodId"));
 export type PeriodId = typeof PeriodId.Type;
@@ -23,6 +24,8 @@ export class Period extends Model.Class<Period>("Period")({
   startDate: IsoDate,
   endDate: IsoDate,
   incomeMinor: Money,
+  /** All amounts of the period are in this currency. */
+  currency: Currency,
   createdAt: Model.DateTimeInsertFromDate,
   updatedAt: Model.DateTimeUpdateFromDate,
 }) {}
@@ -62,6 +65,8 @@ export const CreatePeriod = Schema.Struct({
   startDate: IsoDate,
   endDate: IsoDate,
   incomeMinor: Money,
+  /** Defaults to the space's default currency. */
+  currency: Schema.optional(Currency),
   /** Initial plan. Entries with a zero amount are ignored. */
   envelopes: Schema.Array(EnvelopePlan),
 }).annotate({ identifier: "CreatePeriod" });

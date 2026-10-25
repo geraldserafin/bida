@@ -4,6 +4,7 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
+import 'currency.dart';
 import 'recurring_rule_frequency.dart';
 
 part 'recurring_rule.g.dart';
@@ -14,6 +15,7 @@ class RecurringRule {
     required this.id,
     required this.categoryId,
     required this.amountMinor,
+    required this.currency,
     required this.frequency,
     required this.note,
     required this.active,
@@ -27,6 +29,7 @@ class RecurringRule {
   final String id;
   final String categoryId;
   final int amountMinor;
+  final Currency currency;
   final RecurringRuleFrequency frequency;
   final String? note;
   final bool active;

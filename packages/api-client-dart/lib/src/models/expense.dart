@@ -4,6 +4,8 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
+import 'currency.dart';
+
 part 'expense.g.dart';
 
 @JsonSerializable()
@@ -13,6 +15,8 @@ class Expense {
     required this.envelopeId,
     required this.periodId,
     required this.amountMinor,
+    required this.originalAmountMinor,
+    required this.originalCurrency,
     required this.spentAt,
     required this.note,
     required this.recurringId,
@@ -27,6 +31,8 @@ class Expense {
   final String envelopeId;
   final String periodId;
   final int amountMinor;
+  final int? originalAmountMinor;
+  final Currency? originalCurrency;
   final String spentAt;
   final String? note;
   final String? recurringId;

@@ -14,6 +14,9 @@ CreatePeriod _$CreatePeriodFromJson(Map<String, dynamic> json) => CreatePeriod(
   envelopes: (json['envelopes'] as List<dynamic>)
       .map((e) => EnvelopePlan.fromJson(e as Map<String, dynamic>))
       .toList(),
+  currency: json['currency'] == null
+      ? null
+      : Currency.fromJson(json['currency'] as String),
 );
 
 Map<String, dynamic> _$CreatePeriodToJson(CreatePeriod instance) =>
@@ -22,5 +25,21 @@ Map<String, dynamic> _$CreatePeriodToJson(CreatePeriod instance) =>
       'startDate': instance.startDate,
       'endDate': instance.endDate,
       'incomeMinor': instance.incomeMinor,
+      'currency': _$CurrencyEnumMap[instance.currency],
       'envelopes': instance.envelopes,
     };
+
+const _$CurrencyEnumMap = {
+  Currency.pln: 'PLN',
+  Currency.eur: 'EUR',
+  Currency.usd: 'USD',
+  Currency.gbp: 'GBP',
+  Currency.chf: 'CHF',
+  Currency.czk: 'CZK',
+  Currency.sek: 'SEK',
+  Currency.nok: 'NOK',
+  Currency.dkk: 'DKK',
+  Currency.huf: 'HUF',
+  Currency.jpy: 'JPY',
+  Currency.$unknown: r'$unknown',
+};

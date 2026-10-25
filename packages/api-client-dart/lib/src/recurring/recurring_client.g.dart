@@ -130,9 +130,12 @@ class _RecurringClient implements RecurringClient {
   }
 
   @override
-  Future<List<EnvelopePlan>> recurringSuggestedPlan() async {
+  Future<List<EnvelopePlan>> recurringSuggestedPlan({
+    Currency? currency,
+  }) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'currency': currency};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<List<EnvelopePlan>>(

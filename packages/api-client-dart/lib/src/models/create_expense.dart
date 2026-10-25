@@ -4,6 +4,8 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
+import 'original_amount.dart';
+
 part 'create_expense.g.dart';
 
 @JsonSerializable()
@@ -13,6 +15,7 @@ class CreateExpense {
     required this.amountMinor,
     required this.spentAt,
     required this.note,
+    this.original,
   });
 
   factory CreateExpense.fromJson(Map<String, Object?> json) =>
@@ -22,6 +25,7 @@ class CreateExpense {
   final int amountMinor;
   final String spentAt;
   final String? note;
+  final OriginalAmount? original;
 
   Map<String, Object?> toJson() => _$CreateExpenseToJson(this);
 }

@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../models/apply_result.dart';
+import '../models/currency.dart';
 import '../models/envelope_plan.dart';
 import '../models/recurring_rule.dart';
 import '../models/save_recurring_rule.dart';
@@ -45,9 +46,11 @@ abstract class RecurringClient {
 
   /// Suggested envelope amounts.
   ///
-  /// Sum of the active rules per category, to prefill a new period's plan.
+  /// Sum of the active rules in one currency per category, to prefill a new period's plan.
   @GET('/recurring-rules/suggested-plan')
-  Future<List<EnvelopePlan>> recurringSuggestedPlan();
+  Future<List<EnvelopePlan>> recurringSuggestedPlan({
+    @Query('currency') Currency? currency,
+  });
 
   /// Apply recurring rules to a period.
   ///

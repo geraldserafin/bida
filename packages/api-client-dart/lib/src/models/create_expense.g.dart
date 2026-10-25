@@ -12,6 +12,9 @@ CreateExpense _$CreateExpenseFromJson(Map<String, dynamic> json) =>
       amountMinor: (json['amountMinor'] as num).toInt(),
       spentAt: json['spentAt'] as String,
       note: json['note'] as String?,
+      original: json['original'] == null
+          ? null
+          : OriginalAmount.fromJson(json['original'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$CreateExpenseToJson(CreateExpense instance) =>
@@ -20,4 +23,5 @@ Map<String, dynamic> _$CreateExpenseToJson(CreateExpense instance) =>
       'amountMinor': instance.amountMinor,
       'spentAt': instance.spentAt,
       'note': instance.note,
+      'original': instance.original,
     };

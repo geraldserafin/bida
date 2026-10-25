@@ -4,6 +4,7 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
+import 'currency.dart';
 import 'envelope_plan.dart';
 
 part 'create_period.g.dart';
@@ -16,6 +17,7 @@ class CreatePeriod {
     required this.endDate,
     required this.incomeMinor,
     required this.envelopes,
+    this.currency,
   });
 
   factory CreatePeriod.fromJson(Map<String, Object?> json) =>
@@ -25,6 +27,7 @@ class CreatePeriod {
   final String startDate;
   final String endDate;
   final int incomeMinor;
+  final Currency? currency;
   final List<EnvelopePlan> envelopes;
 
   Map<String, Object?> toJson() => _$CreatePeriodToJson(this);
