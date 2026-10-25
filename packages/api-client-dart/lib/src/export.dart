@@ -6,8 +6,16 @@
 export 'system/system_client.dart';
 export 'categories/categories_client.dart';
 export 'budgets/budgets_client.dart';
+export 'expenses/expenses_client.dart';
 // Data classes
 export 'models/period_not_found_encoded.dart';
+export 'models/period_progress.dart';
+export 'models/envelope_progress.dart';
+export 'models/expense.dart';
+export 'models/expense_not_found_encoded.dart';
+export 'models/envelope_not_found_encoded.dart';
+export 'models/update_expense.dart';
+export 'models/create_expense.dart';
 export 'models/envelope_already_exists_encoded.dart';
 export 'models/category_not_found_encoded.dart';
 export 'models/envelope.dart';
@@ -24,6 +32,8 @@ export 'models/update_category.dart';
 export 'models/create_category.dart';
 export 'models/health.dart';
 export 'models/period_not_found_encoded_tag.dart';
+export 'models/expense_not_found_encoded_tag.dart';
+export 'models/envelope_not_found_encoded_tag.dart';
 export 'models/envelope_already_exists_encoded_tag.dart';
 export 'models/category_not_found_encoded_tag.dart';
 export 'models/invalid_period_range_encoded_tag.dart';

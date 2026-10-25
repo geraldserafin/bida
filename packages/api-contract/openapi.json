@@ -539,6 +539,360 @@
           "required": true
         }
       }
+    },
+    "/expenses": {
+      "post": {
+        "tags": [
+          "Expenses"
+        ],
+        "operationId": "expenses.create",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Expense",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Expense"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add an expense",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpense"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/expenses/{id}": {
+      "get": {
+        "tags": [
+          "Expenses"
+        ],
+        "operationId": "expenses.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Expense",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Expense"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ExpenseNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get an expense"
+      },
+      "put": {
+        "tags": [
+          "Expenses"
+        ],
+        "operationId": "expenses.update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Expense",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Expense"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ExpenseNotFound | EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                    },
+                    {
+                      "$ref": "#/components/schemas/EnvelopeNotFoundEncoded"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Edit an expense",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExpense"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Expenses"
+        ],
+        "operationId": "expenses.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "404": {
+            "description": "ExpenseNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Delete an expense"
+      }
+    },
+    "/periods/{periodId}/expenses": {
+      "get": {
+        "tags": [
+          "Expenses"
+        ],
+        "operationId": "expenses.listForPeriod",
+        "parameters": [
+          {
+            "name": "periodId",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "envelopeId",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Expense"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PeriodNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Newest first. Defaults to 50 rows, at most 200.",
+        "summary": "List the expenses of a period"
+      }
+    },
+    "/periods/{periodId}/progress": {
+      "get": {
+        "tags": [
+          "Expenses"
+        ],
+        "operationId": "expenses.progress",
+        "parameters": [
+          {
+            "name": "periodId",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "PeriodProgress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodProgress"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PeriodNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PeriodNotFoundEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Totals for the period and for each envelope.",
+        "summary": "Planned versus spent"
+      }
     }
   },
   "components": {
@@ -559,6 +913,243 @@
         "required": [
           "_tag",
           "id"
+        ],
+        "additionalProperties": false
+      },
+      "PeriodProgress": {
+        "type": "object",
+        "properties": {
+          "periodId": {
+            "type": "string"
+          },
+          "incomeMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "plannedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "spentMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "remainingMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "unallocatedMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "envelopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnvelopeProgress"
+            }
+          }
+        },
+        "required": [
+          "periodId",
+          "incomeMinor",
+          "plannedMinor",
+          "spentMinor",
+          "remainingMinor",
+          "unallocatedMinor",
+          "envelopes"
+        ],
+        "additionalProperties": false
+      },
+      "EnvelopeProgress": {
+        "type": "object",
+        "properties": {
+          "envelopeId": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "plannedMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "spentMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "remainingMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "envelopeId",
+          "categoryId",
+          "plannedMinor",
+          "spentMinor",
+          "remainingMinor"
+        ],
+        "additionalProperties": false
+      },
+      "Expense": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "envelopeId": {
+            "type": "string"
+          },
+          "periodId": {
+            "type": "string"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 9007199254740991,
+            "exclusiveMinimum": 0
+          },
+          "spentAt": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "envelopeId",
+          "periodId",
+          "amountMinor",
+          "spentAt",
+          "note",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "title": "Expense.json"
+      },
+      "ExpenseNotFoundEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "ExpenseNotFound"
+            ]
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "EnvelopeNotFoundEncoded": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "EnvelopeNotFound"
+            ]
+          },
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateExpense": {
+        "type": "object",
+        "properties": {
+          "envelopeId": {
+            "type": "string"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 9007199254740991,
+            "exclusiveMinimum": 0
+          },
+          "spentAt": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "envelopeId",
+          "amountMinor",
+          "spentAt",
+          "note"
+        ],
+        "additionalProperties": false
+      },
+      "CreateExpense": {
+        "type": "object",
+        "properties": {
+          "envelopeId": {
+            "type": "string"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 9007199254740991,
+            "exclusiveMinimum": 0
+          },
+          "spentAt": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "envelopeId",
+          "amountMinor",
+          "spentAt",
+          "note"
         ],
         "additionalProperties": false
       },
@@ -973,6 +1564,9 @@
     },
     {
       "name": "Budgets"
+    },
+    {
+      "name": "Expenses"
     }
   ]
 }
