@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
   packages = [
     pkgs.pnpm
@@ -6,6 +6,12 @@
 
   env.DATABASE_URL = "postgres://bida@127.0.0.1:5432/bida";
   env.TEST_DATABASE_URL = "postgres://bida@127.0.0.1:5432/bida_test";
+
+  # The web OAuth client of the Google Cloud project. It is public (it is in the
+  # web app's source): the api checks Google ID tokens against it and the app
+  # offers "Sign in with Google" when it is set.
+  env.GOOGLE_CLIENT_ID = "67840222616-r4pocur8m07i39b87h88n8psd21f2o3s.apps.googleusercontent.com";
+  env.GOOGLE_CLIENT_IDS = config.env.GOOGLE_CLIENT_ID;
 
   services.postgres = {
     enable = true;
@@ -79,8 +85,7 @@
   processes.mobile = {
     exec = ''
       cd "$DEVENV_ROOT/apps/mobile"
-      # GOOGLE_CLIENT_ID (the web client id of the Google Cloud project) turns
-      # on "Sign in with Google"; without it only the e-mail code is offered
+      # with GOOGLE_CLIENT_ID set the app offers "Sign in with Google"
       exec flutter run -d emulator-5554 ''${GOOGLE_CLIENT_ID:+--dart-define=GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID}
     '';
     process-compose = {
