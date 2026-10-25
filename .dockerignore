@@ -1,0 +1,9 @@
+**/node_modules
+**/.dart_tool
+**/build
+.git
+.devenv*
+.direnv
+apps/mobile
+packages/api-client-dart
+docs

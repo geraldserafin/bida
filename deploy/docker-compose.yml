@@ -1,0 +1,13 @@
+# Runs on the VPS. The deploy workflow copies this file there and runs
+# `docker compose pull && docker compose up -d` next to a `.env` that holds
+# DATABASE_URL and CORS_ORIGINS (see docs/DEPLOYMENT.md).
+services:
+  api:
+    image: ghcr.io/geraldserafin/bida-api:${TAG:-latest}
+    restart: unless-stopped
+    # host network: Postgres and Caddy run on the host and reach the API on
+    # 127.0.0.1:3000
+    network_mode: host
+    env_file: .env
+    environment:
+      PORT: 3000

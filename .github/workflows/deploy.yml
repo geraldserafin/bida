@@ -1,0 +1,94 @@
+name: Deploy
+
+# Runs after CI is green on main: builds the API image and the web app, then
+# ships both to the VPS over SSH.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/geraldserafin/bida-api
+  API_URL: https://api.bida.maknet.com.pl
+  SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+jobs:
+  api-image:
+    name: API image
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.SHA }}
+            ${{ env.IMAGE }}:latest
+
+  web:
+    name: Web app
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.4
+          cache: true
+      - run: flutter pub get
+        working-directory: apps/mobile
+      - run: flutter build web --release --dart-define=API_URL=${{ env.API_URL }}
+        working-directory: apps/mobile
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web
+          path: apps/mobile/build/web
+          if-no-files-found: error
+
+  deploy:
+    name: Ship to the VPS
+    needs: [api-image, web]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: web
+          path: web
+      - name: SSH setup
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf 'Host vps\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/id_deploy\n' \
+            "${{ secrets.VPS_HOST }}" "${{ secrets.VPS_USER }}" > ~/.ssh/config
+      - name: Upload the web app and the compose file
+        run: |
+          rsync -az --delete web/ vps:${{ vars.VPS_DIR }}/web/
+          scp deploy/docker-compose.yml vps:${{ vars.VPS_DIR }}/docker-compose.yml
+      - name: Restart the API
+        run: |
+          ssh vps "cd ${{ vars.VPS_DIR }} && TAG=${{ env.SHA }} docker compose pull && TAG=${{ env.SHA }} docker compose up -d --remove-orphans"
