@@ -1,0 +1,231 @@
+{
+  "@@locale": "en",
+  "appTitle": "PLNing",
+
+  "dashboardEmptyTitle": "Your envelope budget lives here.",
+  "dashboardEmptyBody": "Create a period and split your income to get started.",
+  "newPeriod": "New period",
+  "addExpense": "Add expense",
+  "envelopes": "Envelopes",
+  "noEnvelopes": "No categories allocated yet.",
+
+  "income": "Income",
+  "planned": "Planned",
+  "spent": "Spent",
+  "unallocated": "Unallocated",
+  "overAllocated": "Over-allocated",
+
+  "remaining": "Remaining",
+  "remainingIn": "Remaining · {period}",
+  "@remainingIn": {
+    "placeholders": { "period": { "type": "String" } }
+  },
+  "amountLeft": "{amount} left",
+  "@amountLeft": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "overBy": "Over by {amount}",
+  "@overBy": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+
+  "periodName": "Period name",
+  "enterName": "Enter a name",
+  "start": "Start",
+  "end": "End",
+  "incomeForPeriod": "Income for this period",
+  "enterIncome": "Enter your income",
+  "splitAcrossCategories": "Split across categories",
+  "overAllocationWarning": "You've allocated {amount} more than your income. You can still continue.",
+  "@overAllocationWarning": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "createPeriod": "Create period",
+  "editPlan": "Edit plan",
+  "saveChanges": "Save changes",
+
+  "noEnvelopesForExpense": "This period has no envelopes yet. Add categories to the period before logging expenses.",
+  "envelope": "Envelope",
+  "pickEnvelope": "Pick an envelope",
+  "amount": "Amount",
+  "enterAmount": "Enter an amount",
+  "date": "Date",
+  "noteOptional": "Note (optional)",
+  "saveExpense": "Save expense",
+  "editExpense": "Edit expense",
+
+  "categories": "Categories",
+  "manageCategories": "Manage categories",
+  "newCategory": "New category",
+  "editCategory": "Edit category",
+  "name": "Name",
+  "icon": "Icon",
+  "color": "Color",
+  "save": "Save",
+  "delete": "Delete",
+  "addCategory": "Add category",
+  "noCategories": "No categories yet. Add your first one.",
+  "categoryInUse": "Can't delete a category that's used in a period.",
+
+  "period": "Period",
+
+  "expenses": "Expenses",
+  "noExpenses": "No expenses in this envelope yet.",
+  "deleteExpense": "Delete expense",
+  "deleteExpenseConfirm": "Delete this expense of {amount}?",
+  "@deleteExpenseConfirm": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "cancel": "Cancel",
+  "expenseDeleted": "Expense deleted",
+
+  "plannedSplit": "Planned split",
+  "plannedVsSpent": "Planned vs. spent",
+  "spendingOverTime": "Spending over time",
+  "notEnoughData": "Not enough data yet.",
+
+  "recurringRules": "Recurring rules",
+  "newRule": "New rule",
+  "editRule": "Edit rule",
+  "addRule": "Add rule",
+  "category": "Category",
+  "note": "Note",
+  "frequency": "Frequency",
+  "weekly": "Weekly",
+  "monthly": "Monthly",
+  "active": "Active",
+  "noRecurringRules": "No recurring rules yet. Add templates for regular income or expenses.",
+  "prefillFromRecurring": "Pre-fill from recurring",
+  "applyRecurring": "Add recurring to this period",
+  "recurringApplied": "{count, plural, =0{Everything is already up to date} =1{Added 1 recurring expense} other{Added {count} recurring expenses}}",
+  "@recurringApplied": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "needCategoryFirst": "Add a category first.",
+
+  "settings": "Settings",
+  "security": "Security",
+  "appLock": "App lock (PIN)",
+  "appLockSubtitle": "Require a PIN to open the app",
+  "changePin": "Change PIN",
+  "biometricUnlock": "Unlock with biometrics",
+  "setPin": "Set PIN",
+  "enterPin": "Enter PIN",
+  "confirmPin": "Confirm PIN",
+  "pinTooShort": "PIN must be at least 6 digits",
+  "pinsDontMatch": "PINs don't match",
+  "wrongPin": "Incorrect PIN",
+  "unlock": "Unlock",
+  "unlockTitle": "Enter your PIN",
+  "useBiometrics": "Use biometrics",
+  "biometricReason": "Authenticate to unlock Money Planner",
+  "pinSaved": "PIN saved",
+  "lockDisabled": "App lock disabled",
+
+  "cloudSync": "Cloud sync",
+  "syncSubtitle": "Encrypted backup to a private GitHub repo",
+  "setUpSync": "Set up GitHub sync",
+  "githubToken": "GitHub token",
+  "repoOwner": "Owner (user or org)",
+  "repoName": "Repository",
+  "filePath": "File path",
+  "syncPassphrase": "Encryption passphrase",
+  "connect": "Connect",
+  "syncNow": "Sync now",
+  "restoreFromCloud": "Restore from cloud",
+  "disconnect": "Disconnect",
+  "lastSynced": "Last synced: {when}",
+  "@lastSynced": {
+    "placeholders": { "when": { "type": "String" } }
+  },
+  "neverSynced": "Never synced",
+  "syncComplete": "Sync complete",
+  "restoreComplete": "Restored from cloud",
+  "nothingToRestore": "Nothing to restore yet",
+  "restoreWarningTitle": "Restore from cloud?",
+  "restoreWarningBody": "This replaces all local data with the cloud copy.",
+  "restorePreviewCloud": "Cloud backup: {periods} periods · {expenses} expenses",
+  "@restorePreviewCloud": {
+    "placeholders": {
+      "periods": { "type": "int" },
+      "expenses": { "type": "int" }
+    }
+  },
+  "restorePreviewLocal": "Your data now: {periods} periods · {expenses} expenses — this will be replaced",
+  "@restorePreviewLocal": {
+    "placeholders": {
+      "periods": { "type": "int" },
+      "expenses": { "type": "int" }
+    }
+  },
+  "restoreSnapshotNote": "A safety copy of your current data is saved first, so you can recover if the restore is wrong.",
+  "snapshotKept": "Previous data saved to {path}",
+  "@snapshotKept": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "syncFailed": "Sync failed: {error}",
+  "@syncFailed": {
+    "placeholders": { "error": { "type": "String" } }
+  },
+  "restore": "Restore",
+
+  "general": "General",
+  "appearance": "Appearance",
+  "dataSection": "Data",
+  "currency": "Currency",
+  "firstDayOfMonth": "First day of month",
+  "theme": "Theme",
+  "themeDark": "Dark",
+  "themeLight": "Light",
+  "themeAuto": "Auto",
+  "exportCsv": "Export data (CSV)",
+  "importCsv": "Import from CSV",
+  "noExportFound": "No export file found",
+  "importResult": "{count, plural, =0{No expenses to import} =1{Imported 1 expense} other{Imported {count} expenses}}",
+  "@importResult": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "importSkipped": "{count, plural, =1{, skipped 1 duplicate} other{, skipped {count} duplicates}}",
+  "@importSkipped": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "backup": "Backup",
+  "about": "About",
+  "csvExported": "Exported to {path}",
+  "@csvExported": {
+    "placeholders": { "path": { "type": "String" } }
+  },
+  "today": "Today",
+  "noteHint": "e.g. Weekly groceries",
+  "addNew": "New",
+  "remainingInCategory": "Remaining in {category}",
+  "@remainingInCategory": {
+    "placeholders": { "category": { "type": "String" } }
+  },
+
+  "history": "History",
+  "periods": "Periods",
+  "all": "All",
+  "dateRange": "Date range",
+  "noMatchingExpenses": "No expenses match the filters.",
+  "yesterday": "Yesterday",
+  "noPeriodsYet": "No periods yet.",
+  "upcoming": "Upcoming",
+  "currentSet": "Current",
+  "earlier": "Earlier",
+  "newExpense": "New expense",
+  "deletePeriod": "Delete period",
+  "deletePeriodConfirm": "Delete \"{name}\" and all its data?",
+  "@deletePeriodConfirm": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "periodDeleted": "Period deleted",
+  "dashboard": "Dashboard",
+  "periodRange": "{start} – {end}",
+  "@periodRange": {
+    "placeholders": {
+      "start": { "type": "String" },
+      "end": { "type": "String" }
+    }
+  }
+}
