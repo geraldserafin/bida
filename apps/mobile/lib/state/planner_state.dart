@@ -29,6 +29,9 @@ class PlannerState extends ChangeNotifier {
 
   static const _kCurrentPeriod = 'current_period_id';
 
+  /// The last chosen period is remembered per budget.
+  String get _periodKey => '$_kCurrentPeriod:${_spaceId ?? ''}';
+
   final PlannerRepository _repo;
 
   /// Runs first on every [load], e.g. to move old local data to the server.
@@ -38,9 +41,9 @@ class PlannerState extends ChangeNotifier {
   Future<void> _persistCurrent() async {
     final id = _currentPeriod?.id;
     if (id == null) {
-      await _storage.delete(key: _kCurrentPeriod);
+      await _storage.delete(key: _periodKey);
     } else {
-      await _storage.write(key: _kCurrentPeriod, value: id);
+      await _storage.write(key: _periodKey, value: id);
     }
   }
 
@@ -86,15 +89,19 @@ class PlannerState extends ChangeNotifier {
 
   // ---- lifecycle ------------------------------------------------------------
 
-  bool _signedIn = false;
+  String? _spaceId;
 
-  /// Tells the state whether somebody is signed in: it loads their data when
-  /// they are, and forgets it when they sign out.
-  void signedIn(bool value) {
-    if (value == _signedIn) return;
-    _signedIn = value;
+  /// Tells the state which budget to show: it loads that budget's data, and
+  /// forgets everything for `null` (nobody signed in). Switching to another
+  /// budget drops the old one's data first.
+  void useSpace(String? id) {
+    if (id == _spaceId) return;
+    _spaceId = id;
     // this is called while the widget tree builds, so change state after it
-    scheduleMicrotask(() => value ? load() : _forget());
+    scheduleMicrotask(() async {
+      await _forget();
+      if (id != null && id == _spaceId) await load();
+    });
   }
 
   Future<void> _forget() async {
@@ -105,7 +112,6 @@ class PlannerState extends ChangeNotifier {
     _currentPeriod = null;
     _loadError = null;
     _loading = true;
-    await _storage.delete(key: _kCurrentPeriod);
     notifyListeners();
   }
 
@@ -127,7 +133,7 @@ class PlannerState extends ChangeNotifier {
       _periods = periods;
 
       // Restore the last chosen period, falling back to the most recent one.
-      final storedId = await _storage.read(key: _kCurrentPeriod);
+      final storedId = await _storage.read(key: _periodKey);
       _currentPeriod =
           _periods.where((p) => p.id == storedId).firstOrNull ??
           _periods.firstOrNull;

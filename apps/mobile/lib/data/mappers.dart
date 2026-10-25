@@ -42,6 +42,7 @@ Period periodFrom(api.Period p) {
     endDate: parseDay(p.endDate),
     income: fromMinor(p.incomeMinor, currency),
     currency: currency,
+    version: p.version,
   );
 }
 
@@ -78,6 +79,7 @@ Expense expenseFrom(api.Expense e, String currency) => Expense(
   date: DateTime.parse(e.spentAt).toLocal(),
   note: e.note,
   recurringId: e.recurringId,
+  createdBy: e.createdBy,
   originalAmount: e.originalAmountMinor == null || e.originalCurrency == null
       ? null
       : fromMinor(e.originalAmountMinor!, currencyCode(e.originalCurrency!)),

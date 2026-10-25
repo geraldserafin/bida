@@ -3,11 +3,13 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'app.dart';
 import 'data/api_client.dart';
+import 'data/active_space.dart';
 import 'data/auth_repository.dart';
 import 'data/google_sign_in.dart';
 import 'data/legacy_migration.dart';
 import 'data/planner_repository.dart';
 import 'data/session_store.dart';
+import 'data/sharing_repository.dart';
 import 'state/app_settings.dart';
 
 Future<void> main() async {
@@ -22,7 +24,8 @@ Future<void> main() async {
   await initGoogleSignIn();
 
   final session = SessionStore();
-  final dio = createDio(session: session);
+  final activeSpace = ActiveSpace();
+  final dio = createDio(session: session, space: activeSpace);
   final repository = PlannerRepository(dio);
 
   runApp(
@@ -30,6 +33,8 @@ Future<void> main() async {
       settings: settings,
       repository: repository,
       auth: AuthRepository(dio, session),
+      sharing: SharingRepository(dio),
+      activeSpace: activeSpace,
       // Data kept on the device by the offline version moves to the server.
       beforeLoad: legacyMigration(repository),
       // The browser app opened from the link in the sign-in e-mail.

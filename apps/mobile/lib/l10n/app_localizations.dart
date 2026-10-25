@@ -1027,6 +1027,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'or'**
   String get orSeparator;
+
+  /// No description provided for @errorForbidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an owner of this budget can do that.'**
+  String get errorForbidden;
 }
 
 class _AppLocalizationsDelegate

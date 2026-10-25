@@ -115,6 +115,7 @@ void main() {
 
       expect(updated.income, 90000);
       expect(backend.sent('PUT /periods/p1/plan').single.body, {
+        'version': 1,
         'incomeMinor': 90000, // yen have no minor unit
         'envelopes': [
           {'categoryId': 'c1', 'plannedMinor': 5000},
@@ -130,6 +131,7 @@ void main() {
             'period': periodJson('p1', 'July'),
             'plannedMinor': 40000,
             'spentMinor': 3550,
+            'contributedMinor': 25000,
           },
         ]),
       );
@@ -139,6 +141,7 @@ void main() {
       expect(summary.period.name, 'July');
       expect(summary.planned, 400);
       expect(summary.spent, 35.5);
+      expect(summary.contributed, 250);
     });
   });
 

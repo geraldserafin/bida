@@ -154,5 +154,6 @@
   "signOutConfirm": "Wylogować z tego urządzenia?",
   "signInWithGoogle": "Zaloguj przez Google",
   "googleSignInFailed": "Logowanie przez Google nie udało się. Spróbuj ponownie albo użyj kodu z e-maila.",
-  "orSeparator": "lub"
+  "orSeparator": "lub",
+  "errorForbidden": "Tylko właściciel tego budżetu może to zrobić."
 }

@@ -16,6 +16,10 @@ class Expense {
   final double? originalAmount;
   final String? originalCurrency;
 
+  /// Who added it (a user id), null for imported data and for people whose
+  /// account is gone.
+  final String? createdBy;
+
   const Expense({
     this.id,
     required this.envelopeId,
@@ -25,6 +29,7 @@ class Expense {
     this.recurringId,
     this.originalAmount,
     this.originalCurrency,
+    this.createdBy,
   });
 
   Expense copyWith({
@@ -44,6 +49,7 @@ class Expense {
       recurringId: recurringId ?? this.recurringId,
       originalAmount: originalAmount,
       originalCurrency: originalCurrency,
+      createdBy: createdBy,
     );
   }
 }

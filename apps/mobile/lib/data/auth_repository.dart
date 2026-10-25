@@ -70,6 +70,10 @@ class AuthRepository {
     }
   }
 
+  /// Sets the name other members of a shared budget see.
+  Future<void> rename(String name) =>
+      guard(() => _api.auth.authRename(body: api.SaveProfile(name: name)));
+
   /// Ends the session. The device is signed out even when the server cannot
   /// be reached.
   Future<void> signOut() async {

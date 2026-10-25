@@ -7,4 +7,5 @@ export 'period.dart';
 export 'envelope.dart';
 export 'expense.dart';
 export 'recurring_rule.dart';
+export 'sharing.dart';
 export 'transaction.dart';

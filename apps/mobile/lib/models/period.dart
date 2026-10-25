@@ -12,6 +12,10 @@ class Period {
   /// ISO 4217 code. Every amount of the period is in this currency.
   final String currency;
 
+  /// Counts the edits of the plan. It goes back to the server with an edit, so
+  /// an edit made on stale data is refused.
+  final int version;
+
   const Period({
     this.id,
     required this.name,
@@ -19,6 +23,7 @@ class Period {
     required this.endDate,
     required this.income,
     this.currency = defaultCurrency,
+    this.version = 1,
   });
 
   static const defaultCurrency = 'PLN';
@@ -30,6 +35,7 @@ class Period {
     DateTime? endDate,
     double? income,
     String? currency,
+    int? version,
   }) {
     return Period(
       id: id ?? this.id,
@@ -38,6 +44,7 @@ class Period {
       endDate: endDate ?? this.endDate,
       income: income ?? this.income,
       currency: currency ?? this.currency,
+      version: version ?? this.version,
     );
   }
 }

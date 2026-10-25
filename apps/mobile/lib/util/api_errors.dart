@@ -12,6 +12,7 @@ String apiErrorMessage(AppLocalizations l10n, ApiException error) =>
       ApiFailure.invalid => l10n.errorInvalid,
       ApiFailure.server => l10n.errorServer,
       ApiFailure.unauthorized => l10n.errorUnauthorized,
+      ApiFailure.forbidden => l10n.errorForbidden,
       ApiFailure.rateLimited => l10n.errorRateLimited,
     };
 

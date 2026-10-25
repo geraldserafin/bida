@@ -255,5 +255,6 @@
   "signOutConfirm": "Sign out of this device?",
   "signInWithGoogle": "Sign in with Google",
   "googleSignInFailed": "Google sign-in did not work. Try again or use the e-mail code.",
-  "orSeparator": "or"
+  "orSeparator": "or",
+  "errorForbidden": "Only an owner of this budget can do that."
 }

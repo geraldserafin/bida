@@ -6,10 +6,15 @@ class PeriodSummary {
   final double planned;
   final double spent;
 
+  /// What was actually paid into the period (shared budgets), next to the
+  /// planned income.
+  final double contributed;
+
   const PeriodSummary({
     required this.period,
     required this.planned,
     required this.spent,
+    this.contributed = 0,
   });
 
   double get income => period.income;

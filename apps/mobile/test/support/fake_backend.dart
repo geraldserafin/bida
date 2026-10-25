@@ -139,6 +139,7 @@ Map<String, Object?> periodJson(
   String currency = 'PLN',
   String start = '2026-07-01',
   String end = '2026-07-31',
+  int version = 1,
 }) => {
   'id': id,
   'name': name,
@@ -146,6 +147,7 @@ Map<String, Object?> periodJson(
   'endDate': end,
   'incomeMinor': incomeMinor,
   'currency': currency,
+  'version': version,
   'createdAt': '2026-07-01T00:00:00.000Z',
   'updatedAt': '2026-07-01T00:00:00.000Z',
 };
@@ -183,6 +185,7 @@ Map<String, Object?> progressJson(
   'spentMinor': 0,
   'remainingMinor': 0,
   'unallocatedMinor': 0,
+  'contributedMinor': 0,
   'envelopes': envelopes,
 };
 
@@ -213,4 +216,70 @@ Map<String, Object?> userJson(String email) => {
   'email': email,
   'name': null,
   'createdAt': '2026-01-01T00:00:00Z',
+};
+
+Map<String, Object?> mySpaceJson(
+  String id,
+  String name, {
+  String kind = 'shared',
+  String role = 'owner',
+  int memberCount = 1,
+  String currency = 'PLN',
+}) => {
+  'space': {
+    'id': id,
+    'name': name,
+    'defaultCurrency': currency,
+    'kind': kind,
+    'createdAt': '2026-07-01T00:00:00.000Z',
+    'updatedAt': '2026-07-01T00:00:00.000Z',
+  },
+  'role': role,
+  'memberCount': memberCount,
+};
+
+Map<String, Object?> memberJson(
+  String userId,
+  String email, {
+  String? name,
+  String role = 'member',
+}) => {
+  'userId': userId,
+  'email': email,
+  'name': name,
+  'role': role,
+  'joinedAt': '2026-07-01T00:00:00.000Z',
+};
+
+Map<String, Object?> invitationJson(
+  String id, {
+  String status = 'invited',
+  String spaceName = 'Dom',
+  String email = 'bob@example.com',
+}) => {
+  'id': id,
+  'spaceId': 's2',
+  'spaceName': spaceName,
+  'email': email,
+  'role': 'member',
+  'status': status,
+  'invitedBy': {'email': 'ann@example.com', 'name': 'Ann'},
+  'acceptedBy': null,
+  'expiresAt': '2026-07-15T00:00:00.000Z',
+  'createdAt': '2026-07-01T00:00:00.000Z',
+};
+
+Map<String, Object?> contributionJson(
+  String id,
+  int amountMinor, {
+  String periodId = 'p1',
+  String? userId,
+}) => {
+  'id': id,
+  'periodId': periodId,
+  'userId': userId,
+  'amountMinor': amountMinor,
+  'contributedAt': '2026-07-02T10:00:00.000Z',
+  'note': null,
+  'createdAt': '2026-07-02T10:00:00.000Z',
 };

@@ -74,21 +74,21 @@ void main() {
   });
 
   test(
-    'loads when somebody signs in and forgets everything on sign-out',
+    'loads the budget it is told to use and forgets it on a change',
     () async {
       final state = newState();
 
-      state.signedIn(true);
+      state.useSpace('home');
       await Future<void>.delayed(Duration.zero);
-      await state.load(); // wait for the load the sign-in started
+      await state.load(); // wait for the load that started
       expect(state.categories, isNotEmpty);
       final asked = backend.requests.length;
 
-      state.signedIn(true); // already signed in: nothing more is asked
+      state.useSpace('home'); // the same budget: nothing more is asked
       await Future<void>.delayed(Duration.zero);
       expect(backend.requests.length, asked);
 
-      state.signedIn(false);
+      state.useSpace(null); // nobody is signed in
       await Future<void>.delayed(Duration.zero);
       expect(state.categories, isEmpty);
       expect(state.currentPeriod, isNull);

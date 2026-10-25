@@ -16,6 +16,9 @@ enum ApiFailure {
   /// Not signed in, or the session is over.
   unauthorized,
 
+  /// Signed in, but the action is for the owners of the budget only.
+  forbidden,
+
   /// Too many requests; wait before trying again.
   rateLimited,
 }
@@ -37,6 +40,7 @@ class ApiException implements Exception {
       null => ApiFailure.unreachable,
       404 => ApiFailure.notFound,
       401 => ApiFailure.unauthorized,
+      403 => ApiFailure.forbidden,
       409 => ApiFailure.conflict,
       429 => ApiFailure.rateLimited,
       400 || 422 => ApiFailure.invalid,

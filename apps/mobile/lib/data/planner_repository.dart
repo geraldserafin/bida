@@ -69,6 +69,10 @@ class PlannerRepository {
           period: periodFrom(s.period),
           planned: fromMinor(s.plannedMinor, currencyCode(s.period.currency)),
           spent: fromMinor(s.spentMinor, currencyCode(s.period.currency)),
+          contributed: fromMinor(
+            s.contributedMinor,
+            currencyCode(s.period.currency),
+          ),
         ),
     ];
   });
@@ -107,6 +111,7 @@ class PlannerRepository {
     final updated = await _api.periods.periodsSetPlan(
       id: period.id!,
       body: api.SetPlan(
+        version: period.version,
         incomeMinor: toMinor(income, period.currency),
         envelopes: envelopePlansOf(plannedByCategory, period.currency),
       ),

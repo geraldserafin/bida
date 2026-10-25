@@ -531,4 +531,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orSeparator => 'or';
+
+  @override
+  String get errorForbidden => 'Only an owner of this budget can do that.';
 }

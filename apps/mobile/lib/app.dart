@@ -3,8 +3,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'data/active_space.dart';
 import 'data/auth_repository.dart';
 import 'data/planner_repository.dart';
+import 'data/sharing_repository.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/lock/lock_gate.dart';
@@ -12,6 +14,7 @@ import 'screens/login/auth_gate.dart';
 import 'state/app_settings.dart';
 import 'state/auth_state.dart';
 import 'state/planner_state.dart';
+import 'state/spaces_state.dart';
 import 'theme/app_theme.dart';
 import 'widgets/phone_frame.dart';
 
@@ -23,6 +26,8 @@ class MoneyPlannerApp extends StatefulWidget {
     required this.settings,
     required this.repository,
     required this.auth,
+    required this.sharing,
+    required this.activeSpace,
     this.beforeLoad,
     this.linkToken,
   });
@@ -30,6 +35,8 @@ class MoneyPlannerApp extends StatefulWidget {
   final AppSettings settings;
   final PlannerRepository repository;
   final AuthRepository auth;
+  final SharingRepository sharing;
+  final ActiveSpace activeSpace;
 
   /// Runs before the first load, e.g. to move data from an older version.
   final Future<void> Function()? beforeLoad;
@@ -80,13 +87,20 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
       providers: [
         Provider.value(value: widget.repository),
         ChangeNotifierProvider.value(value: _auth),
-        // loads the data once somebody is signed in, forgets it on sign-out
-        ChangeNotifierProxyProvider<AuthState, PlannerState>(
+        Provider.value(value: widget.sharing),
+        // the user's budgets, once somebody is signed in
+        ChangeNotifierProxyProvider<AuthState, SpacesState>(
+          create: (_) => SpacesState(widget.sharing, widget.activeSpace),
+          update: (_, auth, spaces) => spaces!..bind(signedIn: auth.isSignedIn),
+        ),
+        // the data of the budget in use; forgotten when it changes
+        ChangeNotifierProxyProvider<SpacesState, PlannerState>(
           create: (_) => PlannerState(
             repository: widget.repository,
             beforeLoad: widget.beforeLoad,
           ),
-          update: (_, auth, planner) => planner!..signedIn(auth.isSignedIn),
+          update: (_, spaces, planner) =>
+              planner!..useSpace(spaces.current?.id),
         ),
         ChangeNotifierProvider.value(value: widget.settings),
       ],
