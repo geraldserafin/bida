@@ -1,19 +1,32 @@
 import { createServer } from "node:http";
 import { Api } from "@bida/api-contract";
 import { NodeHttpServer, NodeRuntime } from "@effect/platform-node";
-import { Layer } from "effect";
+import { Effect, Layer } from "effect";
 import { HttpRouter } from "effect/http";
 import { HttpApiBuilder } from "effect/http-api";
-import { SystemLive } from "./System.ts";
+import { SystemHttp } from "./modules/system/system.module.ts";
+import { AppConfig } from "./platform/config.ts";
+import { DbLive } from "./platform/db.ts";
 
-const port = Number(process.env.PORT ?? 3000);
+// Domain modules (services) go here as they are added.
+const Modules = Layer.empty;
 
 const ApiRoutes = HttpApiBuilder.layer(Api, {
   openapiPath: "/openapi.json",
-}).pipe(Layer.provide(SystemLive));
+}).pipe(
+  Layer.provide([SystemHttp]),
+  Layer.provide(Modules),
+  Layer.provide(DbLive),
+);
 
-const Server = HttpRouter.serve(ApiRoutes).pipe(
-  Layer.provide(NodeHttpServer.layer(createServer, { port })),
+const Server = Layer.unwrap(
+  AppConfig.pipe(
+    Effect.map(({ port }) =>
+      HttpRouter.serve(ApiRoutes).pipe(
+        Layer.provide(NodeHttpServer.layer(createServer, { port })),
+      ),
+    ),
+  ),
 );
 
 Layer.launch(Server).pipe(NodeRuntime.runMain);
