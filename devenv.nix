@@ -25,16 +25,23 @@
   };
   processes.docs.exec = "pnpm --filter @bida/docs dev";
 
-  # Runs the Flutter app on a running device or emulator (start one with `emu`).
-  # Not a process: native Flutter has no dev server to keep alive, and this way
-  # you get the terminal for hot reload (r / R). The app reaches the api through
-  # 10.0.2.2 (see apps/mobile/lib/services/api_client.dart).
-  scripts.mobile.exec = ''
-    cd "$DEVENV_ROOT/apps/mobile"
+  # Runs the Flutter app on the emulator, starting the emulator first if none is
+  # running and waiting for it to boot. Not a process: native Flutter has no dev
+  # server to keep alive, and this way you get the terminal for hot reload
+  # (r / R). The emulator is detached, so it survives quitting flutter. The app
+  # reaches the api through 10.0.2.2 (see apps/mobile/lib/services/api_client.dart).
+  scripts.start-mobile.exec = ''
+    adb start-server >/dev/null
+    if ! adb devices | grep -q '^emulator-'; then
+      echo "starting emulator (log: $DEVENV_ROOT/.android/emu.log)..."
+      mkdir -p "$DEVENV_ROOT/.android"
+      setsid nohup emu >"$DEVENV_ROOT/.android/emu.log" 2>&1 &
+    fi
     adb wait-for-device
-    until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do
+    until [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do
       sleep 2
     done
+    cd "$DEVENV_ROOT/apps/mobile"
     exec flutter run "$@"
   '';
 
