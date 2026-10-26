@@ -1,6 +1,6 @@
 # Model kopert i współdzielenia
 
-Model danych i zachowania aplikacji. Zastąpił podział na **przestrzenie** i **okresy**. Działa także współdzielenie kopert. Plan dalszych prac: [ROADMAP.md](ROADMAP.md), etap 9.
+Model danych i zachowania aplikacji. Zastąpił podział na **przestrzenie** i **okresy**. Działa także współdzielenie kopert i reguły cykliczne. Plan dalszych prac: [ROADMAP.md](ROADMAP.md), etap 9.
 
 ## Idea w jednym akapicie
 
@@ -57,7 +57,19 @@ Wejście we wspólną kopertę pokazuje dodatkowo kartę „Kto ile włożył": 
 - **Wyjście z koperty.** Przydziały zostają (to wspólne pieniądze), więc apka ostrzega i pozwala najpierw wycofać wolną część. Wydatki zostają z autorem, reguły cykliczne wychodzącego z tej koperty znikają. Ostatni właściciel nie może wyjść ani zostać zdegradowany (409 `LastOwner`): najpierw trzeba zrobić właścicielem kogoś innego, a gdy koperta jest sama, usunąć ją.
 - **Usunięcie koperty** (tylko właściciel, z potwierdzeniem) usuwa jej wydatki i przydziały, więc pieniądze wracają do pul osób, które je wkładały.
 
-**Kopie zapasowe.** Eksport i import JSON obejmują tylko koperty, w których użytkownik jest sam. Wspólnych nie ma w kopii i import ich nie zastępuje, bo należą do kilku osób. CSV zawiera własne wydatki użytkownika także ze wspólnych kopert.
+**Kopie zapasowe.** Eksport i import JSON obejmują tylko koperty, w których użytkownik jest sam (z regułami do nich i jego cyklicznymi wpływami). Wspólnych nie ma w kopii i import ich nie zastępuje, bo należą do kilku osób. CSV zawiera własne wydatki użytkownika także ze wspólnych kopert.
+
+## Reguły cykliczne
+
+Trzy rodzaje reguł, wszystkie własne (widzi je tylko ich autor):
+
+- **Wydatek cykliczny**: kwota na kopercie (np. czynsz), co tydzień albo co miesiąc.
+- **Wpływ cykliczny**: kwota, która wpada co miesiąc w tym samym dniu (wypłata).
+- **Reguła podziału**: kwota, która co miesiąc w tym samym dniu trafia z puli do koperty, np. 1 000 zł do Domu. Dla podkoperty to podział tego, co użytkownik włożył do rodzica.
+
+Dzień miesiąca to 1–28, więc każdy miesiąc (nawet taki, który zaczyna się 20.) go zawiera.
+
+**Nic nie dzieje się samo.** Reguły są stosowane do miesiąca na ekranie przyciskiem „zastosuj" (w Regułach cyklicznych) albo „Dodaj" na pulpicie, gdzie karta pokazuje, co jest do dodania. Stosowanie dodaje po kolei: wpływy, potem przydziały, potem wydatki, i można je wołać wielokrotnie: reguła daje jeden wpis na miesiąc (unikalny indeks po regule i pierwszym dniu miesiąca). Przydziały do kopert głównych idą przed przydziałami do podkopert, żeby podkoperta miała z czego brać. Przydział, którego koperta nie przyjmie (za mało środków w rodzicu albo użytkownik już jej nie widzi), jest **pominięty i policzony**, a reszta idzie dalej. Wpis, który reguła zrobiła, zostaje po jej usunięciu.
 
 ## Dane
 
@@ -69,6 +81,8 @@ envelope_members(envelope_id, user_id, role)      -- tylko koperty top-level
 allocations(id, envelope_id, user_id, amount_minor, made_on, note)
 expenses(id, envelope_id, created_by, amount_minor, spent_at, note, recurring_id, recurring_month)
 recurring_rules(id, user_id, envelope_id, amount_minor, frequency, note, active)
+recurring_incomes(id, user_id, amount_minor, day_of_month, note, active)
+allocation_rules(id, user_id, envelope_id, amount_minor, day_of_month, note, active)
 invitations(id, envelope_id, email, role, status, invited_by, accepted_by, expires_at)
 ```
 
@@ -94,10 +108,10 @@ Skutek uboczny nowej semantyki: to, co w starym okresie zostało nieodsunięte z
 
 1. **Rdzeń (zrobione).** Wpływy, koperty z podkopertami, przydziały, wydatki, salda toczące się, widok miesiąca, migracja, usunięcie przestrzeni i okresów, nowe ekrany.
 2. **Współdzielenie (zrobione).** Członkowie koperty, zaproszenia, role, widok „kto ile włożył", wyjście i usuwanie.
-3. **Automaty.** Cykliczne wpływy (np. wypłata) i reguły podziału („co miesiąc X zł na Dom"), ekran zbiorczy i polerka.
+3. **Automaty (zrobione).** Cykliczne wpływy (np. wypłata) i reguły podziału („co miesiąc X zł na Dom"), jedno „zastosuj" dla wszystkich reguł i podgląd tego, co czeka. Ekranem zbiorczym jest pulpit: sumuje wszystkie koperty, także wspólne, i pozwala wejść w każdą.
 
 Całość idzie jedną gałęzią i jednym PR-em do `main`.
 
 ## Otwarte, na później
 
-Archiwizacja zamkniętych kopert (wyjazd), szybkie dodanie wydatku, przeniesienie własności koperty, powiadomienia o wydatkach we wspólnej kopercie, wielowalutowość.
+Archiwizacja zamkniętych kopert (wyjazd), szybkie dodanie wydatku, automatyczne stosowanie reguł bez przycisku (potrzebny harmonogram po stronie serwera), powiadomienia o wydatkach we wspólnej kopercie, wielowalutowość.

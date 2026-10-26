@@ -62,6 +62,13 @@ Pojęcia: **wpływ** (pieniądze, które weszły, np. wypłata), **pula** (wpły
 - **US-7.2** Dodaję, edytuję, wyłączam i usuwam regułę. Usunięcie nie kasuje wydatków, które już dodała. 🌐
 - **US-7.3** Jednym przyciskiem „zastosuj" dodaję do miesiąca na ekranie wydatki z aktywnych reguł. Reguła, którą już zastosowałem dla tego miesiąca, nie dubluje się. Widzę, ile dodano. 🌐
 
+- **US-7.4** Dodaję wpływ cykliczny (kwota, dzień miesiąca 1–28, notatka), np. wypłatę. 🌐
+- **US-7.5** Dodaję regułę podziału: ile pieniędzy co miesiąc, w którym dniu, do której koperty (też podkoperty). 🌐
+- **US-7.6** Wszystkie trzy rodzaje reguł mam w jednym ekranie z zakładkami (wydatki, wpływy, przydziały), edytuję je, wyłączam i usuwam; to, co reguła już dodała, zostaje. 🌐
+- **US-7.7** „Zastosuj" dodaje do miesiąca na ekranie najpierw wpływy, potem przydziały, potem wydatki, każdy w dniu z reguły. Nic nie dubluje się przy ponownym zastosowaniu. 🌐
+- **US-7.8** Przydział, którego koperta nie przyjmie (brakuje środków w kopercie nadrzędnej), jest pominięty i dostaję informację, ile takich było. 🌐
+- **US-7.9** Pulpit pokazuje kartę „Do dodania w tym miesiącu" z liczbą wpływów, przydziałów i wydatków, które czekają, i przyciskiem „Dodaj". Gdy nic nie czeka, karty nie ma. 🌐
+
 ## 8. Ustawienia i dane
 
 - **US-8.1** Zmieniam motyw: ciemny, jasny, systemowy. 📱
@@ -107,6 +114,6 @@ Obliczenia, które muszą być po stronie serwera, bo dotyczą pieniędzy i musi
 - pula i salda kopert, z przechodzeniem salda między miesiącami i sumowaniem podkopert (US-1.3, 4.1, 4.3, 4.4)
 - reguły przydziałów: nie zabierzesz więcej, niż jest; nie przypiszesz więcej, niż włożyłeś do rodzica (US-3.2, 3.3, 3.4)
 - historia miesięcy z podziałem na budżetowy początek miesiąca (US-4.8)
-- idempotentne stosowanie reguł cyklicznych (US-7.3)
+- idempotentne stosowanie reguł cyklicznych i podgląd tego, co czeka (US-7.3, 7.7, 7.9)
 - uprawnienia i zasady „czyje to pieniądze" we wspólnej kopercie, zaproszenia z zatwierdzaniem, limity (US-9.x)
 - import CSV z deduplikacją i import kopii z nowymi ID (US-8.3, 8.4)

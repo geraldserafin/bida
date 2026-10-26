@@ -92,9 +92,12 @@ Przestrzenie i okresy ustępują kopertom z subkopertami, saldem toczącym się 
 - Widok „kto ile włożył" w kopercie i jej podkopertach
 - Wyjście z koperty, zmiana ról (kilku właścicieli zamiast przekazywania własności), usuwanie
 
-**Część 3 – automaty i polerka.**
-- Cykliczne przychody (wypłata) i reguły podziału („co miesiąc X zł na Dom")
-- Ekran zbiorczy dla wielu wspólnych kopert, archiwizacja zamkniętych kopert, szybkie dodanie wydatku
+**Część 3 – automaty (zrobione).**
+- Cykliczne wpływy (wypłata) i reguły podziału („co miesiąc X zł na Dom"), jedno „zastosuj" dla wszystkich reguł i karta „do dodania" na pulpicie
+- Kopia zapasowa obejmuje nowe reguły
+- Ekran zbiorczy to pulpit, który już sumuje wszystkie koperty, więc osobnego nie ma
+
+**Dalej** (jeszcze nie zrobione): archiwizacja zamkniętych kopert, szybkie dodanie wydatku, automatyczne stosowanie reguł bez przycisku.
 
 ## Zależności między etapami
 

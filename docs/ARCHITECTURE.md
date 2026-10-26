@@ -34,7 +34,7 @@ apps/api/src/
       <module>.module.ts         # jedyny publiczny plik modułu
 ```
 
-Moduły: `envelopes` (koperty, subkoperty i przydziały pieniędzy), `members` (członkowie i role), `invitations` (zaproszenia), `incomes` (przychody), `expenses`, `recurring`, `overview` (salda i historia miesięcy), `transfer` (eksport, import, CSV), `auth` (konta i sesje), `system` (health). Model danych opisuje [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md).
+Moduły: `envelopes` (koperty, subkoperty i przydziały pieniędzy), `members` (członkowie i role), `invitations` (zaproszenia), `incomes` (przychody), `expenses`, `recurring` (reguły cykliczne: wydatki, wpływy, podział), `overview` (salda i historia miesięcy), `transfer` (eksport, import, CSV), `auth` (konta i sesje), `system` (health). Model danych opisuje [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md).
 
 ## Warstwy
 
@@ -173,7 +173,7 @@ Zasada: zły input kończy się na brzegu odpowiedzią 400, a nie błędem bazy 
 - **Tworzenie zwraca 201** (`HttpApiSchema.status(201)`), usuwanie 204, błędy domenowe 404/409/422 z ciałem `{ _tag, ... }`. Zły input i nieoczekiwane awarie mają puste ciało (400 i 500), więc nic z wnętrza nie wycieka.
 - **Edycja to `PUT`** z pełnym obiektem (nie `PATCH`, bo nie przyjmujemy częściowych zmian).
 - **Nazwy w specu.** Schematy odpowiedzi mają `identifier`, a klasy błędów są nazywane przez `wire()` (`errors.ts`), żeby w OpenAPI nie pojawiało się `...Encoded`. `wire` zwraca ten sam schemat dla tej samej klasy, bo inaczej OpenAPI numeruje duplikaty (`EnvelopeNotFound_3`).
-- **Równoległe `apply`** reguł cyklicznych jest serializowane blokadą doradczą Postgresa (`pg_advisory_xact_lock`) na użytkownika i zakres dni, więc drugie wywołanie czeka i nie dodaje nic. Baza pilnuje tego dodatkowo unikalnym indeksem (`recurring_id`, `recurring_month`).
+- **Równoległe `apply`** reguł cyklicznych jest serializowane blokadą doradczą Postgresa (`pg_advisory_xact_lock`) na użytkownika i zakres dni, więc drugie wywołanie czeka i nie dodaje nic. Baza pilnuje tego dodatkowo unikalnymi indeksami: (`recurring_id`, `recurring_month`) na wydatkach i wpływach oraz (`rule_id`, `rule_month`) na przydziałach. `apply` robi wszystko w jednej transakcji (wpływy, przydziały, wydatki), a `pending` liczy to samo bez zapisu.
 
 Znane luki, celowo odłożone: limit żądań ogólnie (jest tylko limit maili logowania na adres), czyszczenie wygasłych kodów i sesji z bazy, listy bez paginacji (poza wydatkami).
 

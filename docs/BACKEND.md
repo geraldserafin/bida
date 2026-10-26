@@ -66,13 +66,16 @@ Przydział do subkoperty dzieli to, co użytkownik włożył do rodzica (nie rus
 | `PUT /expenses/{id}`, `DELETE /expenses/{id}` | zmiana i usunięcie; wolno autorowi i właścicielowi koperty, inaczej 403 |
 | `GET /expenses?envelopeId&from&to&limit&offset` | lista, najnowsze pierwsze; `envelopeId` top-level obejmuje jej subkoperty; `from` włącznie, `to` wyłącznie (chwile ISO); domyślnie 50, najwyżej 200 |
 
-## Reguły cykliczne
+## Reguły cykliczne (wydatki, wpływy, podział)
 
 | Endpoint | Opis |
 |---|---|
 | `GET /recurring-rules` | własne reguły użytkownika |
 | `POST /recurring-rules`, `PUT /recurring-rules/{id}`, `DELETE /recurring-rules/{id}` | zarządzanie; usunięcie nie kasuje wydatków, które reguła już dodała |
-| `POST /recurring-rules/apply` | dodaje po jednym wydatku dla aktywnych reguł niezastosowanych jeszcze dla `from` (`{ from, to }`); można wołać wielokrotnie |
+| `GET /recurring-incomes`, `POST`, `PUT /{id}`, `DELETE /{id}` | cykliczne wpływy (kwota, dzień miesiąca 1–28) |
+| `GET /allocation-rules`, `POST`, `PUT /{id}`, `DELETE /{id}` | reguły podziału: kwota i dzień miesiąca do koperty (też podkoperty) |
+| `GET /recurring-rules/pending?from&to` | ile wpływów, przydziałów i wydatków dodałoby zastosowanie reguł; nic nie zmienia |
+| `POST /recurring-rules/apply` | dla `{ from, to }` dodaje wpływy (w dniu z reguły), potem przydziały, potem wydatki z aktywnych reguł niezastosowanych jeszcze dla `from`; zwraca liczby (`incomes`, `allocations`, `expenses`, `skipped`); można wołać wielokrotnie |
 
 ## Przegląd
 
