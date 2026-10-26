@@ -36,7 +36,9 @@ import {
   OverviewModule,
 } from "./modules/overview/overview.module.ts";
 import {
+  AllocationRulesHttp,
   RecurringHttp,
+  RecurringIncomesHttp,
   RecurringModule,
 } from "./modules/recurring/recurring.module.ts";
 import { SystemHttp } from "./modules/system/system.module.ts";
@@ -75,6 +77,8 @@ const Handlers = Layer.mergeAll(
   IncomesHttp,
   ExpensesHttp,
   RecurringHttp,
+  RecurringIncomesHttp,
+  AllocationRulesHttp,
   OverviewHttp,
   TransferHttp,
 ).pipe(Layer.provideMerge(AuthenticatedModule));

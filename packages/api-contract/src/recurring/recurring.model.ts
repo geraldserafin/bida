@@ -53,7 +53,16 @@ export const ApplyRecurring = Schema.Struct({
 export type ApplyRecurring = typeof ApplyRecurring.Type;
 
 export const ApplyResult = Schema.Struct({
-  /** Number of expenses that were added. */
-  added: Schema.Int,
+  /** Recurring incomes that were added as income. */
+  incomes: Schema.Int,
+  /** Allocation rules that were carried out as allocations. */
+  allocations: Schema.Int,
+  /** Recurring expenses that were added as expenses. */
+  expenses: Schema.Int,
+  /**
+   * Allocation rules that could not be carried out, because the envelope did
+   * not have the money or is not the user's any more. Always 0 for a preview.
+   */
+  skipped: Schema.Int,
 }).annotate({ identifier: "ApplyResult" });
 export type ApplyResult = typeof ApplyResult.Type;

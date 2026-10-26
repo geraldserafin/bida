@@ -20,7 +20,19 @@ export class IncomesRepository extends Context.Service<
         readonly to?: string | undefined;
       },
     ): Effect.Effect<ReadonlyArray<Income>>;
-    insert(input: typeof Income.insert.Type): Effect.Effect<Income>;
+    /**
+     * `link` says which recurring income made it and for which stretch (its
+     * first day); the database allows a rule once per stretch.
+     */
+    insert(
+      input: typeof Income.insert.Type,
+      link?: { readonly ruleId: string; readonly month: string },
+    ): Effect.Effect<Income>;
+    /** Of the rules, those that already made an income for the stretch. */
+    appliedRuleIds(
+      ruleIds: ReadonlyArray<string>,
+      month: string,
+    ): Effect.Effect<ReadonlySet<string>>;
     /** `None` when the user has no such income. */
     update(
       userId: string,
@@ -56,10 +68,31 @@ export class IncomesRepository extends Context.Service<
         },
       });
       const insert = SqlSchema.findOne({
-        Request: Income.insert,
+        Request: Schema.Struct({
+          row: Income.insert,
+          ruleId: Schema.NullOr(Schema.String),
+          month: Schema.NullOr(Schema.String),
+        }),
         Result: Income,
-        execute: (request) =>
-          sql`INSERT INTO incomes ${sql.insert(request)} RETURNING ${columns}`,
+        execute: ({ row, ruleId, month }) =>
+          sql`INSERT INTO incomes ${sql.insert({
+            ...row,
+            recurringId: ruleId,
+            recurringMonth: month,
+          })} RETURNING ${columns}`,
+      });
+      const applied = SqlSchema.findAll({
+        Request: Schema.Struct({
+          ruleIds: Schema.Array(Schema.String),
+          month: Schema.String,
+        }),
+        Result: Schema.Struct({ recurringId: Schema.String }),
+        execute: ({ ruleIds, month }) =>
+          ruleIds.length === 0
+            ? sql`SELECT NULL::uuid AS recurring_id WHERE FALSE`
+            : sql`SELECT recurring_id FROM incomes
+              WHERE ${sql.in("recurring_id", ruleIds)}
+                AND recurring_month = ${month}`,
       });
       const update = SqlSchema.findOneOption({
         Request: Schema.Struct({
@@ -85,7 +118,17 @@ export class IncomesRepository extends Context.Service<
 
       return IncomesRepository.of({
         list: (userId, range) => list({ userId, ...range }).pipe(Effect.orDie),
-        insert: (input) => insert(input).pipe(Effect.orDie),
+        insert: (row, link) =>
+          insert({
+            row,
+            ruleId: link?.ruleId ?? null,
+            month: link?.month ?? null,
+          }).pipe(Effect.orDie),
+        appliedRuleIds: (ruleIds, month) =>
+          applied({ ruleIds, month }).pipe(
+            Effect.map((rows) => new Set(rows.map((row) => row.recurringId))),
+            Effect.orDie,
+          ),
         update: (userId, id, changes) =>
           update({ userId, id, ...changes }).pipe(Effect.orDie),
         remove: (userId, id) =>

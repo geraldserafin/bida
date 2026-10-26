@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import {
   Allocation,
   type AllocationId,
+  AllocationRule,
+  type AllocationRuleId,
   type Counts,
   type CsvImportResult,
   Envelope,
@@ -15,6 +17,8 @@ import {
   type IncomeId,
   InvalidCsv,
   InvalidImport,
+  RecurringIncome,
+  type RecurringIncomeId,
   RecurringRule,
   type RecurringRuleId,
   type UserId,
@@ -51,6 +55,8 @@ const countsOf = (snapshot: Snapshot): Counts => ({
   incomes: snapshot.incomes.length,
   expenses: snapshot.expenses.length,
   recurringRules: snapshot.recurringRules.length,
+  recurringIncomes: snapshot.recurringIncomes.length,
+  allocationRules: snapshot.allocationRules.length,
 });
 
 /** Checks that every reference in a snapshot points at something in it. */
@@ -71,6 +77,11 @@ const checkIntegrity = (snapshot: Snapshot): string | undefined => {
   for (const rule of snapshot.recurringRules) {
     if (!envelopes.has(rule.envelopeId)) {
       return `recurring rule ${rule.id} points at an unknown envelope`;
+    }
+  }
+  for (const rule of snapshot.allocationRules) {
+    if (!envelopes.has(rule.envelopeId)) {
+      return `allocation rule ${rule.id} points at an unknown envelope`;
     }
   }
   for (const allocation of snapshot.allocations) {
@@ -141,6 +152,23 @@ const adopt = (
             x.recurringId === null
               ? null
               : idOf<RecurringRuleId>(x.recurringId),
+        }),
+    ),
+    recurringIncomes: doc.recurringIncomes.map(
+      (r) =>
+        new RecurringIncome({
+          ...r,
+          id: idOf<RecurringIncomeId>(r.id),
+          userId: owner,
+        }),
+    ),
+    allocationRules: doc.allocationRules.map(
+      (r) =>
+        new AllocationRule({
+          ...r,
+          id: idOf<AllocationRuleId>(r.id),
+          envelopeId: idOf<EnvelopeId>(r.envelopeId),
+          userId: owner,
         }),
     ),
     recurringRules: doc.recurringRules.map(

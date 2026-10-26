@@ -42,8 +42,8 @@ export class MembersRepository extends Context.Service<
       role: Role,
     ): Effect.Effect<void>;
     /**
-     * Takes the member out. Their recurring rules on the envelope and its
-     * sub-envelopes go too, since they cannot see them any more.
+     * Takes the member out. Their recurring expenses and allocation rules on
+     * the envelope and its sub-envelopes go too, since they cannot see them any more.
      */
     remove(envelopeId: EnvelopeId, userId: string): Effect.Effect<void>;
     /** Net amount per member and per envelope of the tree, all time. */
@@ -95,9 +95,14 @@ export class MembersRepository extends Context.Service<
           ),
         remove: (envelopeId, userId) =>
           Effect.gen(function* () {
-            // the rules live in another module's table; they only make sense
+            // the rules live in another module's tables; they only make sense
             // for somebody who can see the envelope
             yield* sql`DELETE FROM recurring_rules
+              WHERE user_id = ${userId}
+                AND envelope_id IN (
+                  SELECT id FROM envelopes
+                  WHERE id = ${envelopeId} OR parent_id = ${envelopeId})`;
+            yield* sql`DELETE FROM allocation_rules
               WHERE user_id = ${userId}
                 AND envelope_id IN (
                   SELECT id FROM envelopes

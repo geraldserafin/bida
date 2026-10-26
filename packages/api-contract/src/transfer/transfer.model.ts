@@ -2,7 +2,11 @@ import { Schema } from "effect";
 import { AllocationJson, EnvelopeJson } from "../envelopes/index.ts";
 import { ExpenseJson } from "../expenses/index.ts";
 import { IncomeJson } from "../incomes/index.ts";
-import { RecurringRuleJson } from "../recurring/index.ts";
+import {
+  AllocationRuleJson,
+  RecurringIncomeJson,
+  RecurringRuleJson,
+} from "../recurring/index.ts";
 
 /**
  * A full snapshot of the user's data. Exported and imported as one JSON
@@ -19,6 +23,12 @@ export const ExportDocument = Schema.Struct({
   recurringRules: Schema.Array(RecurringRuleJson).check(
     Schema.isMaxLength(1_000),
   ),
+  recurringIncomes: Schema.Array(RecurringIncomeJson).check(
+    Schema.isMaxLength(1_000),
+  ),
+  allocationRules: Schema.Array(AllocationRuleJson).check(
+    Schema.isMaxLength(1_000),
+  ),
 }).annotate({ identifier: "ExportDocument" });
 export type ExportDocument = typeof ExportDocument.Type;
 
@@ -29,6 +39,8 @@ export const Counts = Schema.Struct({
   incomes: Schema.Int,
   expenses: Schema.Int,
   recurringRules: Schema.Int,
+  recurringIncomes: Schema.Int,
+  allocationRules: Schema.Int,
 }).annotate({ identifier: "Counts" });
 export type Counts = typeof Counts.Type;
 

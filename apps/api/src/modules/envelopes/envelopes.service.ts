@@ -77,10 +77,20 @@ export class EnvelopesService extends Context.Service<
       userId: UserId,
       filter: ListAllocations,
     ): Effect.Effect<ReadonlyArray<Allocation>, EnvelopeNotFound>;
+    /**
+     * `rule` says which allocation rule made it and for which stretch (its
+     * first day), when an allocation rule did.
+     */
     createAllocation(
       userId: UserId,
       input: CreateAllocation,
+      rule?: { readonly ruleId: string; readonly month: string },
     ): Effect.Effect<Allocation, EnvelopeNotFound | NotEnoughMoney>;
+    /** Of the rules, those that already made an allocation for the stretch. */
+    appliedRuleIds(
+      ruleIds: ReadonlyArray<string>,
+      month: string,
+    ): Effect.Effect<ReadonlySet<string>>;
     updateAllocation(
       userId: UserId,
       id: AllocationId,
@@ -253,7 +263,11 @@ export class EnvelopesService extends Context.Service<
         envelope.parentId ?? envelope.id;
 
       const createAllocation = Effect.fn("EnvelopesService.createAllocation")(
-        function* (userId: UserId, input: CreateAllocation) {
+        function* (
+          userId: UserId,
+          input: CreateAllocation,
+          rule?: { readonly ruleId: string; readonly month: string },
+        ) {
           const { envelope } = yield* access(userId, input.envelopeId);
           const row = yield* Allocation.insert
             .makeEffect({ ...input, userId })
@@ -261,7 +275,7 @@ export class EnvelopesService extends Context.Service<
           return yield* Effect.gen(function* () {
             yield* repo.lock(topLevelOf(envelope));
             yield* checkChange(userId, envelope, input.amountMinor);
-            return yield* repo.insertAllocation(row);
+            return yield* repo.insertAllocation(row, rule);
           }).pipe(sql.withTransaction, Effect.catchTag("SqlError", Effect.die));
         },
       );
@@ -320,6 +334,7 @@ export class EnvelopesService extends Context.Service<
         remove,
         listAllocations,
         createAllocation,
+        appliedRuleIds: repo.appliedRuleIds,
         updateAllocation,
         removeAllocation,
       });

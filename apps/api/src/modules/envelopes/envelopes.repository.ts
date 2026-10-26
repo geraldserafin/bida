@@ -80,9 +80,19 @@ export class EnvelopesRepository extends Context.Service<
     listAllocations(
       filter: AllocationFilter,
     ): Effect.Effect<ReadonlyArray<Allocation>>;
+    /**
+     * `link` says which allocation rule made it and for which stretch (its
+     * first day); the database allows a rule once per stretch.
+     */
     insertAllocation(
       input: typeof Allocation.insert.Type,
+      link?: { readonly ruleId: string; readonly month: string },
     ): Effect.Effect<Allocation>;
+    /** Of the rules, those that already made an allocation for the stretch. */
+    appliedRuleIds(
+      ruleIds: ReadonlyArray<string>,
+      month: string,
+    ): Effect.Effect<ReadonlySet<string>>;
     /** The allocation, only when it is the user's own. */
     findOwnAllocation(
       userId: string,
@@ -210,11 +220,30 @@ export class EnvelopesRepository extends Context.Service<
         },
       });
       const insertAllocation = SqlSchema.findOne({
-        Request: Allocation.insert,
+        Request: Schema.Struct({
+          row: Allocation.insert,
+          ruleId: Schema.NullOr(Schema.String),
+          month: Schema.NullOr(Schema.String),
+        }),
         Result: Allocation,
-        execute: (request) =>
-          sql`INSERT INTO allocations ${sql.insert(request)}
-            RETURNING ${allocationColumns}`,
+        execute: ({ row, ruleId, month }) =>
+          sql`INSERT INTO allocations ${sql.insert({
+            ...row,
+            ruleId,
+            ruleMonth: month,
+          })} RETURNING ${allocationColumns}`,
+      });
+      const appliedRules = SqlSchema.findAll({
+        Request: Schema.Struct({
+          ruleIds: Schema.Array(Schema.String),
+          month: Schema.String,
+        }),
+        Result: Schema.Struct({ ruleId: Schema.String }),
+        execute: ({ ruleIds, month }) =>
+          ruleIds.length === 0
+            ? sql`SELECT NULL::uuid AS rule_id WHERE FALSE`
+            : sql`SELECT rule_id FROM allocations
+              WHERE ${sql.in("rule_id", ruleIds)} AND rule_month = ${month}`,
       });
       const findOwnAllocation = SqlSchema.findOneOption({
         Request: Schema.Struct({ userId: Schema.String, id: Schema.String }),
@@ -267,7 +296,17 @@ export class EnvelopesRepository extends Context.Service<
         childTotals: (id, userId) =>
           childTotals({ id, userId }).pipe(Effect.orDie),
         listAllocations: (filter) => listAllocations(filter).pipe(Effect.orDie),
-        insertAllocation: (input) => insertAllocation(input).pipe(Effect.orDie),
+        insertAllocation: (row, link) =>
+          insertAllocation({
+            row,
+            ruleId: link?.ruleId ?? null,
+            month: link?.month ?? null,
+          }).pipe(Effect.orDie),
+        appliedRuleIds: (ruleIds, month) =>
+          appliedRules({ ruleIds, month }).pipe(
+            Effect.map((rows) => new Set(rows.map((row) => row.ruleId))),
+            Effect.orDie,
+          ),
         findOwnAllocation: (userId, id) =>
           findOwnAllocation({ userId, id }).pipe(Effect.orDie),
         updateAllocation: (id, changes) =>

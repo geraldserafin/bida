@@ -12,6 +12,8 @@ Counts _$CountsFromJson(Map<String, dynamic> json) => Counts(
   incomes: (json['incomes'] as num).toInt(),
   expenses: (json['expenses'] as num).toInt(),
   recurringRules: (json['recurringRules'] as num).toInt(),
+  recurringIncomes: (json['recurringIncomes'] as num).toInt(),
+  allocationRules: (json['allocationRules'] as num).toInt(),
 );
 
 Map<String, dynamic> _$CountsToJson(Counts instance) => <String, dynamic>{
@@ -20,4 +22,6 @@ Map<String, dynamic> _$CountsToJson(Counts instance) => <String, dynamic>{
   'incomes': instance.incomes,
   'expenses': instance.expenses,
   'recurringRules': instance.recurringRules,
+  'recurringIncomes': instance.recurringIncomes,
+  'allocationRules': instance.allocationRules,
 };

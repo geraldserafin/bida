@@ -89,6 +89,20 @@ const setup = Effect.gen(function* () {
     active: true,
   });
   yield* recurring.apply(ann.id, { from: "2026-07-01", to: "2026-07-31" });
+  // rules for next time, not applied yet
+  yield* recurring.createIncome(ann.id, {
+    amountMinor: 500_000,
+    dayOfMonth: 1,
+    note: "salary",
+    active: true,
+  });
+  yield* recurring.createAllocationRule(ann.id, {
+    envelopeId: food.id,
+    amountMinor: 30_000,
+    dayOfMonth: 2,
+    note: null,
+    active: true,
+  });
   yield* expenses.create(ann.id, {
     envelopeId: food.id,
     amountMinor: 4_599,
@@ -104,6 +118,8 @@ const counts = {
   incomes: 1,
   expenses: 2,
   recurringRules: 1,
+  recurringIncomes: 1,
+  allocationRules: 1,
 };
 
 /** The document as it would arrive over the wire. */
@@ -126,6 +142,8 @@ layer(TestLayer)("TransferService", (it) => {
           incomes: mine.incomes.length,
           expenses: mine.expenses.length,
           recurringRules: mine.recurringRules.length,
+          recurringIncomes: mine.recurringIncomes.length,
+          allocationRules: mine.allocationRules.length,
         },
         counts,
       );
@@ -380,6 +398,8 @@ layer(TestLayer)("TransferService", (it) => {
         incomes: 1,
         expenses: 1,
         recurringRules: 0,
+        recurringIncomes: 0,
+        allocationRules: 0,
       });
       const doc = yield* transfer.export(ann.id as UserId);
       assert.strictEqual(doc.incomes[0]?.amountMinor, 500_000);

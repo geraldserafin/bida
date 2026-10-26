@@ -14,6 +14,8 @@ class Counts {
     required this.incomes,
     required this.expenses,
     required this.recurringRules,
+    required this.recurringIncomes,
+    required this.allocationRules,
   });
 
   factory Counts.fromJson(Map<String, Object?> json) => _$CountsFromJson(json);
@@ -23,6 +25,8 @@ class Counts {
   final int incomes;
   final int expenses;
   final int recurringRules;
+  final int recurringIncomes;
+  final int allocationRules;
 
   Map<String, Object?> toJson() => _$CountsToJson(this);
 }

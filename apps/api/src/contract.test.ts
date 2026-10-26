@@ -83,6 +83,8 @@ it("the documents of an import are bounded", () => {
     incomes: [],
     expenses: [],
     recurringRules: [],
+    recurringIncomes: [],
+    allocationRules: [],
   };
   const decodes = (value: unknown) => {
     try {

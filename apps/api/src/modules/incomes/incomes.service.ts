@@ -20,6 +20,17 @@ export class IncomesService extends Context.Service<
       },
     ): Effect.Effect<ReadonlyArray<Income>>;
     create(userId: UserId, input: SaveIncome): Effect.Effect<Income>;
+    /** Adds the income a recurring income produces for a stretch. */
+    createFromRule(
+      userId: UserId,
+      input: SaveIncome,
+      link: { readonly ruleId: string; readonly month: string },
+    ): Effect.Effect<Income>;
+    /** Of the rules, those that already made an income for the stretch. */
+    appliedRuleIds(
+      ruleIds: ReadonlyArray<string>,
+      month: string,
+    ): Effect.Effect<ReadonlySet<string>>;
     update(
       userId: UserId,
       id: IncomeId,
@@ -33,15 +44,19 @@ export class IncomesService extends Context.Service<
     Effect.gen(function* () {
       const repo = yield* IncomesRepository;
 
-      const create = Effect.fn("IncomesService.create")(function* (
+      const insert = Effect.fn("IncomesService.insert")(function* (
         userId: UserId,
         input: SaveIncome,
+        link?: { readonly ruleId: string; readonly month: string },
       ) {
         const row = yield* Income.insert
           .makeEffect({ ...input, userId })
           .pipe(Effect.orDie);
-        return yield* repo.insert(row);
+        return yield* repo.insert(row, link);
       });
+
+      const create = (userId: UserId, input: SaveIncome) =>
+        insert(userId, input);
 
       const update = Effect.fn("IncomesService.update")(function* (
         userId: UserId,
@@ -64,7 +79,14 @@ export class IncomesService extends Context.Service<
         }
       });
 
-      return IncomesService.of({ list: repo.list, create, update, remove });
+      return IncomesService.of({
+        list: repo.list,
+        create,
+        createFromRule: insert,
+        appliedRuleIds: repo.appliedRuleIds,
+        update,
+        remove,
+      });
     }),
   );
 }

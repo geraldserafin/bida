@@ -25,6 +25,12 @@ ExportDocument _$ExportDocumentFromJson(Map<String, dynamic> json) =>
       recurringRules: (json['recurringRules'] as List<dynamic>)
           .map((e) => RecurringRule.fromJson(e as Map<String, dynamic>))
           .toList(),
+      recurringIncomes: (json['recurringIncomes'] as List<dynamic>)
+          .map((e) => RecurringIncome.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      allocationRules: (json['allocationRules'] as List<dynamic>)
+          .map((e) => AllocationRule.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$ExportDocumentToJson(ExportDocument instance) =>
@@ -36,6 +42,8 @@ Map<String, dynamic> _$ExportDocumentToJson(ExportDocument instance) =>
       'incomes': instance.incomes,
       'expenses': instance.expenses,
       'recurringRules': instance.recurringRules,
+      'recurringIncomes': instance.recurringIncomes,
+      'allocationRules': instance.allocationRules,
     };
 
 const _$ExportDocumentVersionEnumMap = {

@@ -1,9 +1,11 @@
 import {
   Allocation,
+  AllocationRule,
   type Counts,
   Envelope,
   Expense,
   Income,
+  RecurringIncome,
   RecurringRule,
 } from "@bida/api-contract";
 import { Context, Effect, Layer, Schema } from "effect";
@@ -25,6 +27,8 @@ export interface Snapshot {
   readonly incomes: ReadonlyArray<Income>;
   readonly expenses: ReadonlyArray<Expense>;
   readonly recurringRules: ReadonlyArray<RecurringRule>;
+  readonly recurringIncomes: ReadonlyArray<RecurringIncome>;
+  readonly allocationRules: ReadonlyArray<AllocationRule>;
 }
 
 /**
@@ -113,6 +117,22 @@ export class TransferRepository extends Context.Service<
           ORDER BY r.created_at, r.id`,
       );
 
+      const recurringIncomes = selectAll(
+        RecurringIncome,
+        `SELECT id, user_id, amount_minor::float8 AS amount_minor, day_of_month,
+          note, active, created_at, updated_at
+          FROM recurring_incomes WHERE user_id = $1 ORDER BY created_at, id`,
+      );
+      const allocationRules = selectAll(
+        AllocationRule,
+        `SELECT id, user_id, envelope_id, amount_minor::float8 AS amount_minor,
+          day_of_month, note, active, created_at, updated_at
+          FROM allocation_rules r
+          WHERE r.user_id = $1 AND r.envelope_id IN (
+            SELECT id FROM envelopes WHERE COALESCE(parent_id, id) IN ${alone})
+          ORDER BY r.created_at, r.id`,
+      );
+
       const csv = SqlSchema.findAll({
         Request: Schema.String,
         Result: CsvExpense,
@@ -148,6 +168,14 @@ export class TransferRepository extends Context.Service<
       const insertIncomes = insertRows("incomes", Income);
       const insertExpenses = insertRows("expenses", Expense);
       const insertRules = insertRows("recurring_rules", RecurringRule);
+      const insertRecurringIncomes = insertRows(
+        "recurring_incomes",
+        RecurringIncome,
+      );
+      const insertAllocationRules = insertRows(
+        "allocation_rules",
+        AllocationRule,
+      );
 
       return TransferRepository.of({
         snapshot: (userId) =>
@@ -157,6 +185,8 @@ export class TransferRepository extends Context.Service<
             incomes: incomes(userId),
             expenses: expenses(userId),
             recurringRules: recurringRules(userId),
+            recurringIncomes: recurringIncomes(userId),
+            allocationRules: allocationRules(userId),
           }).pipe(Effect.orDie, Effect.withSpan("TransferRepository.snapshot")),
         counts: (userId) =>
           Effect.all({
@@ -165,6 +195,8 @@ export class TransferRepository extends Context.Service<
             incomes: incomes(userId),
             expenses: expenses(userId),
             recurringRules: recurringRules(userId),
+            recurringIncomes: recurringIncomes(userId),
+            allocationRules: allocationRules(userId),
           }).pipe(
             Effect.map((rows) => ({
               envelopes: rows.envelopes.length,
@@ -172,6 +204,8 @@ export class TransferRepository extends Context.Service<
               incomes: rows.incomes.length,
               expenses: rows.expenses.length,
               recurringRules: rows.recurringRules.length,
+              recurringIncomes: rows.recurringIncomes.length,
+              allocationRules: rows.allocationRules.length,
             })),
             Effect.orDie,
           ),
@@ -185,6 +219,7 @@ export class TransferRepository extends Context.Service<
               [userId],
             );
             yield* sql`DELETE FROM incomes WHERE user_id = ${userId}`;
+            yield* sql`DELETE FROM recurring_incomes WHERE user_id = ${userId}`;
             // parents first
             yield* insertEnvelopes(snapshot.envelopes);
             const topLevel = snapshot.envelopes
@@ -195,7 +230,9 @@ export class TransferRepository extends Context.Service<
                 SELECT id, ${userId}, 'owner' FROM envelopes
                 WHERE ${sql.in("id", topLevel)}`;
             }
+            yield* insertRecurringIncomes(snapshot.recurringIncomes);
             yield* insertIncomes(snapshot.incomes);
+            yield* insertAllocationRules(snapshot.allocationRules);
             yield* insertAllocations(snapshot.allocations);
             yield* insertRules(snapshot.recurringRules);
             yield* insertExpenses(snapshot.expenses);

@@ -43,9 +43,18 @@ abstract class RecurringClient {
   @DELETE('/recurring-rules/{id}')
   Future<void> recurringDelete({@Path('id') required String id});
 
+  /// What applying would add.
+  ///
+  /// Counts of the recurring incomes, allocation rules and expenses that have not been applied to the stretch yet. Changes nothing.
+  @GET('/recurring-rules/pending')
+  Future<ApplyResult> recurringPending({
+    @Query('from') required String from,
+    @Query('to') required String to,
+  });
+
   /// Apply the recurring rules to a stretch of time.
   ///
-  /// Adds one expense for every active rule not applied for this `from` yet (dated today when today is in the stretch, else `from`). Safe to call repeatedly.
+  /// Adds, for every active rule not applied for this `from` yet: the recurring incomes (dated on their day of the month), then the allocation rules (the same), then the expenses (dated today when today is in the stretch, else `from`). Safe to call repeatedly. An allocation the envelope cannot take is skipped and counted.
   @POST('/recurring-rules/apply')
   Future<ApplyResult> recurringApply({@Body() required ApplyRecurring body});
 }

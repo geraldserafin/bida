@@ -54,6 +54,16 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
         description: "Expenses it already generated are kept.",
       }),
     ),
+    HttpApiEndpoint.get("pending", "/recurring-rules/pending", {
+      query: ApplyRecurring,
+      success: ApplyResult,
+    }).annotateMerge(
+      OpenApi.annotations({
+        summary: "What applying would add",
+        description:
+          "Counts of the recurring incomes, allocation rules and expenses that have not been applied to the stretch yet. Changes nothing.",
+      }),
+    ),
     HttpApiEndpoint.post("apply", "/recurring-rules/apply", {
       payload: ApplyRecurring,
       success: ApplyResult,
@@ -61,7 +71,7 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
       OpenApi.annotations({
         summary: "Apply the recurring rules to a stretch of time",
         description:
-          "Adds one expense for every active rule not applied for this `from` yet (dated today when today is in the stretch, else `from`). Safe to call repeatedly.",
+          "Adds, for every active rule not applied for this `from` yet: the recurring incomes (dated on their day of the month), then the allocation rules (the same), then the expenses (dated today when today is in the stretch, else `from`). Safe to call repeatedly. An allocation the envelope cannot take is skipped and counted.",
       }),
     ),
   )

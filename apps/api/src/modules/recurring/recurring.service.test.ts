@@ -85,8 +85,8 @@ layer(TestLayer)("RecurringService", (it) => {
         active: false,
       });
 
-      assert.strictEqual((yield* recurring.apply(ann.id, July)).added, 1);
-      assert.strictEqual((yield* recurring.apply(ann.id, July)).added, 0);
+      assert.strictEqual((yield* recurring.apply(ann.id, July)).expenses, 1);
+      assert.strictEqual((yield* recurring.apply(ann.id, July)).expenses, 0);
       const spent = yield* expenses.list(ann.id, {});
       assert.deepStrictEqual(
         spent.map((e) => e.amountMinor),
@@ -99,7 +99,7 @@ layer(TestLayer)("RecurringService", (it) => {
         (yield* recurring.apply(ann.id, {
           from: "2026-08-01",
           to: "2026-08-31",
-        })).added,
+        })).expenses,
         1,
       );
     }),
@@ -116,7 +116,7 @@ layer(TestLayer)("RecurringService", (it) => {
         note: null,
         active: true,
       });
-      assert.strictEqual((yield* recurring.apply(bob.id, July)).added, 0);
+      assert.strictEqual((yield* recurring.apply(bob.id, July)).expenses, 0);
     }),
   );
 

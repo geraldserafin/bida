@@ -181,5 +181,13 @@ export const convertLegacy = (
       );
     }
 
-    return { envelopes, allocations, incomes, expenses, recurringRules };
+    return {
+      envelopes,
+      allocations,
+      incomes,
+      expenses,
+      recurringRules,
+      recurringIncomes: [],
+      allocationRules: [],
+    };
   });
