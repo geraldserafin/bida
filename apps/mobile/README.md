@@ -64,7 +64,7 @@ History
 |---|---|
 | 🧧 **Envelope budgeting** | Put income into envelopes and sub-envelopes; spend from them; balances roll over |
 | 📊 **Visual insight** | Donut chart of where the money is, available-vs-spent bars, spending-over-time line charts |
-| 🔁 **Recurring rules** | Templates for regular expenses (rent, subscriptions) that add themselves to the month with one tap |
+| 🔁 **Recurring rules** | Rent and subscriptions, a salary that comes in every month, and sums that go into envelopes on a fixed day: one tap adds them all to the month, and the dashboard says what is due |
 | 🧮 **Unallocated tracking** | Always know how much income is still free to put into envelopes |
 | 👥 **Shared envelopes** | Invite people by e-mail to an envelope; each puts money in from their own pool, everybody sees who put how much, owners approve who gets in |
 | 📅 **Months** | Step through months with the arrows; a list shows every month so far. The month can start on any day from 1 to 28 |

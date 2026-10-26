@@ -21,6 +21,7 @@ import '../sharing/invitations_card.dart';
 import '../recurring/recurring_rules_screen.dart';
 import '../settings/settings_screen.dart';
 import 'widgets/available_pie_chart.dart';
+import 'widgets/pending_rules_card.dart';
 import 'widgets/available_vs_spent_chart.dart';
 
 /// Opens an envelope's detail view for a tapped chart element.
@@ -270,6 +271,7 @@ class _MonthView extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
       children: [
         const InvitationsCard(),
+        const PendingRulesCard(),
         _SummaryCard(state: state),
         if (top.any((p) => p.available > 0 || p.spent > 0)) ...[
           const SizedBox(height: 14),

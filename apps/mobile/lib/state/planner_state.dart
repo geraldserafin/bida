@@ -59,6 +59,17 @@ class PlannerState extends ChangeNotifier {
   List<RecurringRule> _recurringRules = const [];
   List<RecurringRule> get recurringRules => _recurringRules;
 
+  List<RecurringIncome> _recurringIncomes = const [];
+  List<RecurringIncome> get recurringIncomes => _recurringIncomes;
+
+  List<AllocationRule> _allocationRules = const [];
+  List<AllocationRule> get allocationRules => _allocationRules;
+
+  ApplyOutcome _pending = const ApplyOutcome();
+
+  /// What applying the recurring rules to the month on screen would add.
+  ApplyOutcome get pending => _pending;
+
   List<Invitation> _invitations = const [];
 
   /// Invitations to share an envelope that wait for the user's answer.
@@ -140,6 +151,9 @@ class PlannerState extends ChangeNotifier {
     _envelopes = const [];
     _recurringRules = const [];
     _invitations = const [];
+    _recurringIncomes = const [];
+    _allocationRules = const [];
+    _pending = const ApplyOutcome();
     _overview = Overview.empty(month);
     _month = null;
     _loadError = null;
@@ -155,27 +169,34 @@ class PlannerState extends ChangeNotifier {
 
     try {
       await beforeLoad?.call();
-      final (envelopes, rules, invitations) = await (
+      final (envelopes, rules, invitations, incomeRules, allocations) = await (
         _repo.envelopes(),
         _repo.recurringRules(),
         _repo.myInvitations(),
+        _repo.recurringIncomes(),
+        _repo.allocationRules(),
       ).wait;
       _envelopes = envelopes;
       _recurringRules = rules;
       _invitations = invitations;
+      _recurringIncomes = incomeRules;
+      _allocationRules = allocations;
       _overview = await _repo.overview(month, _envelopesById);
+      await _refreshPending();
     } on ApiException catch (error) {
       _loadError = error;
     } on ParallelWaitError<
       Object?,
-      (AsyncError?, AsyncError?, AsyncError?)
+      (AsyncError?, AsyncError?, AsyncError?, AsyncError?, AsyncError?)
     > catch (error) {
       // the requests ran side by side: report the first that failed
-      final (a, b, c) = error.errors;
+      final (a, b, c, d, e) = error.errors;
       _loadError = [
         a?.error,
         b?.error,
         c?.error,
+        d?.error,
+        e?.error,
       ].whereType<ApiException>().firstOrNull;
       if (_loadError == null) rethrow;
     }
@@ -213,6 +234,7 @@ class PlannerState extends ChangeNotifier {
     if (month == this.month) return;
     _overview = await _repo.overview(month, _envelopesById);
     _month = month;
+    await _refreshPending();
     notifyListeners();
   }
 
@@ -318,21 +340,63 @@ class PlannerState extends ChangeNotifier {
   Future<void> saveRecurringRule(RecurringRule rule) async {
     await _repo.saveRecurringRule(rule);
     _recurringRules = await _repo.recurringRules();
+    await _refreshPending();
     notifyListeners();
   }
 
   Future<void> deleteRecurringRule(String ruleId) async {
     await _repo.deleteRecurringRule(ruleId);
     _recurringRules = await _repo.recurringRules();
+    await _refreshPending();
     notifyListeners();
   }
 
-  /// Adds an expense to the month for each active rule that hasn't been
-  /// applied there yet. Returns the number of expenses added.
-  Future<int> applyRecurringToMonth() async {
-    final added = await _repo.applyRecurringRules(month);
-    if (added > 0) await reloadOverview();
-    return added;
+  /// Adds to the month what every active rule that has not been applied there
+  /// yet makes: incomes, allocations and expenses.
+  Future<ApplyOutcome> applyRecurringToMonth() async {
+    final outcome = await _repo.applyRecurringRules(month);
+    if (outcome.added > 0) await reloadOverview();
+    await _refreshPending();
+    notifyListeners();
+    return outcome;
+  }
+
+  /// Asks again what applying the rules would add; the answer stays as it was
+  /// when the server cannot be reached.
+  Future<void> _refreshPending() async {
+    try {
+      _pending = await _repo.pendingRecurring(month);
+    } on ApiException {
+      // a hint, not worth a failed screen
+    }
+  }
+
+  Future<void> saveRecurringIncome(RecurringIncome rule) async {
+    await _repo.saveRecurringIncome(rule);
+    _recurringIncomes = await _repo.recurringIncomes();
+    await _refreshPending();
+    notifyListeners();
+  }
+
+  Future<void> deleteRecurringIncome(String ruleId) async {
+    await _repo.deleteRecurringIncome(ruleId);
+    _recurringIncomes = await _repo.recurringIncomes();
+    await _refreshPending();
+    notifyListeners();
+  }
+
+  Future<void> saveAllocationRule(AllocationRule rule) async {
+    await _repo.saveAllocationRule(rule);
+    _allocationRules = await _repo.allocationRules();
+    await _refreshPending();
+    notifyListeners();
+  }
+
+  Future<void> deleteAllocationRule(String ruleId) async {
+    await _repo.deleteAllocationRule(ruleId);
+    _allocationRules = await _repo.allocationRules();
+    await _refreshPending();
+    notifyListeners();
   }
 
   // ---- sharing -----------------------------------------------------------------

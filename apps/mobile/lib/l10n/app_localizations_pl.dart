@@ -146,20 +146,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get applyRecurring => 'Dodaj cykliczne do miesiąca';
 
   @override
-  String recurringApplied(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Dodano $count wydatku cyklicznego',
-      many: 'Dodano $count wydatków cyklicznych',
-      few: 'Dodano $count wydatki cykliczne',
-      one: 'Dodano 1 wydatek cykliczny',
-      zero: 'Wszystko jest już aktualne',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get settings => 'Ustawienia';
 
   @override
@@ -704,5 +690,93 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String youWith(String name) {
     return '$name (Ty)';
+  }
+
+  @override
+  String get addPending => 'Dodaj';
+
+  @override
+  String get appliedNothing => 'Wszystko jest już aktualne';
+
+  @override
+  String appliedSummary(String parts) {
+    return 'Dodano: $parts.';
+  }
+
+  @override
+  String countAllocations(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count przydziału',
+      many: '$count przydziałów',
+      few: '$count przydziały',
+      one: '$count przydział',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countExpenses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wydatku',
+      many: '$count wydatków',
+      few: '$count wydatki',
+      one: '$count wydatek',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countIncomes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wpływu',
+      many: '$count wpływów',
+      few: '$count wpływy',
+      one: '$count wpływ',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayOfMonth => 'Dzień miesiąca';
+
+  @override
+  String get editAllocationRule => 'Edytuj regułę podziału';
+
+  @override
+  String get editIncomeRule => 'Edytuj wpływ cykliczny';
+
+  @override
+  String everyMonthOn(int day) {
+    return 'Co miesiąc, $day.';
+  }
+
+  @override
+  String get newAllocationRule => 'Nowa reguła podziału';
+
+  @override
+  String get newIncomeRule => 'Nowy wpływ cykliczny';
+
+  @override
+  String get noAllocationRules =>
+      'Brak reguł podziału. Dodaj, ile pieniędzy co miesiąc ma trafiać do koperty, np. 1000 zł do Domu.';
+
+  @override
+  String get noRecurringIncomes =>
+      'Brak cyklicznych wpływów. Dodaj wypłatę, która wpada co miesiąc w tym samym dniu.';
+
+  @override
+  String pendingTitle(String parts) {
+    return 'Do dodania w tym miesiącu: $parts';
+  }
+
+  @override
+  String skippedAllocations(int count) {
+    return 'Pominięto przydziały bez pokrycia w kopercie: $count.';
   }
 }

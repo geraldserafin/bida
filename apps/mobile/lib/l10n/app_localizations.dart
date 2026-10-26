@@ -362,12 +362,6 @@ abstract class AppLocalizations {
   /// **'Add recurring to this month'**
   String get applyRecurring;
 
-  /// No description provided for @recurringApplied.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{Everything is already up to date} =1{Added 1 recurring expense} other{Added {count} recurring expenses}}'**
-  String recurringApplied(int count);
-
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
@@ -1297,6 +1291,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name} (you)'**
   String youWith(String name);
+
+  /// No description provided for @addPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get addPending;
+
+  /// No description provided for @appliedNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is up to date'**
+  String get appliedNothing;
+
+  /// No description provided for @appliedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Added: {parts}.'**
+  String appliedSummary(String parts);
+
+  /// No description provided for @countAllocations.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} allocation} other{{count} allocations}}'**
+  String countAllocations(int count);
+
+  /// No description provided for @countExpenses.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} expense} other{{count} expenses}}'**
+  String countExpenses(int count);
+
+  /// No description provided for @countIncomes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} income} other{{count} incomes}}'**
+  String countIncomes(int count);
+
+  /// No description provided for @dayOfMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Day of the month'**
+  String get dayOfMonth;
+
+  /// No description provided for @editAllocationRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit allocation rule'**
+  String get editAllocationRule;
+
+  /// No description provided for @editIncomeRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit recurring income'**
+  String get editIncomeRule;
+
+  /// No description provided for @everyMonthOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Every month on the {day}.'**
+  String everyMonthOn(int day);
+
+  /// No description provided for @newAllocationRule.
+  ///
+  /// In en, this message translates to:
+  /// **'New allocation rule'**
+  String get newAllocationRule;
+
+  /// No description provided for @newIncomeRule.
+  ///
+  /// In en, this message translates to:
+  /// **'New recurring income'**
+  String get newIncomeRule;
+
+  /// No description provided for @noAllocationRules.
+  ///
+  /// In en, this message translates to:
+  /// **'No allocation rules. Add how much goes into an envelope every month, e.g. 1000 zł into Home.'**
+  String get noAllocationRules;
+
+  /// No description provided for @noRecurringIncomes.
+  ///
+  /// In en, this message translates to:
+  /// **'No recurring income. Add a salary that comes in on the same day every month.'**
+  String get noRecurringIncomes;
+
+  /// No description provided for @pendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'To add this month: {parts}'**
+  String pendingTitle(String parts);
+
+  /// No description provided for @skippedAllocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Allocations skipped for lack of money in the envelope: {count}.'**
+  String skippedAllocations(int count);
 }
 
 class _AppLocalizationsDelegate

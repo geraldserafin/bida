@@ -177,3 +177,46 @@ Invitation invitationFrom(api.Invitation i) {
     invitedBy: by == null ? null : (by.name ?? by.email),
   );
 }
+
+// ----------------------------------------------------------- money rules
+
+RecurringIncome recurringIncomeFrom(api.RecurringIncome r) => RecurringIncome(
+  id: r.id,
+  amount: fromMinor(r.amountMinor),
+  dayOfMonth: r.dayOfMonth,
+  note: r.note,
+  active: r.active,
+);
+
+api.SaveRecurringIncome saveRecurringIncomeOf(RecurringIncome r) =>
+    api.SaveRecurringIncome(
+      amountMinor: toMinor(r.amount),
+      dayOfMonth: r.dayOfMonth,
+      note: r.note,
+      active: r.active,
+    );
+
+AllocationRule allocationRuleFrom(api.AllocationRule r) => AllocationRule(
+  id: r.id,
+  envelopeId: r.envelopeId,
+  amount: fromMinor(r.amountMinor),
+  dayOfMonth: r.dayOfMonth,
+  note: r.note,
+  active: r.active,
+);
+
+api.SaveAllocationRule saveAllocationRuleOf(AllocationRule r) =>
+    api.SaveAllocationRule(
+      envelopeId: r.envelopeId,
+      amountMinor: toMinor(r.amount),
+      dayOfMonth: r.dayOfMonth,
+      note: r.note,
+      active: r.active,
+    );
+
+ApplyOutcome outcomeFrom(api.ApplyResult r) => ApplyOutcome(
+  incomes: r.incomes,
+  allocations: r.allocations,
+  expenses: r.expenses,
+  skipped: r.skipped,
+);

@@ -115,6 +115,8 @@ void main() {
         'incomes': 1,
         'expenses': 1,
         'recurringRules': 1,
+        'recurringIncomes': 0,
+        'allocationRules': 0,
       }),
     );
 

@@ -415,19 +415,135 @@ void main() {
       });
     });
 
-    test('applying names the days of the month', () async {
+    test(
+      'applying names the days of the month and counts what it added',
+      () async {
+        backend.on(
+          'POST /recurring-rules/apply',
+          (_) => const Reply({
+            'incomes': 1,
+            'allocations': 2,
+            'expenses': 3,
+            'skipped': 1,
+          }),
+        );
+
+        final outcome = await backend.repository().applyRecurringRules(august);
+
+        expect(
+          [
+            outcome.incomes,
+            outcome.allocations,
+            outcome.expenses,
+            outcome.skipped,
+          ],
+          [1, 2, 3, 1],
+        );
+        expect(outcome.added, 6);
+        expect(backend.sent('POST /recurring-rules/apply').single.body, {
+          'from': '2026-08-01',
+          'to': '2026-08-31',
+        });
+      },
+    );
+
+    test('what is pending is asked by the same days', () async {
       backend.on(
-        'POST /recurring-rules/apply',
-        (_) => const Reply({'added': 3}),
+        'GET /recurring-rules/pending',
+        (_) => const Reply({
+          'incomes': 1,
+          'allocations': 0,
+          'expenses': 0,
+          'skipped': 0,
+        }),
       );
 
-      final added = await backend.repository().applyRecurringRules(august);
+      final pending = await backend.repository().pendingRecurring(august);
 
-      expect(added, 3);
-      expect(backend.sent('POST /recurring-rules/apply').single.body, {
+      expect(pending.incomes, 1);
+      expect(backend.sent('GET /recurring-rules/pending').single.query, {
         'from': '2026-08-01',
         'to': '2026-08-31',
       });
+    });
+
+    test('recurring incomes are saved with their day', () async {
+      backend
+        ..on(
+          'GET /recurring-incomes',
+          (_) => Reply([recurringIncomeJson('r1', 500050, 10, note: 'salary')]),
+        )
+        ..on(
+          'POST /recurring-incomes',
+          (_) => Reply(recurringIncomeJson('r2', 100, 1), status: 201),
+        )
+        ..on(
+          'PUT /recurring-incomes/r1',
+          (_) => Reply(recurringIncomeJson('r1', 200, 2)),
+        );
+      final repository = backend.repository();
+
+      final rules = await repository.recurringIncomes();
+      await repository.saveRecurringIncome(
+        const RecurringIncome(amount: 1, dayOfMonth: 1),
+      );
+      await repository.saveRecurringIncome(
+        const RecurringIncome(
+          id: 'r1',
+          amount: 2,
+          dayOfMonth: 2,
+          active: false,
+        ),
+      );
+
+      expect(rules.single.amount, 5000.5);
+      expect(rules.single.dayOfMonth, 10);
+      expect(backend.sent('POST /recurring-incomes').single.body, {
+        'amountMinor': 100,
+        'dayOfMonth': 1,
+        'note': null,
+        'active': true,
+      });
+      expect(backend.sent('PUT /recurring-incomes/r1').single.body, {
+        'amountMinor': 200,
+        'dayOfMonth': 2,
+        'note': null,
+        'active': false,
+      });
+    });
+
+    test('allocation rules go to an envelope', () async {
+      backend
+        ..on(
+          'GET /allocation-rules',
+          (_) => Reply([allocationRuleJson('a1', 'e1', 100000, 5)]),
+        )
+        ..on(
+          'POST /allocation-rules',
+          (_) => Reply(allocationRuleJson('a2', 'e1', 100, 1), status: 201),
+        )
+        ..on(
+          'DELETE /allocation-rules/a1',
+          (_) => const Reply(null, status: 204),
+        );
+      final repository = backend.repository();
+
+      final rules = await repository.allocationRules();
+      await repository.saveAllocationRule(
+        const AllocationRule(envelopeId: 'e1', amount: 1, dayOfMonth: 1),
+      );
+      await repository.deleteAllocationRule('a1');
+
+      expect(rules.single.envelopeId, 'e1');
+      expect(rules.single.amount, 1000);
+      expect(backend.sent('POST /allocation-rules').single.body, {
+        'envelopeId': 'e1',
+        'amountMinor': 100,
+        'dayOfMonth': 1,
+        'note': null,
+        'active': true,
+      });
+      expect(backend.sent('DELETE /allocation-rules/a1'), hasLength(1));
     });
   });
 

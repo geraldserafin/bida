@@ -300,17 +300,69 @@ class PlannerRepository {
   Future<void> deleteRecurringRule(String id) =>
       guard(() => _api.recurring.recurringDelete(id: id));
 
-  /// Adds an expense for every active rule not applied to the month yet.
-  /// Returns how many were added.
-  Future<int> applyRecurringRules(BudgetMonth month) => guard(() async {
-    final result = await _api.recurring.recurringApply(
-      body: api.ApplyRecurring(
-        from: formatDay(month.from),
-        to: formatDay(month.to),
-      ),
+  /// Adds what every active rule not applied to the month yet makes: the
+  /// recurring incomes, then the allocations, then the expenses.
+  Future<ApplyOutcome> applyRecurringRules(BudgetMonth month) =>
+      guard(() async {
+        final result = await _api.recurring.recurringApply(
+          body: api.ApplyRecurring(
+            from: formatDay(month.from),
+            to: formatDay(month.to),
+          ),
+        );
+        return outcomeFrom(result);
+      });
+
+  /// What applying the rules to the month would add. Changes nothing.
+  Future<ApplyOutcome> pendingRecurring(BudgetMonth month) => guard(() async {
+    final result = await _api.recurring.recurringPending(
+      from: formatDay(month.from),
+      to: formatDay(month.to),
     );
-    return result.added;
+    return outcomeFrom(result);
   });
+
+  Future<List<RecurringIncome>> recurringIncomes() => guard(() async {
+    final all = await _api.recurringIncomes.recurringIncomesList();
+    return all.map(recurringIncomeFrom).toList();
+  });
+
+  Future<void> saveRecurringIncome(RecurringIncome rule) => guard(() async {
+    if (rule.id == null) {
+      await _api.recurringIncomes.recurringIncomesCreate(
+        body: saveRecurringIncomeOf(rule),
+      );
+    } else {
+      await _api.recurringIncomes.recurringIncomesUpdate(
+        id: rule.id!,
+        body: saveRecurringIncomeOf(rule),
+      );
+    }
+  });
+
+  Future<void> deleteRecurringIncome(String id) =>
+      guard(() => _api.recurringIncomes.recurringIncomesDelete(id: id));
+
+  Future<List<AllocationRule>> allocationRules() => guard(() async {
+    final all = await _api.allocationRules.allocationRulesList();
+    return all.map(allocationRuleFrom).toList();
+  });
+
+  Future<void> saveAllocationRule(AllocationRule rule) => guard(() async {
+    if (rule.id == null) {
+      await _api.allocationRules.allocationRulesCreate(
+        body: saveAllocationRuleOf(rule),
+      );
+    } else {
+      await _api.allocationRules.allocationRulesUpdate(
+        id: rule.id!,
+        body: saveAllocationRuleOf(rule),
+      );
+    }
+  });
+
+  Future<void> deleteAllocationRule(String id) =>
+      guard(() => _api.allocationRules.allocationRulesDelete(id: id));
 
   // ------------------------------------------------------------- data exchange
 

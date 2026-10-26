@@ -21,8 +21,7 @@ void main() {
           envelopeJson('e3', 'Food'),
         ]),
       )
-      ..on('GET /recurring-rules', (_) => const Reply([]))
-      ..on('GET /invitations', (_) => const Reply([]))
+      ..noRules()
       ..on(
         'GET /overview',
         (_) => Reply(
@@ -357,29 +356,116 @@ void main() {
     expect(state.envelopes.map((e) => e.name), ['Home', 'Fun']);
   });
 
+  test('load asks what the recurring rules would add', () async {
+    backend.on(
+      'GET /recurring-rules/pending',
+      (_) => const Reply({
+        'incomes': 1,
+        'allocations': 2,
+        'expenses': 0,
+        'skipped': 0,
+      }),
+    );
+    final state = newState();
+
+    await state.load();
+
+    expect(state.pending.incomes, 1);
+    expect(state.pending.allocations, 2);
+    expect(state.pending.added, 3);
+    expect(backend.sent('GET /recurring-rules/pending').single.query, {
+      'from': '2026-08-01',
+      'to': '2026-08-31',
+    });
+  });
+
+  test('the pending rules are asked again for another month', () async {
+    final state = newState();
+    await state.load();
+    final before = backend.sent('GET /recurring-rules/pending').length;
+
+    await state.nextMonth();
+
+    expect(backend.sent('GET /recurring-rules/pending'), hasLength(before + 1));
+    expect(
+      backend.sent('GET /recurring-rules/pending').last.query['from'],
+      '2026-09-01',
+    );
+  });
+
+  test('applying reloads the figures only when something was added', () async {
+    backend.on(
+      'POST /recurring-rules/apply',
+      (_) => const Reply({
+        'incomes': 0,
+        'allocations': 0,
+        'expenses': 0,
+        'skipped': 0,
+      }),
+    );
+    final state = newState();
+    await state.load();
+    final before = backend.sent('GET /overview').length;
+
+    expect((await state.applyRecurringToMonth()).isEmpty, isTrue);
+    expect(backend.sent('GET /overview'), hasLength(before));
+
+    backend.on(
+      'POST /recurring-rules/apply',
+      (_) => const Reply({
+        'incomes': 1,
+        'allocations': 1,
+        'expenses': 2,
+        'skipped': 1,
+      }),
+    );
+    final outcome = await state.applyRecurringToMonth();
+    expect(
+      [outcome.incomes, outcome.allocations, outcome.expenses, outcome.skipped],
+      [1, 1, 2, 1],
+    );
+    expect(backend.sent('GET /overview'), hasLength(before + 1));
+    expect(backend.sent('POST /recurring-rules/apply').last.body, {
+      'from': '2026-08-01',
+      'to': '2026-08-31',
+    });
+  });
+
   test(
-    'applying recurring rules reloads only when something was added',
+    'saving and deleting the rules refreshes them and the pending ones',
     () async {
-      backend.on(
-        'POST /recurring-rules/apply',
-        (_) => const Reply({'added': 0}),
-      );
+      backend
+        ..on(
+          'POST /recurring-incomes',
+          (_) => Reply(recurringIncomeJson('r1', 500000, 10), status: 201),
+        )
+        ..on(
+          'DELETE /allocation-rules/a1',
+          (_) => const Reply(null, status: 204),
+        );
       final state = newState();
       await state.load();
-      final before = backend.sent('GET /overview').length;
-
-      expect(await state.applyRecurringToMonth(), 0);
-      expect(backend.sent('GET /overview'), hasLength(before));
-
       backend.on(
-        'POST /recurring-rules/apply',
-        (_) => const Reply({'added': 2}),
+        'GET /recurring-incomes',
+        (_) => Reply([recurringIncomeJson('r1', 500000, 10)]),
       );
-      expect(await state.applyRecurringToMonth(), 2);
-      expect(backend.sent('GET /overview'), hasLength(before + 1));
-      expect(backend.sent('POST /recurring-rules/apply').last.body, {
-        'from': '2026-08-01',
-        'to': '2026-08-31',
+      final pending = backend.sent('GET /recurring-rules/pending').length;
+
+      await state.saveRecurringIncome(
+        const RecurringIncome(amount: 5000, dayOfMonth: 10),
+      );
+      await state.deleteAllocationRule('a1');
+
+      expect(state.recurringIncomes.single.amount, 5000);
+      expect(
+        backend.sent('GET /recurring-rules/pending'),
+        hasLength(pending + 2),
+      );
+      expect(backend.sent('POST /recurring-incomes').single.body, {
+        'amountMinor': 500000,
+        'dayOfMonth': 10,
+        'note': null,
+        'active': true,
       });
     },
   );

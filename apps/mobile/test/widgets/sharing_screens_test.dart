@@ -42,7 +42,7 @@ void main() {
     FlutterSecureStorage.setMockInitialValues({});
     backend = FakeBackend()
       ..on('GET /auth/me', (_) => Reply(userJson('ann@example.com')))
-      ..on('GET /recurring-rules', (_) => const Reply([]))
+      ..noRules()
       ..on(
         'GET /envelopes',
         (_) => Reply([envelopeJson('e1', 'Home'), envelopeJson('e2', 'Food')]),

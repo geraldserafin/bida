@@ -46,6 +46,8 @@ void main() {
       ..on('GET /envelopes', (_) => const Reply.unreachable())
       ..on('GET /recurring-rules', (_) => const Reply.unreachable())
       ..on('GET /invitations', (_) => const Reply.unreachable())
+      ..on('GET /recurring-incomes', (_) => const Reply.unreachable())
+      ..on('GET /allocation-rules', (_) => const Reply.unreachable())
       ..on('GET /overview', (_) => const Reply.unreachable());
     final state = PlannerState(repository: backend.repository());
 
@@ -59,8 +61,7 @@ void main() {
     // the server comes back: retrying shows the app
     backend
       ..on('GET /envelopes', (_) => const Reply([]))
-      ..on('GET /recurring-rules', (_) => const Reply([]))
-      ..on('GET /invitations', (_) => const Reply([]))
+      ..noRules()
       ..on('GET /overview', (_) => Reply(overviewJson()));
     await tester.tap(find.text('Spróbuj ponownie'));
     await tester.pumpAndSettle();
@@ -74,8 +75,7 @@ void main() {
   ) async {
     final backend = FakeBackend()
       ..on('GET /envelopes', (_) => const Reply([]))
-      ..on('GET /recurring-rules', (_) => const Reply([]))
-      ..on('GET /invitations', (_) => const Reply([]))
+      ..noRules()
       ..on('GET /overview', (_) => Reply(overviewJson()));
     final state = PlannerState(repository: backend.repository());
 
@@ -99,8 +99,7 @@ void main() {
         'GET /envelopes',
         (_) => Reply([envelopeJson('e1', 'Food'), envelopeJson('e2', 'Rent')]),
       )
-      ..on('GET /recurring-rules', (_) => const Reply([]))
-      ..on('GET /invitations', (_) => const Reply([]))
+      ..noRules()
       ..on(
         'GET /overview',
         (_) => Reply(
@@ -131,4 +130,72 @@ void main() {
     expect(find.text('Rent'), findsWidgets);
     expect(find.text('Dodaj wydatek'), findsOneWidget);
   });
+
+  testWidgets(
+    'Dashboard offers the recurring rules that are due and applies them',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 4000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final backend = FakeBackend()
+        ..noRules()
+        ..on('GET /envelopes', (_) => Reply([envelopeJson('e1', 'Food')]))
+        ..on(
+          'GET /overview',
+          (_) => Reply(
+            overviewJson(envelopes: [figuresJson('e1', allocated: 10000)]),
+          ),
+        )
+        ..on(
+          'GET /recurring-rules/pending',
+          (_) => const Reply({
+            'incomes': 1,
+            'allocations': 2,
+            'expenses': 0,
+            'skipped': 0,
+          }),
+        )
+        ..on(
+          'POST /recurring-rules/apply',
+          (_) => const Reply({
+            'incomes': 1,
+            'allocations': 2,
+            'expenses': 0,
+            'skipped': 0,
+          }),
+        );
+      final state = PlannerState(
+        repository: backend.repository(),
+        clock: () => DateTime(2026, 8, 15),
+      );
+
+      await tester.pumpWidget(app(state, backend));
+      await tester.runAsync(state.load);
+      await tester.pump();
+
+      expect(
+        find.text('Do dodania w tym miesiącu: 1 wpływ, 2 przydziały'),
+        findsOneWidget,
+      );
+
+      backend.on(
+        'GET /recurring-rules/pending',
+        (_) => const Reply({
+          'incomes': 0,
+          'allocations': 0,
+          'expenses': 0,
+          'skipped': 0,
+        }),
+      );
+      await tester.runAsync(() async {
+        await tester.tap(find.text('Dodaj').first);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      });
+      await tester.pump();
+
+      expect(backend.sent('POST /recurring-rules/apply'), hasLength(1));
+      expect(find.textContaining('Do dodania w tym miesiącu'), findsNothing);
+      expect(find.text('Dodano: 1 wpływ, 2 przydziały.'), findsOneWidget);
+    },
+  );
 }

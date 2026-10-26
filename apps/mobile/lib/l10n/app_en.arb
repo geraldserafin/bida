@@ -51,14 +51,6 @@
   "active": "Active",
   "noRecurringRules": "No recurring rules yet. Add templates for regular income or expenses.",
   "applyRecurring": "Add recurring to this month",
-  "recurringApplied": "{count, plural, =0{Everything is already up to date} =1{Added 1 recurring expense} other{Added {count} recurring expenses}}",
-  "@recurringApplied": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "settings": "Settings",
   "security": "Security",
   "appLock": "App lock (PIN)",
@@ -377,6 +369,71 @@
     "placeholders": {
       "name": {
         "type": "String"
+      }
+    }
+  },
+  "addPending": "Add",
+  "appliedNothing": "Everything is up to date",
+  "appliedSummary": "Added: {parts}.",
+  "@appliedSummary": {
+    "placeholders": {
+      "parts": {
+        "type": "String"
+      }
+    }
+  },
+  "countAllocations": "{count, plural, one{{count} allocation} other{{count} allocations}}",
+  "@countAllocations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "countExpenses": "{count, plural, one{{count} expense} other{{count} expenses}}",
+  "@countExpenses": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "countIncomes": "{count, plural, one{{count} income} other{{count} incomes}}",
+  "@countIncomes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dayOfMonth": "Day of the month",
+  "editAllocationRule": "Edit allocation rule",
+  "editIncomeRule": "Edit recurring income",
+  "everyMonthOn": "Every month on the {day}.",
+  "@everyMonthOn": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "newAllocationRule": "New allocation rule",
+  "newIncomeRule": "New recurring income",
+  "noAllocationRules": "No allocation rules. Add how much goes into an envelope every month, e.g. 1000 zł into Home.",
+  "noRecurringIncomes": "No recurring income. Add a salary that comes in on the same day every month.",
+  "pendingTitle": "To add this month: {parts}",
+  "@pendingTitle": {
+    "placeholders": {
+      "parts": {
+        "type": "String"
+      }
+    }
+  },
+  "skippedAllocations": "Allocations skipped for lack of money in the envelope: {count}.",
+  "@skippedAllocations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   }

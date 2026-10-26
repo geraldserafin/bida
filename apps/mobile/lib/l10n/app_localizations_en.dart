@@ -146,18 +146,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get applyRecurring => 'Add recurring to this month';
 
   @override
-  String recurringApplied(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Added $count recurring expenses',
-      one: 'Added 1 recurring expense',
-      zero: 'Everything is already up to date',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get settings => 'Settings';
 
   @override
@@ -696,5 +684,87 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String youWith(String name) {
     return '$name (you)';
+  }
+
+  @override
+  String get addPending => 'Add';
+
+  @override
+  String get appliedNothing => 'Everything is up to date';
+
+  @override
+  String appliedSummary(String parts) {
+    return 'Added: $parts.';
+  }
+
+  @override
+  String countAllocations(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count allocations',
+      one: '$count allocation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countExpenses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '$count expense',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countIncomes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count incomes',
+      one: '$count income',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayOfMonth => 'Day of the month';
+
+  @override
+  String get editAllocationRule => 'Edit allocation rule';
+
+  @override
+  String get editIncomeRule => 'Edit recurring income';
+
+  @override
+  String everyMonthOn(int day) {
+    return 'Every month on the $day.';
+  }
+
+  @override
+  String get newAllocationRule => 'New allocation rule';
+
+  @override
+  String get newIncomeRule => 'New recurring income';
+
+  @override
+  String get noAllocationRules =>
+      'No allocation rules. Add how much goes into an envelope every month, e.g. 1000 zł into Home.';
+
+  @override
+  String get noRecurringIncomes =>
+      'No recurring income. Add a salary that comes in on the same day every month.';
+
+  @override
+  String pendingTitle(String parts) {
+    return 'To add this month: $parts';
+  }
+
+  @override
+  String skippedAllocations(int count) {
+    return 'Allocations skipped for lack of money in the envelope: $count.';
   }
 }

@@ -50,6 +50,24 @@ class FakeBackend implements HttpClientAdapter {
   final Map<String, Handler> routes = {};
   final List<Seen> requests = [];
 
+  /// Answers the requests every load makes about recurring rules and
+  /// invitations with "none", for tests that are about something else.
+  void noRules() {
+    on('GET /recurring-rules', (_) => const Reply([]));
+    on('GET /recurring-incomes', (_) => const Reply([]));
+    on('GET /allocation-rules', (_) => const Reply([]));
+    on('GET /invitations', (_) => const Reply([]));
+    on(
+      'GET /recurring-rules/pending',
+      (_) => const Reply({
+        'incomes': 0,
+        'allocations': 0,
+        'expenses': 0,
+        'skipped': 0,
+      }),
+    );
+  }
+
   /// Registers a route, e.g. `on('GET /envelopes', (_) => Reply([...]))`.
   void on(String route, Handler handler) => routes[route] = handler;
 
@@ -302,6 +320,42 @@ Map<String, Object?> invitationJson(
   'acceptedBy': null,
   'expiresAt': '2026-11-01T00:00:00.000Z',
   'createdAt': _stamp,
+};
+
+Map<String, Object?> recurringIncomeJson(
+  String id,
+  int amountMinor,
+  int dayOfMonth, {
+  String? note,
+  bool active = true,
+}) => {
+  'id': id,
+  'userId': 'u1',
+  'amountMinor': amountMinor,
+  'dayOfMonth': dayOfMonth,
+  'note': note,
+  'active': active,
+  'createdAt': _stamp,
+  'updatedAt': _stamp,
+};
+
+Map<String, Object?> allocationRuleJson(
+  String id,
+  String envelopeId,
+  int amountMinor,
+  int dayOfMonth, {
+  String? note,
+  bool active = true,
+}) => {
+  'id': id,
+  'userId': 'u1',
+  'envelopeId': envelopeId,
+  'amountMinor': amountMinor,
+  'dayOfMonth': dayOfMonth,
+  'note': note,
+  'active': active,
+  'createdAt': _stamp,
+  'updatedAt': _stamp,
 };
 
 Map<String, Object?> userJson(String email) => {
