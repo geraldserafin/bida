@@ -4,31 +4,31 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/category_progress.dart';
 import '../../models/period.dart';
+import '../../state/auth_state.dart';
 import '../../state/planner_state.dart';
+import '../../theme/app_theme.dart';
 import '../../theme/category_visuals.dart';
 import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
+import '../../widgets/app_button.dart';
+import '../../widgets/app_icon.dart';
+import '../../widgets/avatar.dart';
+import '../../widgets/bottom_menu.dart';
 import '../../widgets/error_view.dart';
+import '../../widgets/labeled_field.dart';
+import '../../widgets/logo_box.dart';
+import '../../widgets/surface_card.dart';
+import '../../widgets/transaction_row.dart';
 import '../add_expense/add_expense_screen.dart';
+import '../add_income/add_income_screen.dart';
 import '../category_detail/category_detail_screen.dart';
-import '../history/history_screen.dart';
+import '../home/home_shell.dart';
 import '../period_setup/new_period_screen.dart';
 import '../periods/periods_screen.dart';
-import '../recurring/recurring_rules_screen.dart';
-import '../settings/settings_screen.dart';
-import 'widgets/planned_pie_chart.dart';
-import 'widgets/planned_vs_spent_chart.dart';
+import '../setup_wizard/setup_wizard_screen.dart';
 
-/// Opens an envelope's detail (expense) view for a tapped chart element.
-void _openEnvelope(BuildContext context, CategoryProgress progress) {
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (_) => CategoryDetailScreen(envelopeId: progress.envelope.id!),
-    ),
-  );
-}
-
-/// Home screen — current-period overview with planned vs. spent per category.
+/// Home tab ("Pulpit"): the household, the chosen period's money in and out,
+/// and how full each envelope is.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -39,188 +39,79 @@ class DashboardScreen extends StatelessWidget {
     final period = state.currentPeriod;
 
     return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 20,
-        title: period != null && state.periods.length > 1
-            ? _PeriodSwitcher(state: state)
-            : Row(
-                children: [
-                  const Icon(Icons.savings_outlined, size: 20),
-                  const SizedBox(width: 10),
-                  Text(
-                    l10n.appTitle,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-        actions: [
-          if (period != null)
-            IconButton(
-              tooltip: l10n.editPlan,
-              icon: const Icon(Icons.tune),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => NewPeriodScreen(editPeriod: period),
-                ),
-              ),
-            ),
-          IconButton(
-            tooltip: l10n.recurringRules,
-            icon: const Icon(Icons.repeat),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const RecurringRulesScreen()),
-            ),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: Builder(
-        builder: (context) {
-          if (state.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final loadError = state.loadError;
-          if (loadError != null) {
-            return ErrorView(error: loadError, onRetry: state.load);
-          }
-          if (period == null) {
-            return _EmptyState(onCreate: () => _openNewPeriod(context));
-          }
-          return _PeriodView(state: state);
-        },
-      ),
-      bottomNavigationBar: const _BottomNav(),
-      floatingActionButton: period == null
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
-              ),
-              icon: const Icon(Icons.add),
-              label: Text(l10n.addExpense),
-            ),
-    );
-  }
-
-  void _openNewPeriod(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const NewPeriodScreen()));
-  }
-}
-
-/// Bottom navigation. The dashboard is index 0 ("Plan"); the other
-/// destinations push their screens and the bar snaps back to Plan.
-class _BottomNav extends StatelessWidget {
-  const _BottomNav();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          ),
+      body: SafeArea(
+        bottom: false,
+        child: Builder(
+          builder: (context) {
+            if (state.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final loadError = state.loadError;
+            if (loadError != null) {
+              return ErrorView(error: loadError, onRetry: state.load);
+            }
+            if (period == null) return const _SetUpPrompt();
+            return _PeriodView(state: state, period: period);
+          },
         ),
       ),
-      child: NavigationBar(
-        selectedIndex: 0,
-        onDestinationSelected: (i) {
-          Widget? screen = switch (i) {
-            1 => const HistoryScreen(),
-            2 => const PeriodsScreen(),
-            3 => const SettingsScreen(),
-            _ => null,
-          };
-          if (screen != null) {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => screen));
-          }
-        },
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
-            label: l10n.dashboard,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.history),
-            label: l10n.history,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.calendar_month_outlined),
-            selectedIcon: const Icon(Icons.calendar_month),
-            label: l10n.periods,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.settings_outlined),
-            label: l10n.settings,
-          ),
-        ],
-      ),
+      floatingActionButton: period == null || state.isLoading
+          ? null
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppButton(
+                  label: l10n.addIncomeShort,
+                  kind: ButtonKind.raised,
+                  height: 48,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AddIncomeScreen()),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                AppButton(
+                  label: l10n.addExpenseShort,
+                  height: 48,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
 
-class _PeriodSwitcher extends StatelessWidget {
-  const _PeriodSwitcher({required this.state});
-  final PlannerState state;
-
-  @override
-  Widget build(BuildContext context) {
-    return DropdownButtonHideUnderline(
-      child: DropdownButton<String>(
-        value: state.currentPeriod!.id,
-        isExpanded: true,
-        borderRadius: BorderRadius.circular(12),
-        dropdownColor: Theme.of(context).colorScheme.surfaceContainer,
-        style: Theme.of(
-          context,
-        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        items: [
-          for (final Period p in state.periods)
-            DropdownMenuItem(value: p.id, child: Text(p.name)),
-        ],
-        onChanged: (id) {
-          if (id == null) return;
-          final state = context.read<PlannerState>();
-          attempt(context, () => state.selectPeriod(id));
-        },
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onCreate});
-  final VoidCallback onCreate;
+/// Shown before the first period exists: leads into the set-up wizard.
+class _SetUpPrompt extends StatelessWidget {
+  const _SetUpPrompt();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.savings_outlined, size: 64),
-            const SizedBox(height: 16),
-            Text(
-              l10n.dashboardEmptyTitle,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
+            const Align(alignment: Alignment.centerLeft, child: LogoBox()),
+            const SizedBox(height: 14),
+            Text(l10n.wizardStartTitle, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
-            Text(l10n.dashboardEmptyBody, textAlign: TextAlign.center),
+            Text(
+              l10n.wizardStartBody,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: AppColors.of(context).textMuted,
+              ),
+            ),
             const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: onCreate,
-              icon: const Icon(Icons.add),
-              label: Text(l10n.newPeriod),
+            AppButton(
+              label: l10n.wizardStart,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SetupWizardScreen()),
+              ),
             ),
           ],
         ),
@@ -230,64 +121,157 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _PeriodView extends StatelessWidget {
-  const _PeriodView({required this.state});
+  const _PeriodView({required this.state, required this.period});
   final PlannerState state;
+  final Period period;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+    return Column(
       children: [
-        _SummaryCard(state: state),
-        if (state.progress.isNotEmpty) ...[
-          const SizedBox(height: 14),
-          PlannedPieChart(
-            progress: state.progress,
-            spent: state.totalSpent,
-            onTap: (p) => _openEnvelope(context, p),
+        _Header(state: state),
+        _PeriodSwitcher(state: state, period: period),
+        Expanded(
+          child: ListView(
+            // room for the add buttons floating over the end of the list
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+            children: [
+              _SummaryCard(state: state),
+              const SizedBox(height: 12),
+              _EnvelopesCard(state: state, period: period),
+            ],
           ),
-          const SizedBox(height: 14),
-          PlannedVsSpentChart(
-            progress: state.progress,
-            onTap: (p) => _openEnvelope(context, p),
-          ),
-        ],
-        const SizedBox(height: 20),
-        _SectionLabel(l10n.envelopes),
-        const SizedBox(height: 10),
-        if (state.progress.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Center(child: Text(l10n.noEnvelopes)),
-          )
-        else
-          for (final p in state.progress) ...[
-            _CategoryProgressTile(progress: p),
-            const SizedBox(height: 10),
-          ],
+        ),
       ],
     );
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
+/// The household's name (tapping it opens the household tab) and its
+/// members.
+class _Header extends StatelessWidget {
+  const _Header({required this.state});
+  final PlannerState state;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFFE4E4E7),
+    final l10n = AppLocalizations.of(context);
+    final c = AppColors.of(context);
+    final email = context.watch<AuthState>().email ?? '';
+    final name = state.household?.name ?? l10n.appTitle;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => context
+                  .findAncestorStateOfType<HomeShellState>()
+                  ?.select(AppTab.household),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: c.text,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const AppIconView(AppIcon.chevronDown),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.soloSubtitle,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Avatar(name: email, color: avatarColors.first, size: 32, ring: true),
+        ],
       ),
     );
   }
 }
 
+/// The period's name between arrows to the previous and the next one.
+/// Tapping the name lists all periods.
+class _PeriodSwitcher extends StatelessWidget {
+  const _PeriodSwitcher({required this.state, required this.period});
+  final PlannerState state;
+  final Period period;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final previous = state.previousPeriod;
+    final next = state.nextPeriod;
+
+    void go(Period? to) {
+      if (to == null) return;
+      attempt(context, () => state.selectPeriod(to.id!));
+    }
+
+    return SizedBox(
+      height: 44,
+      child: Row(
+        children: [
+          Opacity(
+            opacity: previous == null ? 0.3 : 1,
+            child: AppIconButton(
+              AppIcon.chevronLeft,
+              tooltip: l10n.previousPeriod,
+              onPressed: previous == null ? null : () => go(previous),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PeriodsScreen()),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  child: Text(
+                    period.name,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Opacity(
+            opacity: next == null ? 0.3 : 1,
+            child: AppIconButton(
+              AppIcon.chevronRight,
+              tooltip: l10n.nextPeriod,
+              onPressed: next == null ? null : () => go(next),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Money in, money out, the balance, and what is not in any envelope.
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({required this.state});
   final PlannerState state;
@@ -295,55 +279,68 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _Stat(
-                    label: l10n.income,
-                    value: formatZloty(state.income),
-                  ),
+    final c = AppColors.of(context);
+    final over = state.isOverAllocated;
+
+    return SurfaceCard(
+      radius: 20,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _Stat(
+                  label: l10n.incomes,
+                  value: formatZloty(state.income),
                 ),
-                Expanded(
-                  child: _Stat(
-                    label: l10n.planned,
-                    value: formatZloty(state.totalPlanned),
-                  ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _Stat(
+                  label: l10n.expenses,
+                  value: formatZloty(state.totalSpent),
                 ),
-              ],
-            ),
-            const Divider(height: 28),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  state.isOverAllocated ? l10n.overAllocated : l10n.unallocated,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Divider(height: 1, color: c.border),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.periodBalance,
                   style: TextStyle(
-                    color: state.isOverAllocated
-                        ? scheme.error
-                        : scheme.onSurfaceVariant,
-                    fontSize: 13,
+                    fontSize: 15,
+                    height: 1.5,
+                    color: c.textSoft,
                   ),
                 ),
-                Text(
-                  formatZloty(state.unallocated),
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: state.isOverAllocated
-                        ? scheme.error
-                        : scheme.onSurface,
-                  ),
+              ),
+              Text(
+                formatZloty(state.balance),
+                style: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w700,
+                  color: state.balance < 0 ? c.danger : c.accent,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ValueRow(
+            small: true,
+            label: over ? l10n.overAllocated : l10n.unallocatedToEnvelopes,
+            value: formatZloty(state.unallocated),
+            valueColor: over ? c.danger : null,
+          ),
+        ],
       ),
     );
   }
@@ -359,93 +356,89 @@ class _Stat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.4,
-            color: Color(0xFF71717A),
-          ),
-        ),
-        const SizedBox(height: 5),
+        Overline(label),
+        const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: AppColors.of(context).text,
+          ),
         ),
       ],
     );
   }
 }
 
-class _CategoryProgressTile extends StatelessWidget {
-  const _CategoryProgressTile({required this.progress});
-  final CategoryProgress progress;
+/// Every envelope of the period with what was spent of it.
+class _EnvelopesCard extends StatelessWidget {
+  const _EnvelopesCard({required this.state, required this.period});
+  final PlannerState state;
+  final Period period;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = progress.category.displayColor;
+    final l10n = AppLocalizations.of(context);
+    final c = AppColors.of(context);
 
-    return Card(
-      child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) =>
-                CategoryDetailScreen(envelopeId: progress.envelope.id!),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return SurfaceCard(
+      radius: 20,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      progress.category.displayIcon,
-                      size: 17,
-                      color: color,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      progress.category.name,
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '${formatZloty(progress.spent)} / ${formatZloty(progress.planned)}',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+              Expanded(
+                child: Text(
+                  l10n.envelopes,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
               ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: LinearProgressIndicator(
-                  value: progress.fraction,
-                  minHeight: 5,
-                  backgroundColor: scheme.surfaceContainerHighest,
-                  color: progress.isOverspent ? scheme.error : color,
+              InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => NewPeriodScreen(editPeriod: period),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text(
+                    l10n.editPlan,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: c.textMuted,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          if (state.progress.isEmpty)
+            Text(l10n.noEnvelopes, style: Theme.of(context).textTheme.bodySmall)
+          else
+            for (final (i, p) in state.progress.indexed) ...[
+              if (i > 0) const SizedBox(height: 12),
+              _envelope(context, p),
+            ],
+        ],
+      ),
+    );
+  }
+
+  Widget _envelope(BuildContext context, CategoryProgress p) {
+    return EnvelopeBar(
+      color: p.category.displayColor,
+      name: p.category.name,
+      amounts: '${formatPlain(p.spent)} / ${formatZloty(p.planned)}',
+      fraction: p.fraction,
+      overspent: p.isOverspent,
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CategoryDetailScreen(envelopeId: p.envelope.id!),
         ),
       ),
     );

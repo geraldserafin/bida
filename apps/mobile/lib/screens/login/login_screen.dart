@@ -7,15 +7,24 @@ import '../../data/google_credential.dart';
 import '../../data/google_sign_in.dart';
 import '../../l10n/app_localizations.dart';
 import '../../state/auth_state.dart';
-import '../../widgets/google_button.dart';
+import '../../theme/app_theme.dart';
 import '../../util/api_errors.dart';
+import '../../widgets/app_button.dart';
+import '../../widgets/google_button.dart';
+import '../../widgets/labeled_field.dart';
+import '../../widgets/logo_box.dart';
 
 final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
 /// Signing in without a password: the user gets a code (and a link) by e-mail
-/// and types the code here.
+/// and types the code here, or continues with Google. Either way they first
+/// accept how their data is processed.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  static const emailFieldKey = Key('login-email');
+  static const codeFieldKey = Key('login-code');
+  static const consentKey = Key('login-consent');
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -24,11 +33,11 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _codeController = TextEditingController();
-  final _emailKey = GlobalKey<FormState>();
-  final _codeKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
 
   /// The address a code was sent to; null while the address is being asked.
   String? _sentTo;
+  bool _consent = false;
   bool _busy = false;
   String? _error;
 
@@ -37,6 +46,13 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _codeController.dispose();
     super.dispose();
+  }
+
+  /// False, with the reason under the form, until the consent is ticked.
+  bool _consented() {
+    if (_consent) return true;
+    setState(() => _error = AppLocalizations.of(context).consentRequired);
+    return false;
   }
 
   /// Runs [action]; an error of the server becomes the text under the form.
@@ -63,7 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _sendCode() async {
-    if (!_emailKey.currentState!.validate()) return;
+    // sending again needs no code yet, and the address was checked before
+    if (_sentTo == null && !_formKey.currentState!.validate()) return;
+    if (!_consented()) return;
     final auth = context.read<AuthState>();
     final email = _emailController.text.trim();
     final sent = await _run(() => auth.requestLink(email));
@@ -76,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signIn() async {
-    if (!_codeKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate() || !_consented()) return;
     final auth = context.read<AuthState>();
     final email = _sentTo!;
     final code = _codeController.text.trim();
@@ -85,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
+    if (!_consented()) return;
     final l10n = AppLocalizations.of(context);
     final auth = context.read<AuthState>();
     final GoogleCredential? credential;
@@ -99,63 +118,107 @@ class _LoginScreenState extends State<LoginScreen> {
     await _run(() => auth.signInWithGoogle(credential!));
   }
 
+  void _useOtherEmail() => setState(() {
+    _sentTo = null;
+    _error = null;
+  });
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final c = AppColors.of(context);
     final sentTo = _sentTo;
 
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 52, 24, 32),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(l10n.signInTitle, style: theme.textTheme.headlineMedium),
-                  const SizedBox(height: 8),
-                  Text(
-                    sentTo == null
-                        ? l10n.signInSubtitle
-                        : l10n.codeSentTo(sentTo),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (sentTo == null) ...[
-                    if (googleSignInConfigured) ...[
-                      GoogleButton(
-                        label: l10n.signInWithGoogle,
-                        onPressed: _busy ? null : _signInWithGoogle,
+              // fill the screen so the buttons sit at the bottom
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight - 84,
+              ),
+              child: IntrinsicHeight(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: LogoBox(),
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          const Expanded(child: Divider()),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(l10n.orSeparator),
-                          ),
-                          const Expanded(child: Divider()),
-                        ],
+                      const SizedBox(height: 14),
+                      Text(
+                        l10n.loginHeadline,
+                        style: theme.textTheme.headlineMedium,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
+                      Text(
+                        sentTo == null
+                            ? l10n.loginSubtitle
+                            : l10n.codeSentTo(sentTo),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: c.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      LabeledField(
+                        fieldKey: LoginScreen.emailFieldKey,
+                        label: l10n.emailAddress,
+                        controller: _emailController,
+                        enabled: sentTo == null && !_busy,
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [AutofillHints.email],
+                        textInputAction: TextInputAction.done,
+                        autofocus: true,
+                        validator: (v) =>
+                            _emailPattern.hasMatch((v ?? '').trim())
+                            ? null
+                            : l10n.enterValidEmail,
+                        onSubmitted: (_) => _sendCode(),
+                      ),
+                      if (sentTo != null) ..._codePart(l10n, c),
+                      const SizedBox(height: 24),
+                      _Consent(
+                        value: _consent,
+                        onChanged: (v) => setState(() {
+                          _consent = v;
+                          if (v && _error == l10n.consentRequired) {
+                            _error = null;
+                          }
+                        }),
+                      ),
+                      const Spacer(),
+                      const SizedBox(height: 24),
+                      AppButton(
+                        label: sentTo == null
+                            ? l10n.sendCode
+                            : l10n.signInAction,
+                        busy: _busy,
+                        onPressed: sentTo == null ? _sendCode : _signIn,
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          _error!,
+                          style: TextStyle(color: c.danger, fontSize: 14),
+                        ),
+                      ],
+                      if (googleSignInConfigured && sentTo == null) ...[
+                        const SizedBox(height: 24),
+                        _OrDivider(label: l10n.orSeparator),
+                        const SizedBox(height: 24),
+                        GoogleButton(
+                          label: l10n.signInWithGoogle,
+                          onPressed: _busy ? null : _signInWithGoogle,
+                        ),
+                      ],
                     ],
-                    _emailForm(l10n),
-                  ] else
-                    _codeForm(l10n),
-                  if (_error != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      _error!,
-                      style: TextStyle(color: theme.colorScheme.error),
-                    ),
-                  ],
-                ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -164,80 +227,86 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _emailForm(AppLocalizations l10n) {
-    return Form(
-      key: _emailKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+  List<Widget> _codePart(AppLocalizations l10n, AppColors c) {
+    final caption = Theme.of(context).textTheme.bodySmall;
+    final link = caption?.copyWith(
+      color: c.text,
+      decoration: TextDecoration.underline,
+      decorationColor: c.textMuted,
+    );
+    return [
+      const SizedBox(height: 24),
+      LabeledField(
+        fieldKey: LoginScreen.codeFieldKey,
+        label: l10n.codeFieldLabel,
+        controller: _codeController,
+        keyboardType: TextInputType.number,
+        autofillHints: const [AutofillHints.oneTimeCode],
+        inputFormatters: [
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(6),
+        ],
+        autofocus: true,
+        validator: (v) => (v ?? '').trim().length == 6 ? null : l10n.enterCode,
+        onSubmitted: (_) => _signIn(),
+      ),
+      const SizedBox(height: 24),
+      Wrap(
+        spacing: 4,
+        runSpacing: 4,
         children: [
-          TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            autofillHints: const [AutofillHints.email],
-            textInputAction: TextInputAction.done,
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: l10n.emailAddress,
-              border: const OutlineInputBorder(),
-            ),
-            validator: (v) => _emailPattern.hasMatch((v ?? '').trim())
-                ? null
-                : l10n.enterValidEmail,
-            onFieldSubmitted: (_) => _sendCode(),
+          Text(l10n.codeValidity, style: caption),
+          GestureDetector(
+            onTap: _busy ? null : _sendCode,
+            child: Text(l10n.resendShort, style: link),
           ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _busy ? null : _sendCode,
-            child: _busy ? const _Spinner() : Text(l10n.sendCode),
+          Text('·', style: caption),
+          GestureDetector(
+            onTap: _busy ? null : _useOtherEmail,
+            child: Text(l10n.useOtherEmail, style: link),
           ),
         ],
       ),
-    );
+    ];
   }
+}
 
-  Widget _codeForm(AppLocalizations l10n) {
-    return Form(
-      key: _codeKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+/// The data-processing consent ("Zgoda RODO").
+class _Consent extends StatelessWidget {
+  const _Consent({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return InkWell(
+      onTap: () => onChanged(!value),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextFormField(
-            controller: _codeController,
-            keyboardType: TextInputType.number,
-            autofillHints: const [AutofillHints.oneTimeCode],
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(6),
-            ],
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 24, letterSpacing: 8),
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: l10n.signInCode,
-              border: const OutlineInputBorder(),
+          SizedBox(
+            width: 20,
+            height: 20,
+            child: Checkbox(
+              key: LoginScreen.consentKey,
+              value: value,
+              onChanged: (v) => onChanged(v ?? false),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
             ),
-            validator: (v) =>
-                (v ?? '').trim().length == 6 ? null : l10n.enterCode,
-            onFieldSubmitted: (_) => _signIn(),
           ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _busy ? null : _signIn,
-            child: _busy ? const _Spinner() : Text(l10n.signInAction),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: _busy ? null : _sendCode,
-            child: Text(l10n.resendCode),
-          ),
-          TextButton(
-            onPressed: _busy
-                ? null
-                : () => setState(() {
-                    _sentTo = null;
-                    _error = null;
-                  }),
-            child: Text(l10n.useOtherEmail),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              l10n.consent,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.45,
+                color: AppColors.of(context).textSoft,
+              ),
+            ),
           ),
         ],
       ),
@@ -245,13 +314,22 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
-class _Spinner extends StatelessWidget {
-  const _Spinner();
+class _OrDivider extends StatelessWidget {
+  const _OrDivider({required this.label});
+  final String label;
 
   @override
-  Widget build(BuildContext context) => const SizedBox(
-    width: 18,
-    height: 18,
-    child: CircularProgressIndicator(strokeWidth: 2),
-  );
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Row(
+      children: [
+        Expanded(child: Divider(height: 1, color: c.border)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+        ),
+        Expanded(child: Divider(height: 1, color: c.border)),
+      ],
+    );
+  }
 }

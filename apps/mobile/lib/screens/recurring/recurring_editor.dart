@@ -4,29 +4,42 @@ import '../../l10n/app_localizations.dart';
 import '../../models/category.dart';
 import '../../models/period.dart';
 import '../../models/recurring_rule.dart';
-import '../../theme/category_visuals.dart';
+import '../../widgets/app_button.dart';
+import '../../widgets/labeled_field.dart';
+import '../../widgets/pill_chip.dart';
+import '../../widgets/toggle_switch.dart';
 
 /// Modal editor for creating or editing a [RecurringRule]. Returns the edited
-/// rule, or null if dismissed. Persistence is left to the caller.
+/// rule, or null if dismissed. Persistence is left to the caller; [onDelete],
+/// when given, is offered for an existing rule and closes the editor.
 Future<RecurringRule?> showRecurringEditor(
   BuildContext context, {
   required List<Category> categories,
   RecurringRule? existing,
+  VoidCallback? onDelete,
 }) {
   return showModalBottomSheet<RecurringRule>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) =>
-        _RecurringEditorSheet(categories: categories, existing: existing),
+    builder: (_) => _RecurringEditorSheet(
+      categories: categories,
+      existing: existing,
+      onDelete: onDelete,
+    ),
   );
 }
 
 class _RecurringEditorSheet extends StatefulWidget {
-  const _RecurringEditorSheet({required this.categories, this.existing});
+  const _RecurringEditorSheet({
+    required this.categories,
+    this.existing,
+    this.onDelete,
+  });
 
   final List<Category> categories;
   final RecurringRule? existing;
+  final VoidCallback? onDelete;
 
   @override
   State<_RecurringEditorSheet> createState() => _RecurringEditorSheetState();
@@ -36,7 +49,9 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
   late final TextEditingController _amountController;
   late final TextEditingController _noteController;
   late String _categoryId;
+  late RecurrenceFrequency _frequency;
   late bool _active;
+  String? _amountError;
 
   @override
   void initState() {
@@ -47,6 +62,7 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
     );
     _noteController = TextEditingController(text: e?.note ?? '');
     _categoryId = e?.categoryId ?? widget.categories.first.id!;
+    _frequency = e?.frequency ?? RecurrenceFrequency.monthly;
     _active = e?.active ?? true;
   }
 
@@ -61,14 +77,17 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
     final amount = double.tryParse(
       _amountController.text.trim().replaceAll(',', '.'),
     );
-    if (amount == null || amount <= 0) return;
+    if (amount == null || amount <= 0) {
+      setState(() => _amountError = AppLocalizations.of(context).enterAmount);
+      return;
+    }
     Navigator.of(context).pop(
       RecurringRule(
         id: widget.existing?.id,
         categoryId: _categoryId,
         amount: amount,
         currency: widget.existing?.currency ?? Period.defaultCurrency,
-        frequency: widget.existing?.frequency ?? RecurrenceFrequency.monthly,
+        frequency: _frequency,
         note: _noteController.text.trim().isEmpty
             ? null
             : _noteController.text.trim(),
@@ -81,76 +100,108 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final onDelete = widget.onDelete;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, 0, 16, bottomInset + 16),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, bottomInset + 28),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               widget.existing == null ? l10n.newRule : l10n.editRule,
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              initialValue: _categoryId,
-              isExpanded: true,
-              decoration: InputDecoration(
-                labelText: l10n.category,
-                border: const OutlineInputBorder(),
-              ),
-              items: [
-                for (final c in widget.categories)
-                  DropdownMenuItem(
-                    value: c.id,
-                    child: Row(
-                      children: [
-                        Icon(c.displayIcon, size: 18, color: c.displayColor),
-                        const SizedBox(width: 8),
-                        Text(c.name),
-                      ],
-                    ),
-                  ),
-              ],
-              onChanged: (v) => setState(() => _categoryId = v!),
+            const SizedBox(height: 18),
+            LabeledField(
+              label: l10n.name,
+              controller: _noteController,
+              hint: l10n.noteHint,
             ),
-            const SizedBox(height: 12),
-            TextField(
+            const SizedBox(height: 18),
+            LabeledField(
+              label: l10n.amount,
               controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: InputDecoration(
-                labelText: l10n.amount,
-                suffixText: 'zł',
-                border: const OutlineInputBorder(),
-              ),
+              suffixText: 'zł',
+              onChanged: (_) {
+                if (_amountError != null) setState(() => _amountError = null);
+              },
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _noteController,
-              decoration: InputDecoration(
-                labelText: l10n.note,
-                border: const OutlineInputBorder(),
+            if (_amountError != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                _amountError!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 12,
+                ),
               ),
+            ],
+            const SizedBox(height: 18),
+            FieldLabel(l10n.category),
+            const SizedBox(height: 10),
+            ChipWrap(
+              children: [
+                for (final c in widget.categories)
+                  PillChip(
+                    label: c.name,
+                    selected: c.id == _categoryId,
+                    onTap: () => setState(() => _categoryId = c.id!),
+                  ),
+              ],
             ),
-            const SizedBox(height: 4),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.active),
-              value: _active,
-              onChanged: (v) => setState(() => _active = v),
+            const SizedBox(height: 18),
+            FieldLabel(l10n.frequency),
+            const SizedBox(height: 10),
+            SegmentedPills<RecurrenceFrequency>(
+              options: [
+                (RecurrenceFrequency.monthly, l10n.monthly),
+                (RecurrenceFrequency.weekly, l10n.weekly),
+              ],
+              selected: _frequency,
+              onChanged: (f) => setState(() => _frequency = f),
+              trayColor: Theme.of(context).scaffoldBackgroundColor,
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _submit,
-                icon: const Icon(Icons.check),
-                label: Text(l10n.save),
-              ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.active,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ),
+                ToggleSwitch(
+                  value: _active,
+                  semanticLabel: l10n.active,
+                  onChanged: (v) => setState(() => _active = v),
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+            Row(
+              children: [
+                if (onDelete != null) ...[
+                  Expanded(
+                    child: AppButton(
+                      label: l10n.delete,
+                      kind: ButtonKind.secondary,
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        onDelete();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: AppButton(label: l10n.save, onPressed: _submit),
+                ),
+              ],
             ),
           ],
         ),

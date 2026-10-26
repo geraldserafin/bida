@@ -22,17 +22,23 @@ void main() {
 
   tearDown(() => auth.dispose());
 
-  Future<void> open(WidgetTester tester) => tester.pumpWidget(
-    ChangeNotifierProvider<AuthState>.value(
-      value: auth,
-      child: const MaterialApp(
-        locale: Locale('pl'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: LoginScreen(),
+  Future<void> open(WidgetTester tester) {
+    // the phone of the design, so the whole form is on screen
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    return tester.pumpWidget(
+      ChangeNotifierProvider<AuthState>.value(
+        value: auth,
+        child: const MaterialApp(
+          locale: Locale('pl'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: LoginScreen(),
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   testWidgets('asks for the address, then for the code, then signs in', (
     tester,
@@ -45,26 +51,39 @@ void main() {
     await open(tester);
 
     // a malformed address is not sent
-    await tester.enterText(find.byType(TextFormField), 'ann');
+    await tester.enterText(find.byKey(LoginScreen.emailFieldKey), 'ann');
     await tester.tap(find.text('Wyślij kod'));
     await tester.pump();
     expect(find.text('Podaj poprawny adres e-mail'), findsOneWidget);
     expect(backend.requests, isEmpty);
 
-    await tester.enterText(find.byType(TextFormField), ' ann@example.com ');
+    // nor is one without the consent
+    await tester.enterText(
+      find.byKey(LoginScreen.emailFieldKey),
+      ' ann@example.com ',
+    );
+    await tester.tap(find.text('Wyślij kod'));
+    await tester.pump();
+    expect(find.text('Zaznacz zgodę, aby się zalogować.'), findsOneWidget);
+    expect(backend.requests, isEmpty);
+
+    await tester.tap(find.byKey(LoginScreen.consentKey));
     await tester.runAsync(() async {
       await tester.tap(find.text('Wyślij kod'));
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await Future<void>.delayed(const Duration(milliseconds: 300));
     });
     await tester.pump();
-    expect(find.textContaining('ann@example.com'), findsOneWidget);
+    expect(
+      find.textContaining('Wysłaliśmy kod na ann@example.com'),
+      findsOneWidget,
+    );
     expect(backend.sent('POST /auth/magic-link').single.body, {
       'email': 'ann@example.com',
     });
 
-    await tester.enterText(find.byType(TextFormField), '123456');
+    await tester.enterText(find.byKey(LoginScreen.codeFieldKey), '123456');
     await tester.runAsync(() async {
-      await tester.tap(find.text('Zaloguj'));
+      await tester.tap(find.text('Zaloguj się'));
       await Future<void>.delayed(const Duration(milliseconds: 50));
     });
     await tester.pump();
@@ -78,16 +97,20 @@ void main() {
       (_) => Reply.error(401, 'InvalidLogin'),
     );
     await open(tester);
-    await tester.enterText(find.byType(TextFormField), 'ann@example.com');
+    await tester.enterText(
+      find.byKey(LoginScreen.emailFieldKey),
+      'ann@example.com',
+    );
+    await tester.tap(find.byKey(LoginScreen.consentKey));
     await tester.runAsync(() async {
       await tester.tap(find.text('Wyślij kod'));
       await Future<void>.delayed(const Duration(milliseconds: 50));
     });
     await tester.pump();
 
-    await tester.enterText(find.byType(TextFormField), '000000');
+    await tester.enterText(find.byKey(LoginScreen.codeFieldKey), '000000');
     await tester.runAsync(() async {
-      await tester.tap(find.text('Zaloguj'));
+      await tester.tap(find.text('Zaloguj się'));
       await Future<void>.delayed(const Duration(milliseconds: 50));
     });
     await tester.pump();

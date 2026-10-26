@@ -36,7 +36,6 @@ void main() {
       app(PlannerState(repository: backend.repository()), backend),
     );
 
-    expect(find.text('PLNing'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(backend.requests, isEmpty);
   });

@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import 'data/auth_repository.dart';
 import 'data/planner_repository.dart';
 import 'l10n/app_localizations.dart';
-import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/home/home_shell.dart';
 import 'screens/lock/lock_gate.dart';
 import 'screens/login/auth_gate.dart';
 import 'state/app_settings.dart';
@@ -106,7 +106,7 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
             locale: const Locale('pl'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: const LockGate(child: AuthGate(child: DashboardScreen())),
+            home: const LockGate(child: AuthGate(child: HomeShell())),
           ),
         ),
       ),

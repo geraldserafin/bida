@@ -7,14 +7,25 @@ import '../../l10n/app_localizations.dart';
 import '../../models/category_progress.dart';
 import '../../models/expense.dart';
 import '../../state/planner_state.dart';
+import '../../theme/app_theme.dart';
 import '../../util/api_errors.dart';
-import '../../theme/category_visuals.dart';
 import '../../util/money_format.dart';
+import '../../widgets/app_button.dart';
+import '../../widgets/labeled_field.dart';
+import '../../widgets/pill_chip.dart';
+import '../../widgets/screen_header.dart';
 import '../categories/category_editor.dart';
 
 String _amountText(double v) {
   final s = v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
   return s.replaceAll('.', ',');
+}
+
+/// "Household · Period", what the top bar of a new entry says it goes into.
+String entryTarget(PlannerState state, AppLocalizations l10n) {
+  final household = state.household?.name ?? l10n.appTitle;
+  final period = state.currentPeriod?.name;
+  return period == null ? household : '$household · $period';
 }
 
 /// Amount-first entry for logging a real expense against an envelope, or
@@ -179,15 +190,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         _date.year == now.year &&
         _date.month == now.month &&
         _date.day == now.day;
-    final formatted = DateFormat.MMMMd('pl').format(_date);
+    final formatted = DateFormat('dd.MM.yyyy').format(_date);
     return isToday ? '${l10n.today}, $formatted' : formatted;
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    final progress = context.watch<PlannerState>().progress;
+    final c = AppColors.of(context);
+    final state = context.watch<PlannerState>();
+    final progress = state.progress;
     CategoryProgress? selected;
     for (final p in progress) {
       if (p.envelope.id == _envelopeId) {
@@ -197,13 +209,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        centerTitle: true,
-        title: Text(_isEdit ? l10n.editExpense : l10n.newExpense),
+      appBar: FormTopBar(
+        title: _isEdit ? l10n.editExpense : l10n.newExpense,
+        where: _isEdit ? null : entryTarget(state, l10n),
         actions: [
           if (_isEdit)
             IconButton(
@@ -215,339 +223,89 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       ),
       bottomNavigationBar: Padding(
         padding: EdgeInsets.fromLTRB(
-          16,
+          20,
           8,
-          16,
-          MediaQuery.of(context).viewInsets.bottom + 16,
+          20,
+          MediaQuery.of(context).viewInsets.bottom + 28,
         ),
-        child: SizedBox(
-          height: 52,
-          child: FilledButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(_isEdit ? l10n.saveChanges : l10n.saveExpense),
-          ),
+        child: AppButton(
+          label: _isEdit ? l10n.saveChanges : l10n.saveExpense,
+          busy: _saving,
+          onPressed: _save,
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
         children: [
-          // ---- amount ----
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              l10n.amount,
-              style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              IntrinsicWidth(
-                child: TextField(
-                  controller: _amountController,
-                  autofocus: !_isEdit,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-                  ],
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(
-                    fontSize: 44,
-                    fontWeight: FontWeight.w800,
-                  ),
-                  decoration: const InputDecoration(
-                    isCollapsed: true,
-                    filled: false,
-                    border: InputBorder.none,
-                    hintText: '0,00',
-                  ),
-                  onChanged: (_) {
-                    if (_amountError != null) {
-                      setState(() => _amountError = null);
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'zł',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
+          BigAmountField(
+            label: l10n.amount,
+            controller: _amountController,
+            autofocus: !_isEdit,
+            error: _amountError,
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
             ],
+            onChanged: (_) {
+              if (_amountError != null) setState(() => _amountError = null);
+            },
           ),
-          if (_amountError != null)
-            Center(
-              child: Text(
-                _amountError!,
-                style: TextStyle(color: scheme.error, fontSize: 12),
-              ),
-            ),
           const SizedBox(height: 20),
 
-          // ---- category grid ----
-          Text(
-            l10n.category,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
+          // ---- category ----
+          FieldLabel(l10n.category),
+          const SizedBox(height: 10),
           if (progress.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                l10n.noEnvelopesForExpense,
-                style: TextStyle(color: scheme.onSurfaceVariant),
-              ),
+            Text(
+              l10n.noEnvelopesForExpense,
+              style: TextStyle(color: c.textMuted),
             )
           else
-            _CategoryGrid(
-              progress: progress,
-              selectedEnvelopeId: _envelopeId,
-              onSelect: (id) => setState(() {
-                _envelopeId = id;
-                _amountError = null;
-              }),
-              onAddNew: _addNewCategory,
-            ),
-          const SizedBox(height: 16),
-
-          // ---- remaining in selected envelope ----
-          if (selected != null)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      l10n.remainingInCategory(selected.category.name),
-                      style: TextStyle(color: scheme.onSurfaceVariant),
-                    ),
-                    Text(
-                      formatZloty(selected.remaining),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: selected.remaining < 0
-                            ? scheme.error
-                            : selected.category.displayColor,
-                      ),
-                    ),
-                  ],
+            ChipWrap(
+              children: [
+                for (final p in progress)
+                  PillChip(
+                    label: p.category.name,
+                    selected: p.envelope.id == _envelopeId,
+                    onTap: () => setState(() {
+                      _envelopeId = p.envelope.id;
+                      _amountError = null;
+                    }),
+                  ),
+                PillChip(
+                  label: '+ ${l10n.addNew}',
+                  selected: false,
+                  onTap: _addNewCategory,
                 ),
-              ),
+              ],
             ),
-          const SizedBox(height: 16),
-
-          // ---- note ----
-          Text(
-            l10n.note,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _noteController,
-            decoration: InputDecoration(hintText: l10n.noteHint),
-          ),
-          const SizedBox(height: 12),
+          if (selected != null) ...[
+            const SizedBox(height: 12),
+            ValueRow(
+              small: true,
+              label: l10n.remainingInCategory(selected.category.name),
+              value: formatZloty(selected.remaining),
+              valueColor: selected.remaining < 0 ? c.danger : null,
+            ),
+          ],
+          const SizedBox(height: 20),
 
           // ---- date ----
-          InkWell(
+          ValueRow(
+            label: l10n.date,
+            value: _dateLabel(l10n),
+            divided: true,
             onTap: _pickDate,
-            borderRadius: BorderRadius.circular(12),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  children: [
-                    const Icon(Icons.calendar_today_outlined, size: 18),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(_dateLabel(l10n))),
-                    const Icon(Icons.chevron_right),
-                  ],
-                ),
-              ),
-            ),
+          ),
+          const SizedBox(height: 20),
+
+          // ---- note ----
+          LabeledField(
+            label: l10n.descriptionOptional,
+            controller: _noteController,
+            hint: l10n.descriptionHint,
           ),
         ],
       ),
     );
   }
-}
-
-class _CategoryGrid extends StatelessWidget {
-  const _CategoryGrid({
-    required this.progress,
-    required this.selectedEnvelopeId,
-    required this.onSelect,
-    required this.onAddNew,
-  });
-
-  final List<CategoryProgress> progress;
-  final String? selectedEnvelopeId;
-  final ValueChanged<String> onSelect;
-  final VoidCallback onAddNew;
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 4,
-      mainAxisSpacing: 6,
-      crossAxisSpacing: 8,
-      childAspectRatio: 0.92,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      children: [
-        for (final p in progress)
-          _CategoryChip(
-            progress: p,
-            selected: p.envelope.id == selectedEnvelopeId,
-            onTap: () => onSelect(p.envelope.id!),
-          ),
-        _AddChip(onTap: onAddNew),
-      ],
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.progress,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final CategoryProgress progress;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = progress.category.displayColor;
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: selected
-                  ? color.withValues(alpha: 0.18)
-                  : scheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected ? color : scheme.surfaceContainerHigh,
-                width: selected ? 2 : 1,
-              ),
-            ),
-            child: Icon(
-              progress.category.displayIcon,
-              color: selected ? color : scheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          progress.category.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 11.5,
-            color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AddChip extends StatelessWidget {
-  const _AddChip({required this.onTap});
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: DottedBorderBox(
-            color: scheme.outline,
-            child: Icon(Icons.add, color: scheme.onSurfaceVariant),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          l10n.addNew,
-          style: TextStyle(fontSize: 11.5, color: scheme.onSurfaceVariant),
-        ),
-      ],
-    );
-  }
-}
-
-/// A 56×56 rounded box with a dashed border, for the "add new" affordance.
-class DottedBorderBox extends StatelessWidget {
-  const DottedBorderBox({super.key, required this.color, required this.child});
-  final Color color;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _DashedBorderPainter(color: color),
-      child: SizedBox(width: 56, height: 56, child: Center(child: child)),
-    );
-  }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  _DashedBorderPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    final rrect = RRect.fromRectAndRadius(
-      Offset.zero & size,
-      const Radius.circular(14),
-    );
-    final path = Path()..addRRect(rrect);
-    const dash = 4.0;
-    const gap = 4.0;
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        canvas.drawPath(metric.extractPath(distance, distance + dash), paint);
-        distance += dash + gap;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DashedBorderPainter oldDelegate) =>
-      oldDelegate.color != color;
 }
