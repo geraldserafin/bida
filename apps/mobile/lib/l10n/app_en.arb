@@ -253,7 +253,154 @@
   },
   "signOut": "Sign out",
   "signOutConfirm": "Sign out of this device?",
-  "signInWithGoogle": "Sign in with Google",
+  "signInWithGoogle": "Continue with Google",
   "googleSignInFailed": "Google sign-in did not work. Try again or use the e-mail code.",
-  "orSeparator": "or"
+  "orSeparator": "or",
+  "loginHeadline": "Household budget,\ntogether or solo",
+  "loginSubtitle": "Sign in with your e-mail – we'll send you a code. No password.",
+  "codeFieldLabel": "Code from the e-mail (6 digits)",
+  "codeValidity": "The code is valid for 15 minutes. Didn't get it?",
+  "resendShort": "Send again",
+  "consent": "I accept the information on processing my data (e-mail, name, budget data).",
+  "consentRequired": "Tick the consent to sign in.",
+  "recurringTab": "Recurring",
+  "householdTab": "Household",
+  "incomes": "Income",
+  "periodBalance": "Period balance",
+  "unallocatedToEnvelopes": "Not in any envelope",
+  "addIncomeShort": "+ Income",
+  "addExpenseShort": "+ Expense",
+  "soloSubtitle": "Solo · just you",
+  "previousPeriod": "Previous period",
+  "nextPeriod": "Next period",
+  "wizardStartTitle": "Let's set up your budget",
+  "wizardStartBody": "Five short steps: name, people, income, bills and envelopes.",
+  "wizardStart": "Let's start",
+  "stepOf": "Step {step} of {total}",
+  "@stepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "later": "Later",
+  "next": "Next",
+  "back": "Back",
+  "wizardNameTitle": "What will you call your household?",
+  "wizardNameBody": "It can be “Home”, “The flat” or “Mine”. You can add more later.",
+  "currencyPln": "PLN – złoty",
+  "starterCategories": "We'll add these categories to start with – change them any time",
+  "starterFood": "Food",
+  "starterHousing": "Home and bills",
+  "starterTransport": "Transport",
+  "starterHealth": "Health",
+  "starterFun": "Fun",
+  "starterClothes": "Clothes",
+  "starterOther": "Other",
+  "wizardWhoTitle": "Who will use “{name}”?",
+  "@wizardWhoTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "soloTitle": "Just me · Solo",
+  "soloBody": "A private budget. You can share it later.",
+  "multiTitle": "With others · Multi",
+  "multiBody": "Everyone sees the same data. You'll say who each entry is for.",
+  "inviteByEmail": "Invite by e-mail",
+  "inviteHint": "name@example.com",
+  "send": "Send",
+  "sharingSoon": "Shared households and invitations are coming soon. For now the budget is just yours.",
+  "wizardIncomeTitle": "Where does the money come from?",
+  "wizardIncomeBody": "First period: {period}. Enter an amount you don't know yet as an estimate – correct it once it arrives.",
+  "@wizardIncomeBody": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "newIncome": "New income",
+  "fixedAmount": "Fixed",
+  "estimatedAmount": "Estimated",
+  "incomeNameHint": "e.g. Salary",
+  "addIncomeAction": "Add income",
+  "periodIncome": "Period income",
+  "wizardBillsTitle": "Bills that come back every month",
+  "wizardBillsBody": "Fixed ones like rent and variable ones like electricity. “Apply” adds them to every period.",
+  "addRecurringExpense": "+ Add a recurring expense",
+  "wizardEnvelopesTitle": "Split the income into envelopes",
+  "wizardEnvelopesBody": "How much you plan to spend in each category this period. Amounts of recurring bills are filled in.",
+  "fromRecurring": "recurring: {amount}",
+  "@fromRecurring": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "addCategoryPlus": "+ Add a category",
+  "allocated": "Allocated",
+  "unallocatedShort": "Unallocated",
+  "wizardDone": "Done – go to the dashboard",
+  "everyMonth": "every month",
+  "everyWeek": "every week",
+  "descriptionOptional": "Description (optional)",
+  "descriptionHint": "e.g. groceries",
+  "oneOff": "One-off",
+  "recurringIncome": "Recurring",
+  "recurringIncomeSoon": "Recurring income is coming soon.",
+  "incomeGoesTo": "The income is added to {period}.",
+  "@incomeGoesTo": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "saveIncome": "Save income",
+  "incomeAdded": "Income added",
+  "recurringMark": "recurring",
+  "noTransactions": "No expenses in this period.",
+  "newRulePlus": "+ New rule",
+  "applyTo": "Apply to {period}",
+  "@applyTo": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "applyHint": "Adds entries of the active rules. Ones already added aren't doubled.",
+  "ruleFixed": "fixed",
+  "ruleOff": "off",
+  "households": "Households",
+  "newHouseholdPlus": "+ New household",
+  "membersOf": "Members · {name}",
+  "@membersOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "youMark": "{name} (you)",
+  "@youMark": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "owner": "owner",
+  "invitePerson": "Invite someone",
+  "more": "More",
+  "renameHousehold": "Rename",
+  "householdName": "Household name"
 }

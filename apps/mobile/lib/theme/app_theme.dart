@@ -1,250 +1,371 @@
 import 'package:flutter/material.dart';
 
-/// shadcn-inspired themes (dark + light): flat surfaces, hairline borders,
-/// near-mono primary actions, Inter type, generous rounding.
+/// Themes built from the tokens of the BIDA design (Figma "BIDA – ekrany
+/// aplikacji"): flat surfaces, hairline borders, a near-white pill as the main
+/// action, green for money coming in and amber for estimates. The design is
+/// dark; the light theme mirrors it.
 class AppTheme {
   static ThemeData get theme => dark;
-  static ThemeData get dark => _build(_DarkPalette());
-  static ThemeData get light => _build(_LightPalette());
+  static ThemeData get dark => _build(AppColors.dark);
+  static ThemeData get light => _build(AppColors.light);
 
-  static ThemeData _build(_Palette p) {
+  static ThemeData _build(AppColors c) {
     final scheme =
-        (p.brightness == Brightness.dark
+        (c.brightness == Brightness.dark
                 ? const ColorScheme.dark()
                 : const ColorScheme.light())
             .copyWith(
-              brightness: p.brightness,
-              primary: p.primary,
-              onPrimary: p.onPrimary,
-              primaryContainer: p.track,
-              onPrimaryContainer: p.fg,
-              secondary: p.muted,
-              onSecondary: p.onPrimary,
-              surface: p.bg,
-              onSurface: p.fg,
-              onSurfaceVariant: p.muted,
-              surfaceContainerLowest: p.bg,
-              surfaceContainerLow: p.card,
-              surfaceContainer: p.card,
-              surfaceContainerHigh: p.border,
-              surfaceContainerHighest: p.track,
-              outline: p.outline,
-              outlineVariant: p.track,
-              error: p.error,
-              onError: p.onPrimary,
-              errorContainer: p.errorContainer,
-              onErrorContainer: p.onErrorContainer,
+              brightness: c.brightness,
+              primary: c.primary,
+              onPrimary: c.onPrimary,
+              primaryContainer: c.surface2,
+              onPrimaryContainer: c.text,
+              secondary: c.textMuted,
+              onSecondary: c.onPrimary,
+              tertiary: c.accent,
+              surface: c.background,
+              onSurface: c.text,
+              onSurfaceVariant: c.textMuted,
+              surfaceContainerLowest: c.background,
+              surfaceContainerLow: c.surface,
+              surfaceContainer: c.surface,
+              surfaceContainerHigh: c.border,
+              surfaceContainerHighest: c.surface2,
+              outline: c.borderStrong,
+              outlineVariant: c.border,
+              error: c.danger,
+              onError: c.onPrimary,
+              errorContainer: c.dangerContainer,
+              onErrorContainer: c.danger,
             );
 
     final base = ThemeData(
-      brightness: p.brightness,
+      brightness: c.brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: p.bg,
+      scaffoldBackgroundColor: c.background,
       useMaterial3: true,
       fontFamily: 'Inter',
     );
 
     final text = base.textTheme
-        .apply(bodyColor: p.fg, displayColor: p.fg)
         .copyWith(
-          titleLarge: base.textTheme.titleLarge?.copyWith(
-            letterSpacing: -0.3,
+          // Kwota/XL
+          displaySmall: const TextStyle(
+            fontSize: 44,
             fontWeight: FontWeight.w700,
+            height: 1,
           ),
-          titleMedium: base.textTheme.titleMedium?.copyWith(
-            letterSpacing: -0.2,
+          // Nagłówek/H1
+          headlineMedium: const TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+          ),
+          // Nagłówek/H2
+          headlineSmall: const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            height: 1.25,
+          ),
+          // Nagłówek/H3
+          titleMedium: const TextStyle(
+            fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
-          headlineSmall: base.textTheme.headlineSmall?.copyWith(
-            letterSpacing: -0.4,
-            fontWeight: FontWeight.w700,
+          // Tekst/Mocny
+          titleSmall: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
           ),
-        );
+          // Tekst/Zwykły
+          bodyLarge: const TextStyle(fontSize: 15, height: 1.5),
+          // Tekst/Mały
+          bodyMedium: const TextStyle(fontSize: 14, height: 1.45),
+          // Podpis
+          bodySmall: const TextStyle(fontSize: 12, height: 1.45),
+          // Etykieta
+          labelLarge: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+          // Nadtytuł
+          labelSmall: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.72,
+          ),
+        )
+        .apply(bodyColor: c.text, displayColor: c.text, fontFamily: 'Inter');
+    // captions and overlines are muted
+    final textTheme = text.copyWith(
+      bodySmall: text.bodySmall?.copyWith(color: c.textMuted),
+      labelSmall: text.labelSmall?.copyWith(color: c.textMuted),
+    );
+
+    const pill = StadiumBorder();
+    const buttonText = TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+    );
 
     return base.copyWith(
-      textTheme: text,
+      textTheme: textTheme,
+      extensions: [c],
       appBarTheme: AppBarTheme(
-        backgroundColor: p.bg,
-        foregroundColor: p.fg,
+        backgroundColor: c.background,
+        foregroundColor: c.text,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
+        titleTextStyle: textTheme.titleMedium,
       ),
       cardTheme: CardThemeData(
-        color: p.card,
+        color: c.surface,
         elevation: 0,
         margin: EdgeInsets.zero,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: p.border),
+          side: BorderSide(color: c.border),
         ),
       ),
-      dividerTheme: DividerThemeData(color: p.track, thickness: 1),
-      floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: p.primary,
-        foregroundColor: p.onPrimary,
-      ),
+      dividerTheme: DividerThemeData(color: c.border, thickness: 1),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: p.primary,
-          foregroundColor: p.onPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: p.bg,
-        indicatorColor: Colors.transparent,
-        elevation: 0,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        iconTheme: WidgetStateProperty.resolveWith(
-          (states) => IconThemeData(
-            size: 22,
-            color: states.contains(WidgetState.selected) ? p.fg : p.faint,
-          ),
-        ),
-        labelTextStyle: WidgetStateProperty.resolveWith(
-          (states) => TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: states.contains(WidgetState.selected) ? p.fg : p.faint,
-          ),
-        ),
-      ),
-      dialogTheme: DialogThemeData(
-        backgroundColor: p.card,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: p.border),
-        ),
-      ),
-      bottomSheetTheme: BottomSheetThemeData(
-        backgroundColor: p.card,
-        surfaceTintColor: Colors.transparent,
-        showDragHandle: true,
-      ),
-      popupMenuTheme: PopupMenuThemeData(
-        color: p.card,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: p.border),
+          backgroundColor: c.primary,
+          foregroundColor: c.onPrimary,
+          disabledBackgroundColor: c.surface2,
+          disabledForegroundColor: c.textMuted,
+          minimumSize: const Size(64, 52),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          shape: pill,
+          textStyle: buttonText,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: p.fg,
-          side: BorderSide(color: p.track),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          foregroundColor: c.text,
+          side: BorderSide(color: c.borderStrong),
+          minimumSize: const Size(64, 52),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          shape: pill,
+          textStyle: buttonText,
         ),
       ),
-      listTileTheme: ListTileThemeData(iconColor: p.muted),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: c.textMuted,
+          textStyle: buttonText.copyWith(fontSize: 15),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: c.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: c.border),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: c.surface,
+        surfaceTintColor: Colors.transparent,
+        showDragHandle: true,
+        dragHandleColor: c.borderStrong,
+        dragHandleSize: const Size(40, 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          side: BorderSide(color: c.borderStrong),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        color: c.surface,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: c.border),
+        ),
+      ),
+      listTileTheme: ListTileThemeData(iconColor: c.textMuted),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? Colors.white : c.textMuted,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? c.accent : c.surface2,
+        ),
+        trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+      ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (s) => s.contains(WidgetState.selected) ? c.accent : null,
+        ),
+        checkColor: WidgetStateProperty.all(c.onPrimary),
+        side: BorderSide(color: c.borderStrong, width: 1.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+      ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: c.text),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: p.card,
+        fillColor: c.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        hintStyle: TextStyle(color: c.textMuted, fontSize: 16),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: p.track),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: c.borderStrong),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: p.track),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: c.borderStrong),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: c.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: p.fg, width: 1.5),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: c.accent),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: c.danger),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: c.danger),
         ),
       ),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: p.card,
-        contentTextStyle: TextStyle(color: p.fg),
+        backgroundColor: c.surface2,
+        contentTextStyle: TextStyle(color: c.text, fontFamily: 'Inter'),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     );
   }
 }
 
-/// Palette knobs shared by both themes.
-abstract class _Palette {
-  Brightness get brightness;
-  Color get bg;
-  Color get card;
-  Color get border;
-  Color get track;
-  Color get fg;
-  Color get muted;
-  Color get faint;
-  Color get primary;
-  Color get onPrimary;
-  Color get outline;
-  Color get error;
-  Color get errorContainer;
-  Color get onErrorContainer;
-}
+/// The design's colour tokens, reachable with `AppColors.of(context)` for
+/// what [ColorScheme] has no slot for (estimates, the accent, soft text).
+class AppColors extends ThemeExtension<AppColors> {
+  const AppColors({
+    required this.brightness,
+    required this.background,
+    required this.surface,
+    required this.surface2,
+    required this.border,
+    required this.borderStrong,
+    required this.text,
+    required this.textSoft,
+    required this.textMuted,
+    required this.primary,
+    required this.onPrimary,
+    required this.accent,
+    required this.estimate,
+    required this.estimateBorder,
+    required this.warning,
+    required this.danger,
+    required this.dangerContainer,
+  });
 
-class _DarkPalette implements _Palette {
-  @override
-  final brightness = Brightness.dark;
-  @override
-  final bg = const Color(0xFF09090B);
-  @override
-  final card = const Color(0xFF131316);
-  @override
-  final border = const Color(0xFF1F1F23);
-  @override
-  final track = const Color(0xFF27272A);
-  @override
-  final fg = const Color(0xFFFAFAFA);
-  @override
-  final muted = const Color(0xFFA1A1AA);
-  @override
-  final faint = const Color(0xFF71717A);
-  @override
-  final primary = const Color(0xFFFAFAFA);
-  @override
-  final onPrimary = const Color(0xFF09090B);
-  @override
-  final outline = const Color(0xFF3F3F46);
-  @override
-  final error = const Color(0xFFF87171);
-  @override
-  final errorContainer = const Color(0xFF4C0519);
-  @override
-  final onErrorContainer = const Color(0xFFFECDD3);
-}
+  final Brightness brightness;
 
-class _LightPalette implements _Palette {
+  /// tło
+  final Color background;
+
+  /// powierzchnia
+  final Color surface;
+
+  /// powierzchnia-2
+  final Color surface2;
+
+  /// obramowanie
+  final Color border;
+
+  /// obramowanie-mocne
+  final Color borderStrong;
+
+  /// tekst
+  final Color text;
+
+  /// tekst-miękki
+  final Color textSoft;
+
+  /// tekst-wyciszony
+  final Color textMuted;
+
+  /// główny
+  final Color primary;
+
+  /// na-głównym
+  final Color onPrimary;
+
+  /// akcent: money coming in, the balance, what is chosen
+  final Color accent;
+
+  /// szacunkowe: amounts that are only estimated
+  final Color estimate;
+
+  /// szacunkowe-obramowanie
+  final Color estimateBorder;
+
+  /// ostrzeżenie
+  final Color warning;
+
+  /// niebezpieczne
+  final Color danger;
+  final Color dangerContainer;
+
+  static const dark = AppColors(
+    brightness: Brightness.dark,
+    background: Color(0xFF0B0B0C),
+    surface: Color(0xFF17171A),
+    surface2: Color(0xFF27272A),
+    border: Color(0xFF26262B),
+    borderStrong: Color(0xFF3F3F46),
+    text: Color(0xFFF4F4F5),
+    textSoft: Color(0xFFD4D4D8),
+    textMuted: Color(0xFFA1A1AA),
+    primary: Color(0xFFFAFAFA),
+    onPrimary: Color(0xFF0B0B0C),
+    accent: Color(0xFF34D399),
+    estimate: Color(0xFFF5B544),
+    estimateBorder: Color(0xFF8A6A2A),
+    warning: Color(0xFFFB923C),
+    danger: Color(0xFFFCA5A5),
+    dangerContainer: Color(0xFF3B1414),
+  );
+
+  static const light = AppColors(
+    brightness: Brightness.light,
+    background: Color(0xFFF4F4F5),
+    surface: Color(0xFFFFFFFF),
+    surface2: Color(0xFFE4E4E7),
+    border: Color(0xFFE4E4E7),
+    borderStrong: Color(0xFFD4D4D8),
+    text: Color(0xFF09090B),
+    textSoft: Color(0xFF3F3F46),
+    textMuted: Color(0xFF52525B),
+    primary: Color(0xFF18181B),
+    onPrimary: Color(0xFFFAFAFA),
+    accent: Color(0xFF059669),
+    estimate: Color(0xFFB45309),
+    estimateBorder: Color(0xFFD9A54A),
+    warning: Color(0xFFEA580C),
+    danger: Color(0xFFDC2626),
+    dangerContainer: Color(0xFFFEE2E2),
+  );
+
+  static AppColors of(BuildContext context) =>
+      Theme.of(context).extension<AppColors>() ?? dark;
+
   @override
-  final brightness = Brightness.light;
+  AppColors copyWith() => this;
+
   @override
-  final bg = const Color(0xFFF4F4F5);
-  @override
-  final card = const Color(0xFFFFFFFF);
-  @override
-  final border = const Color(0xFFE4E4E7);
-  @override
-  final track = const Color(0xFFE4E4E7);
-  @override
-  final fg = const Color(0xFF09090B);
-  @override
-  final muted = const Color(0xFF52525B);
-  @override
-  final faint = const Color(0xFF71717A);
-  @override
-  final primary = const Color(0xFF18181B);
-  @override
-  final onPrimary = const Color(0xFFFAFAFA);
-  @override
-  final outline = const Color(0xFFD4D4D8);
-  @override
-  final error = const Color(0xFFDC2626);
-  @override
-  final errorContainer = const Color(0xFFFEE2E2);
-  @override
-  final onErrorContainer = const Color(0xFF7F1D1D);
+  AppColors lerp(AppColors? other, double t) =>
+      t < 0.5 || other == null ? this : other;
 }

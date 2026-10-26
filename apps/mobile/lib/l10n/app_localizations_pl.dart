@@ -503,7 +503,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get enterCode => 'Wpisz 6-cyfrowy kod';
 
   @override
-  String get signInAction => 'Zaloguj';
+  String get signInAction => 'Zaloguj się';
 
   @override
   String get useOtherEmail => 'Użyj innego adresu';
@@ -529,12 +529,303 @@ class AppLocalizationsPl extends AppLocalizations {
   String get signOutConfirm => 'Wylogować z tego urządzenia?';
 
   @override
-  String get signInWithGoogle => 'Zaloguj przez Google';
+  String get signInWithGoogle => 'Kontynuuj z Google';
 
   @override
   String get googleSignInFailed =>
       'Logowanie przez Google nie udało się. Spróbuj ponownie albo użyj kodu z e-maila.';
 
   @override
-  String get orSeparator => 'lub';
+  String get orSeparator => 'albo';
+
+  @override
+  String get loginHeadline => 'Budżet domowy,\nwspólnie albo solo';
+
+  @override
+  String get loginSubtitle =>
+      'Zaloguj się adresem e-mail – wyślemy kod. Bez hasła.';
+
+  @override
+  String get codeFieldLabel => 'Kod z e-maila (6 cyfr)';
+
+  @override
+  String get codeValidity => 'Kod jest ważny 15 minut. Nie dotarł?';
+
+  @override
+  String get resendShort => 'Wyślij ponownie';
+
+  @override
+  String get consent =>
+      'Akceptuję informację o przetwarzaniu danych (e-mail, imię, dane budżetu).';
+
+  @override
+  String get consentRequired => 'Zaznacz zgodę, aby się zalogować.';
+
+  @override
+  String get recurringTab => 'Cykliczne';
+
+  @override
+  String get householdTab => 'Gospodarstwo';
+
+  @override
+  String get incomes => 'Wpłaty';
+
+  @override
+  String get periodBalance => 'Saldo okresu';
+
+  @override
+  String get unallocatedToEnvelopes => 'Nierozdzielone na koperty';
+
+  @override
+  String get addIncomeShort => '+ Wpłata';
+
+  @override
+  String get addExpenseShort => '+ Wydatek';
+
+  @override
+  String get soloSubtitle => 'Solo · tylko Ty';
+
+  @override
+  String get previousPeriod => 'Poprzedni okres';
+
+  @override
+  String get nextPeriod => 'Następny okres';
+
+  @override
+  String get wizardStartTitle => 'Ustawmy Twój budżet';
+
+  @override
+  String get wizardStartBody =>
+      'Pięć krótkich kroków: nazwa, domownicy, wpłaty, rachunki i koperty.';
+
+  @override
+  String get wizardStart => 'Zaczynamy';
+
+  @override
+  String stepOf(int step, int total) {
+    return 'Krok $step z $total';
+  }
+
+  @override
+  String get later => 'Później';
+
+  @override
+  String get next => 'Dalej';
+
+  @override
+  String get back => 'Wstecz';
+
+  @override
+  String get wizardNameTitle => 'Jak nazwiesz swoje gospodarstwo?';
+
+  @override
+  String get wizardNameBody =>
+      'To może być „Dom”, „Mieszkanie na Woli” albo „Moje”. Później dodasz kolejne.';
+
+  @override
+  String get currencyPln => 'PLN – złoty';
+
+  @override
+  String get starterCategories =>
+      'Dodamy kategorie na start – zmienisz je w każdej chwili';
+
+  @override
+  String get starterFood => 'Jedzenie';
+
+  @override
+  String get starterHousing => 'Mieszkanie i rachunki';
+
+  @override
+  String get starterTransport => 'Transport';
+
+  @override
+  String get starterHealth => 'Zdrowie';
+
+  @override
+  String get starterFun => 'Rozrywka';
+
+  @override
+  String get starterClothes => 'Ubrania';
+
+  @override
+  String get starterOther => 'Inne';
+
+  @override
+  String wizardWhoTitle(String name) {
+    return 'Kto będzie korzystał z „$name”?';
+  }
+
+  @override
+  String get soloTitle => 'Tylko ja · Solo';
+
+  @override
+  String get soloBody =>
+      'Prywatny budżet. Możesz go później zamienić na wspólny.';
+
+  @override
+  String get multiTitle => 'Z domownikami · Multi';
+
+  @override
+  String get multiBody =>
+      'Wszyscy widzą te same dane. Przy wpłatach i wydatkach wskażesz, kogo dotyczą.';
+
+  @override
+  String get inviteByEmail => 'Zaproś przez e-mail';
+
+  @override
+  String get inviteHint => 'adres@domownika.pl';
+
+  @override
+  String get send => 'Wyślij';
+
+  @override
+  String get sharingSoon =>
+      'Wspólne gospodarstwa i zaproszenia będą dostępne wkrótce. Na razie budżet jest tylko Twój.';
+
+  @override
+  String get wizardIncomeTitle => 'Skąd przychodzą pieniądze?';
+
+  @override
+  String wizardIncomeBody(String period) {
+    return 'Pierwszy okres: $period. Nieznaną kwotę wpisz szacunkowo – poprawisz ją, gdy wpłynie.';
+  }
+
+  @override
+  String get newIncome => 'Nowa wpłata';
+
+  @override
+  String get fixedAmount => 'Stała';
+
+  @override
+  String get estimatedAmount => 'Szacunkowa';
+
+  @override
+  String get incomeNameHint => 'np. Pensja';
+
+  @override
+  String get addIncomeAction => 'Dodaj wpłatę';
+
+  @override
+  String get periodIncome => 'Dochód okresu';
+
+  @override
+  String get wizardBillsTitle => 'Rachunki, które wracają co miesiąc';
+
+  @override
+  String get wizardBillsBody =>
+      'Stałe, jak czynsz, i zmienne, jak prąd. Przycisk „Zastosuj” doda je do każdego okresu.';
+
+  @override
+  String get addRecurringExpense => '+ Dodaj wydatek cykliczny';
+
+  @override
+  String get wizardEnvelopesTitle => 'Rozdziel dochód na koperty';
+
+  @override
+  String get wizardEnvelopesBody =>
+      'Ile planujesz wydać w każdej kategorii w tym okresie. Kwoty z rachunków cyklicznych są już podpowiedziane.';
+
+  @override
+  String fromRecurring(String amount) {
+    return 'cykliczne: $amount';
+  }
+
+  @override
+  String get addCategoryPlus => '+ Dodaj kategorię';
+
+  @override
+  String get allocated => 'Rozdzielone';
+
+  @override
+  String get unallocatedShort => 'Nierozdzielone';
+
+  @override
+  String get wizardDone => 'Gotowe – przejdź do pulpitu';
+
+  @override
+  String get everyMonth => 'co miesiąc';
+
+  @override
+  String get everyWeek => 'co tydzień';
+
+  @override
+  String get descriptionOptional => 'Opis (opcjonalnie)';
+
+  @override
+  String get descriptionHint => 'np. zakupy w Biedronce';
+
+  @override
+  String get oneOff => 'Jednorazowa';
+
+  @override
+  String get recurringIncome => 'Cykliczna';
+
+  @override
+  String get recurringIncomeSoon => 'Wpłaty cykliczne będą dostępne wkrótce.';
+
+  @override
+  String incomeGoesTo(String period) {
+    return 'Wpłata zwiększy dochód okresu $period.';
+  }
+
+  @override
+  String get saveIncome => 'Zapisz wpłatę';
+
+  @override
+  String get incomeAdded => 'Dodano wpłatę';
+
+  @override
+  String get recurringMark => 'cykliczny';
+
+  @override
+  String get noTransactions => 'Brak wydatków w tym okresie.';
+
+  @override
+  String get newRulePlus => '+ Nowa reguła';
+
+  @override
+  String applyTo(String period) {
+    return 'Zastosuj do: $period';
+  }
+
+  @override
+  String get applyHint =>
+      'Doda wpisy z aktywnych reguł. Już dodane się nie zdublują.';
+
+  @override
+  String get ruleFixed => 'stała';
+
+  @override
+  String get ruleOff => 'wyłączona';
+
+  @override
+  String get households => 'Gospodarstwa';
+
+  @override
+  String get newHouseholdPlus => '+ Nowe gospodarstwo';
+
+  @override
+  String membersOf(String name) {
+    return 'Członkowie · $name';
+  }
+
+  @override
+  String youMark(String name) {
+    return '$name (ty)';
+  }
+
+  @override
+  String get owner => 'właściciel';
+
+  @override
+  String get invitePerson => 'Zaproś osobę';
+
+  @override
+  String get more => 'Więcej';
+
+  @override
+  String get renameHousehold => 'Zmień nazwę';
+
+  @override
+  String get householdName => 'Nazwa gospodarstwa';
 }

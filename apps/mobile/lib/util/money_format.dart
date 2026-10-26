@@ -11,3 +11,12 @@ final NumberFormat _plZloty = NumberFormat.currency(
 );
 
 String formatZloty(num amount) => _plZloty.format(amount);
+
+final NumberFormat _plPlain = NumberFormat.decimalPatternDigits(
+  locale: 'pl_PL',
+  decimalDigits: 2,
+);
+
+/// An amount without the currency, e.g. `1 234,56`: the first half of
+/// "spent / planned", or the value of an amount field.
+String formatPlain(num amount) => _plPlain.format(amount);

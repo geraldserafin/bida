@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// "Sign in with Google", drawn the way Google's branding guidelines ask:
 /// the standard-colour "G" on its own white area, the light or dark colours,
-/// and the logo with its padding. Only the corner radius follows the app's
-/// other buttons.
+/// and the logo with its padding. Only the pill shape and the height follow
+/// the app's other buttons.
 class GoogleButton extends StatelessWidget {
   const GoogleButton({super.key, required this.label, required this.onPressed});
 
@@ -12,7 +12,7 @@ class GoogleButton extends StatelessWidget {
   /// Null disables the button.
   final VoidCallback? onPressed;
 
-  static const _radius = 12.0;
+  static const _height = 52.0;
 
   @override
   Widget build(BuildContext context) {
@@ -26,17 +26,14 @@ class GoogleButton extends StatelessWidget {
       opacity: enabled ? 1 : 0.5,
       child: Material(
         color: fill,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_radius),
-          side: BorderSide(color: stroke),
-        ),
+        shape: StadiumBorder(side: BorderSide(color: stroke)),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onPressed,
           child: SizedBox(
-            height: 44,
+            height: _height,
             child: Padding(
-              padding: const EdgeInsets.only(left: 12, right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -61,9 +58,8 @@ class GoogleButton extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: text,
-                        fontSize: 14,
-                        height: 20 / 14,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),

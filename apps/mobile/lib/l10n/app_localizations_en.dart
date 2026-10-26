@@ -523,7 +523,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOutConfirm => 'Sign out of this device?';
 
   @override
-  String get signInWithGoogle => 'Sign in with Google';
+  String get signInWithGoogle => 'Continue with Google';
 
   @override
   String get googleSignInFailed =>
@@ -531,4 +531,295 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orSeparator => 'or';
+
+  @override
+  String get loginHeadline => 'Household budget,\ntogether or solo';
+
+  @override
+  String get loginSubtitle =>
+      'Sign in with your e-mail – we\'ll send you a code. No password.';
+
+  @override
+  String get codeFieldLabel => 'Code from the e-mail (6 digits)';
+
+  @override
+  String get codeValidity =>
+      'The code is valid for 15 minutes. Didn\'t get it?';
+
+  @override
+  String get resendShort => 'Send again';
+
+  @override
+  String get consent =>
+      'I accept the information on processing my data (e-mail, name, budget data).';
+
+  @override
+  String get consentRequired => 'Tick the consent to sign in.';
+
+  @override
+  String get recurringTab => 'Recurring';
+
+  @override
+  String get householdTab => 'Household';
+
+  @override
+  String get incomes => 'Income';
+
+  @override
+  String get periodBalance => 'Period balance';
+
+  @override
+  String get unallocatedToEnvelopes => 'Not in any envelope';
+
+  @override
+  String get addIncomeShort => '+ Income';
+
+  @override
+  String get addExpenseShort => '+ Expense';
+
+  @override
+  String get soloSubtitle => 'Solo · just you';
+
+  @override
+  String get previousPeriod => 'Previous period';
+
+  @override
+  String get nextPeriod => 'Next period';
+
+  @override
+  String get wizardStartTitle => 'Let\'s set up your budget';
+
+  @override
+  String get wizardStartBody =>
+      'Five short steps: name, people, income, bills and envelopes.';
+
+  @override
+  String get wizardStart => 'Let\'s start';
+
+  @override
+  String stepOf(int step, int total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get next => 'Next';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get wizardNameTitle => 'What will you call your household?';
+
+  @override
+  String get wizardNameBody =>
+      'It can be “Home”, “The flat” or “Mine”. You can add more later.';
+
+  @override
+  String get currencyPln => 'PLN – złoty';
+
+  @override
+  String get starterCategories =>
+      'We\'ll add these categories to start with – change them any time';
+
+  @override
+  String get starterFood => 'Food';
+
+  @override
+  String get starterHousing => 'Home and bills';
+
+  @override
+  String get starterTransport => 'Transport';
+
+  @override
+  String get starterHealth => 'Health';
+
+  @override
+  String get starterFun => 'Fun';
+
+  @override
+  String get starterClothes => 'Clothes';
+
+  @override
+  String get starterOther => 'Other';
+
+  @override
+  String wizardWhoTitle(String name) {
+    return 'Who will use “$name”?';
+  }
+
+  @override
+  String get soloTitle => 'Just me · Solo';
+
+  @override
+  String get soloBody => 'A private budget. You can share it later.';
+
+  @override
+  String get multiTitle => 'With others · Multi';
+
+  @override
+  String get multiBody =>
+      'Everyone sees the same data. You\'ll say who each entry is for.';
+
+  @override
+  String get inviteByEmail => 'Invite by e-mail';
+
+  @override
+  String get inviteHint => 'name@example.com';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get sharingSoon =>
+      'Shared households and invitations are coming soon. For now the budget is just yours.';
+
+  @override
+  String get wizardIncomeTitle => 'Where does the money come from?';
+
+  @override
+  String wizardIncomeBody(String period) {
+    return 'First period: $period. Enter an amount you don\'t know yet as an estimate – correct it once it arrives.';
+  }
+
+  @override
+  String get newIncome => 'New income';
+
+  @override
+  String get fixedAmount => 'Fixed';
+
+  @override
+  String get estimatedAmount => 'Estimated';
+
+  @override
+  String get incomeNameHint => 'e.g. Salary';
+
+  @override
+  String get addIncomeAction => 'Add income';
+
+  @override
+  String get periodIncome => 'Period income';
+
+  @override
+  String get wizardBillsTitle => 'Bills that come back every month';
+
+  @override
+  String get wizardBillsBody =>
+      'Fixed ones like rent and variable ones like electricity. “Apply” adds them to every period.';
+
+  @override
+  String get addRecurringExpense => '+ Add a recurring expense';
+
+  @override
+  String get wizardEnvelopesTitle => 'Split the income into envelopes';
+
+  @override
+  String get wizardEnvelopesBody =>
+      'How much you plan to spend in each category this period. Amounts of recurring bills are filled in.';
+
+  @override
+  String fromRecurring(String amount) {
+    return 'recurring: $amount';
+  }
+
+  @override
+  String get addCategoryPlus => '+ Add a category';
+
+  @override
+  String get allocated => 'Allocated';
+
+  @override
+  String get unallocatedShort => 'Unallocated';
+
+  @override
+  String get wizardDone => 'Done – go to the dashboard';
+
+  @override
+  String get everyMonth => 'every month';
+
+  @override
+  String get everyWeek => 'every week';
+
+  @override
+  String get descriptionOptional => 'Description (optional)';
+
+  @override
+  String get descriptionHint => 'e.g. groceries';
+
+  @override
+  String get oneOff => 'One-off';
+
+  @override
+  String get recurringIncome => 'Recurring';
+
+  @override
+  String get recurringIncomeSoon => 'Recurring income is coming soon.';
+
+  @override
+  String incomeGoesTo(String period) {
+    return 'The income is added to $period.';
+  }
+
+  @override
+  String get saveIncome => 'Save income';
+
+  @override
+  String get incomeAdded => 'Income added';
+
+  @override
+  String get recurringMark => 'recurring';
+
+  @override
+  String get noTransactions => 'No expenses in this period.';
+
+  @override
+  String get newRulePlus => '+ New rule';
+
+  @override
+  String applyTo(String period) {
+    return 'Apply to $period';
+  }
+
+  @override
+  String get applyHint =>
+      'Adds entries of the active rules. Ones already added aren\'t doubled.';
+
+  @override
+  String get ruleFixed => 'fixed';
+
+  @override
+  String get ruleOff => 'off';
+
+  @override
+  String get households => 'Households';
+
+  @override
+  String get newHouseholdPlus => '+ New household';
+
+  @override
+  String membersOf(String name) {
+    return 'Members · $name';
+  }
+
+  @override
+  String youMark(String name) {
+    return '$name (you)';
+  }
+
+  @override
+  String get owner => 'owner';
+
+  @override
+  String get invitePerson => 'Invite someone';
+
+  @override
+  String get more => 'More';
+
+  @override
+  String get renameHousehold => 'Rename';
+
+  @override
+  String get householdName => 'Household name';
 }

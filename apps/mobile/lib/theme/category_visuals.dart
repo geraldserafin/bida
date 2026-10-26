@@ -29,19 +29,23 @@ const Map<String, IconData> categoryIcons = <String, IconData>{
   'wallet': Icons.account_balance_wallet_outlined,
 };
 
-/// Default palette offered in the category color picker (shadcn/Tailwind hues
+/// Default palette offered in the category color picker (Tailwind hues
 /// matching the app's dark design).
 const List<String> categoryColorPalette = <String>[
+  // the category colours of the design first
+  '#F59E0B',
+  '#F97316',
+  '#60A5FA',
+  '#A78BFA',
+  '#10B981',
+  '#F472B6',
   '#22C55E',
   '#EC4899',
   '#6366F1',
   '#14B8A6',
-  '#F59E0B',
   '#EF4444',
   '#A855F7',
   '#3B82F6',
-  '#F97316',
-  '#10B981',
   '#EAB308',
   '#8B5CF6',
 ];

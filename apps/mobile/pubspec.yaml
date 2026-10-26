@@ -51,6 +51,7 @@ dependencies:
     path: ../../packages/api-client-dart
   dio: ^5.11.1
   google_sign_in: ^7.2.0
+  flutter_svg: ^2.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -92,6 +93,7 @@ flutter:
 
   assets:
     - assets/google/
+    - assets/icons/
 
   fonts:
     - family: Inter
