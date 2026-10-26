@@ -461,4 +461,188 @@ void main() {
       expect(await backend.repository().isEmpty(), isFalse);
     });
   });
+
+  group('sharing', () {
+    test('lists the members with their roles', () async {
+      backend.on(
+        'GET /envelopes/e1/members',
+        (_) => Reply([
+          memberJson('u1', 'ann@example.com', name: 'Ann', role: 'owner'),
+          memberJson('u2', 'bob@example.com'),
+        ]),
+      );
+
+      final members = await backend.repository().members('e1');
+
+      expect(members.map((m) => m.displayName), ['Ann', 'bob@example.com']);
+      expect(members.map((m) => m.role), [
+        EnvelopeRole.owner,
+        EnvelopeRole.member,
+      ]);
+    });
+
+    test('changes a role and removes a member', () async {
+      backend
+        ..on(
+          'PUT /envelopes/e1/members/u2',
+          (_) => Reply(memberJson('u2', 'bob@example.com', role: 'owner')),
+        )
+        ..on(
+          'DELETE /envelopes/e1/members/u2',
+          (_) => const Reply(null, status: 204),
+        );
+      final repository = backend.repository();
+
+      await repository.setRole('e1', 'u2', EnvelopeRole.owner);
+      await repository.removeMember('e1', 'u2');
+
+      expect(backend.sent('PUT /envelopes/e1/members/u2').single.body, {
+        'role': 'owner',
+      });
+      expect(backend.sent('DELETE /envelopes/e1/members/u2'), hasLength(1));
+    });
+
+    test('the last owner cannot leave', () {
+      backend.on(
+        'DELETE /envelopes/e1/members/u1',
+        (_) => Reply.error(409, 'LastOwner'),
+      );
+
+      expect(
+        backend.repository().removeMember('e1', 'u1'),
+        throwsA(
+          isA<ApiException>()
+              .having((e) => e.failure, 'failure', ApiFailure.conflict)
+              .having((e) => e.tag, 'tag', 'LastOwner'),
+        ),
+      );
+    });
+
+    test('contributions are in złoty', () async {
+      backend.on(
+        'GET /envelopes/e1/contributions',
+        (_) => Reply([
+          contributionJson('e1', 'u1', 60000),
+          contributionJson('e2', 'u2', 5050),
+        ]),
+      );
+
+      final all = await backend.repository().contributions('e1');
+
+      expect(all.map((c) => (c.envelopeId, c.userId, c.amount)), [
+        ('e1', 'u1', 600.0),
+        ('e2', 'u2', 50.5),
+      ]);
+    });
+
+    test('inviting sends the address and the role', () async {
+      backend.on(
+        'POST /envelopes/e1/invitations',
+        (_) =>
+            Reply(invitationJson('i1', 'e1', 'bob@example.com'), status: 201),
+      );
+
+      final invitation = await backend.repository().invite(
+        'e1',
+        email: 'bob@example.com',
+        role: EnvelopeRole.member,
+      );
+
+      expect(invitation.id, 'i1');
+      expect(invitation.status, InvitationStatus.invited);
+      expect(invitation.invitedBy, 'ann@example.com');
+      expect(backend.sent('POST /envelopes/e1/invitations').single.body, {
+        'email': 'bob@example.com',
+        'role': 'member',
+      });
+    });
+
+    test('an invitation is answered, approved and revoked by id', () async {
+      backend
+        ..on(
+          'POST /invitations/i1/accept',
+          (_) => Reply(
+            invitationJson('i1', 'e1', 'bob@example.com', status: 'accepted'),
+          ),
+        )
+        ..on(
+          'POST /invitations/i2/decline',
+          (_) => const Reply(null, status: 204),
+        )
+        ..on(
+          'POST /envelopes/e1/invitations/i1/approve',
+          (_) => Reply(memberJson('u2', 'bob@example.com')),
+        )
+        ..on(
+          'DELETE /envelopes/e1/invitations/i3',
+          (_) => const Reply(null, status: 204),
+        );
+      final repository = backend.repository();
+
+      await repository.acceptInvitation('i1');
+      await repository.declineInvitation('i2');
+      await repository.approveInvitation('e1', 'i1');
+      await repository.revokeInvitation('e1', 'i3');
+
+      expect(backend.sent('POST /invitations/i1/accept'), hasLength(1));
+      expect(backend.sent('POST /invitations/i2/decline'), hasLength(1));
+      expect(
+        backend.sent('POST /envelopes/e1/invitations/i1/approve'),
+        hasLength(1),
+      );
+      expect(backend.sent('DELETE /envelopes/e1/invitations/i3'), hasLength(1));
+    });
+
+    test('lists the invitations for me and for an envelope', () async {
+      backend
+        ..on(
+          'GET /invitations',
+          (_) => Reply([invitationJson('i1', 'e1', 'me@example.com')]),
+        )
+        ..on(
+          'GET /envelopes/e1/invitations',
+          (_) => Reply([
+            invitationJson(
+              'i2',
+              'e1',
+              'cid@example.com',
+              status: 'accepted',
+              invitedBy: null,
+            ),
+          ]),
+        );
+      final repository = backend.repository();
+
+      final mine = await repository.myInvitations();
+      final open = await repository.envelopeInvitations('e1');
+
+      expect(mine.single.envelopeName, 'Home');
+      expect(open.single.status, InvitationStatus.accepted);
+      expect(open.single.invitedBy, isNull);
+    });
+  });
+
+  group('overview of a shared envelope', () {
+    test('carries the role and the number of people', () async {
+      backend.on(
+        'GET /overview',
+        (_) => Reply(
+          overviewJson(
+            envelopes: [figuresJson('e1', role: 'member', memberCount: 3)],
+          ),
+        ),
+      );
+      const home = Envelope(id: 'e1', name: 'Home', color: '#22C55E');
+
+      final overview = await backend.repository().overview(august, {
+        'e1': home,
+      });
+
+      final progress = overview.envelopes.single;
+      expect(progress.role, EnvelopeRole.member);
+      expect(progress.isOwner, isFalse);
+      expect(progress.memberCount, 3);
+      expect(progress.isShared, isTrue);
+    });
+  });
 }

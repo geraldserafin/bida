@@ -558,4 +558,143 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get takeBack => 'Take back';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get alreadyMember =>
+      'This address already belongs to a member of the envelope.';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get awaitingAnswer => 'Waiting for an answer';
+
+  @override
+  String get awaitingApproval => 'Accepted, waiting for approval';
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String get formerMember => 'Former member';
+
+  @override
+  String get invitationAccepted =>
+      'Invitation accepted. An owner of the envelope still has to approve you.';
+
+  @override
+  String invitationBanner(String inviter, String envelope) {
+    return '$inviter invites you to the envelope “$envelope”';
+  }
+
+  @override
+  String get invitations => 'Invitations';
+
+  @override
+  String invitationSent(String email) {
+    return 'Invitation sent to $email';
+  }
+
+  @override
+  String get invite => 'Invite';
+
+  @override
+  String get inviteByEmail => 'Invite by e-mail';
+
+  @override
+  String get lastOwner =>
+      'An envelope needs at least one owner. Make somebody else an owner first.';
+
+  @override
+  String get leave => 'Leave';
+
+  @override
+  String get leaveEnvelope => 'Leave the envelope';
+
+  @override
+  String leaveEnvelopeConfirm(String name) {
+    return 'Leave “$name”? The money you put into it and your expenses in it stay.';
+  }
+
+  @override
+  String get leftEnvelope => 'You left the envelope';
+
+  @override
+  String get limitReached =>
+      'Limit reached: an envelope has up to 10 people, and you can send 10 invitations an hour.';
+
+  @override
+  String get makeMember => 'Make member';
+
+  @override
+  String get makeOwner => 'Make owner';
+
+  @override
+  String get members => 'Members';
+
+  @override
+  String membersOf(String name) {
+    return 'Members of $name';
+  }
+
+  @override
+  String get notShareable =>
+      'Only a top-level envelope can be shared; sub-envelopes go with it.';
+
+  @override
+  String get reject => 'Turn down';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get removeMember => 'Remove from the envelope';
+
+  @override
+  String removeMemberConfirm(String name) {
+    return 'Remove $name from the envelope? The money they put in and their expenses stay in it.';
+  }
+
+  @override
+  String get revokeInvitation => 'Revoke the invitation';
+
+  @override
+  String get role => 'Role';
+
+  @override
+  String get roleExplained =>
+      'An owner manages the envelope and its members. A member adds expenses and puts in their own money.';
+
+  @override
+  String get roleMember => 'Member';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String sharedWith(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Shared by $count people',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get someone => 'Somebody';
+
+  @override
+  String get whoPutHowMuch => 'Who put how much';
+
+  @override
+  String get you => 'You';
+
+  @override
+  String youWith(String name) {
+    return '$name (you)';
+  }
 }

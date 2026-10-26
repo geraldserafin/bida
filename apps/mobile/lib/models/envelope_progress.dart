@@ -1,4 +1,5 @@
 import 'envelope.dart';
+import 'sharing.dart';
 
 /// How much is in an envelope over a month: what was left from before, what
 /// came in, what was spent, and what is left now. Not stored anywhere — the
@@ -16,6 +17,12 @@ class EnvelopeProgress {
   final double balance;
   final double free;
 
+  /// What the user may do with the envelope.
+  final EnvelopeRole role;
+
+  /// How many people share the envelope; 1 when it is only theirs.
+  final int memberCount;
+
   const EnvelopeProgress({
     required this.envelope,
     required this.opening,
@@ -23,7 +30,13 @@ class EnvelopeProgress {
     required this.spent,
     required this.balance,
     required this.free,
+    this.role = EnvelopeRole.owner,
+    this.memberCount = 1,
   });
+
+  bool get isShared => memberCount > 1;
+
+  bool get isOwner => role == EnvelopeRole.owner;
 
   /// What there was to spend this month: the rest from before plus what came in.
   double get available => opening + allocated;

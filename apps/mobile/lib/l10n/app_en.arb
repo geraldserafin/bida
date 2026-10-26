@@ -289,5 +289,95 @@
     }
   },
   "subEnvelopes": "Sub-envelopes",
-  "takeBack": "Take back"
+  "takeBack": "Take back",
+  "accept": "Accept",
+  "alreadyMember": "This address already belongs to a member of the envelope.",
+  "approve": "Approve",
+  "awaitingAnswer": "Waiting for an answer",
+  "awaitingApproval": "Accepted, waiting for approval",
+  "decline": "Decline",
+  "formerMember": "Former member",
+  "invitationAccepted": "Invitation accepted. An owner of the envelope still has to approve you.",
+  "invitationBanner": "{inviter} invites you to the envelope “{envelope}”",
+  "@invitationBanner": {
+    "placeholders": {
+      "inviter": {
+        "type": "String"
+      },
+      "envelope": {
+        "type": "String"
+      }
+    }
+  },
+  "invitations": "Invitations",
+  "invitationSent": "Invitation sent to {email}",
+  "@invitationSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "invite": "Invite",
+  "inviteByEmail": "Invite by e-mail",
+  "lastOwner": "An envelope needs at least one owner. Make somebody else an owner first.",
+  "leave": "Leave",
+  "leaveEnvelope": "Leave the envelope",
+  "leaveEnvelopeConfirm": "Leave “{name}”? The money you put into it and your expenses in it stay.",
+  "@leaveEnvelopeConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "leftEnvelope": "You left the envelope",
+  "limitReached": "Limit reached: an envelope has up to 10 people, and you can send 10 invitations an hour.",
+  "makeMember": "Make member",
+  "makeOwner": "Make owner",
+  "members": "Members",
+  "membersOf": "Members of {name}",
+  "@membersOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notShareable": "Only a top-level envelope can be shared; sub-envelopes go with it.",
+  "reject": "Turn down",
+  "remove": "Remove",
+  "removeMember": "Remove from the envelope",
+  "removeMemberConfirm": "Remove {name} from the envelope? The money they put in and their expenses stay in it.",
+  "@removeMemberConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revokeInvitation": "Revoke the invitation",
+  "role": "Role",
+  "roleExplained": "An owner manages the envelope and its members. A member adds expenses and puts in their own money.",
+  "roleMember": "Member",
+  "roleOwner": "Owner",
+  "sharedWith": "{count, plural, other{Shared by {count} people}}",
+  "@sharedWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "someone": "Somebody",
+  "whoPutHowMuch": "Who put how much",
+  "you": "You",
+  "youWith": "{name} (you)",
+  "@youWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

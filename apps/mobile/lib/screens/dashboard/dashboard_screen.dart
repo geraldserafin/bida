@@ -17,6 +17,7 @@ import '../history/history_screen.dart';
 import '../incomes/incomes_screen.dart';
 import '../incomes/income_sheet.dart';
 import '../months/months_screen.dart';
+import '../sharing/invitations_card.dart';
 import '../recurring/recurring_rules_screen.dart';
 import '../settings/settings_screen.dart';
 import 'widgets/available_pie_chart.dart';
@@ -221,6 +222,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const InvitationsCard(),
             const Icon(Icons.savings_outlined, size: 64),
             const SizedBox(height: 16),
             Text(
@@ -267,6 +269,7 @@ class _MonthView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
       children: [
+        const InvitationsCard(),
         _SummaryCard(state: state),
         if (top.any((p) => p.available > 0 || p.spent > 0)) ...[
           const SizedBox(height: 14),
@@ -484,6 +487,22 @@ class _EnvelopeTile extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (progress.isShared) ...[
+                    Icon(
+                      Icons.group_outlined,
+                      size: 16,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${progress.memberCount}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
                   Text(
                     formatZloty(progress.balance),
                     style: TextStyle(

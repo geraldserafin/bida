@@ -565,4 +565,144 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get takeBack => 'Wycofaj';
+
+  @override
+  String get accept => 'Przyjmij';
+
+  @override
+  String get alreadyMember => 'Ten adres należy już do członka koperty.';
+
+  @override
+  String get approve => 'Zatwierdź';
+
+  @override
+  String get awaitingAnswer => 'Czeka na odpowiedź';
+
+  @override
+  String get awaitingApproval => 'Przyjęte, czeka na zatwierdzenie';
+
+  @override
+  String get decline => 'Odrzuć';
+
+  @override
+  String get formerMember => 'Były członek';
+
+  @override
+  String get invitationAccepted =>
+      'Przyjęto zaproszenie. Właściciel koperty musi jeszcze zatwierdzić Twoje dołączenie.';
+
+  @override
+  String invitationBanner(String inviter, String envelope) {
+    return '$inviter zaprasza Cię do koperty „$envelope”';
+  }
+
+  @override
+  String get invitations => 'Zaproszenia';
+
+  @override
+  String invitationSent(String email) {
+    return 'Wysłano zaproszenie na $email';
+  }
+
+  @override
+  String get invite => 'Zaproś';
+
+  @override
+  String get inviteByEmail => 'Zaproś przez e-mail';
+
+  @override
+  String get lastOwner =>
+      'Koperta musi mieć co najmniej jednego właściciela. Najpierw zrób właścicielem kogoś innego.';
+
+  @override
+  String get leave => 'Opuść';
+
+  @override
+  String get leaveEnvelope => 'Opuść kopertę';
+
+  @override
+  String leaveEnvelopeConfirm(String name) {
+    return 'Opuścić „$name”? Pieniądze, które do niej włożyłeś, i Twoje wydatki w niej zostają.';
+  }
+
+  @override
+  String get leftEnvelope => 'Opuszczono kopertę';
+
+  @override
+  String get limitReached =>
+      'Osiągnięto limit: do koperty można zaprosić do 10 osób, a wysłać do 10 zaproszeń na godzinę.';
+
+  @override
+  String get makeMember => 'Zmień na członka';
+
+  @override
+  String get makeOwner => 'Zrób właścicielem';
+
+  @override
+  String get members => 'Członkowie';
+
+  @override
+  String membersOf(String name) {
+    return 'Członkowie: $name';
+  }
+
+  @override
+  String get notShareable =>
+      'Współdzielić można tylko kopertę główną; podkoperty idą razem z nią.';
+
+  @override
+  String get reject => 'Odrzuć';
+
+  @override
+  String get remove => 'Usuń';
+
+  @override
+  String get removeMember => 'Usuń z koperty';
+
+  @override
+  String removeMemberConfirm(String name) {
+    return 'Usunąć $name z koperty? Pieniądze, które włożył, i jego wydatki zostają w kopercie.';
+  }
+
+  @override
+  String get revokeInvitation => 'Cofnij zaproszenie';
+
+  @override
+  String get role => 'Rola';
+
+  @override
+  String get roleExplained =>
+      'Właściciel zarządza kopertą i jej członkami. Członek dodaje wydatki i przydziela własne pieniądze.';
+
+  @override
+  String get roleMember => 'Członek';
+
+  @override
+  String get roleOwner => 'Właściciel';
+
+  @override
+  String sharedWith(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Wspólna: $count osoby',
+      many: 'Wspólna: $count osób',
+      few: 'Wspólna: $count osoby',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get someone => 'Ktoś';
+
+  @override
+  String get whoPutHowMuch => 'Kto ile włożył';
+
+  @override
+  String get you => 'Ty';
+
+  @override
+  String youWith(String name) {
+    return '$name (Ty)';
+  }
 }

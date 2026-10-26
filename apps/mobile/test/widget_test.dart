@@ -45,6 +45,7 @@ void main() {
     final backend = FakeBackend()
       ..on('GET /envelopes', (_) => const Reply.unreachable())
       ..on('GET /recurring-rules', (_) => const Reply.unreachable())
+      ..on('GET /invitations', (_) => const Reply.unreachable())
       ..on('GET /overview', (_) => const Reply.unreachable());
     final state = PlannerState(repository: backend.repository());
 
@@ -59,6 +60,7 @@ void main() {
     backend
       ..on('GET /envelopes', (_) => const Reply([]))
       ..on('GET /recurring-rules', (_) => const Reply([]))
+      ..on('GET /invitations', (_) => const Reply([]))
       ..on('GET /overview', (_) => Reply(overviewJson()));
     await tester.tap(find.text('Spróbuj ponownie'));
     await tester.pumpAndSettle();
@@ -73,6 +75,7 @@ void main() {
     final backend = FakeBackend()
       ..on('GET /envelopes', (_) => const Reply([]))
       ..on('GET /recurring-rules', (_) => const Reply([]))
+      ..on('GET /invitations', (_) => const Reply([]))
       ..on('GET /overview', (_) => Reply(overviewJson()));
     final state = PlannerState(repository: backend.repository());
 
@@ -97,6 +100,7 @@ void main() {
         (_) => Reply([envelopeJson('e1', 'Food'), envelopeJson('e2', 'Rent')]),
       )
       ..on('GET /recurring-rules', (_) => const Reply([]))
+      ..on('GET /invitations', (_) => const Reply([]))
       ..on(
         'GET /overview',
         (_) => Reply(

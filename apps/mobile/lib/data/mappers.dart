@@ -43,6 +43,8 @@ EnvelopeProgress progressFrom(api.EnvelopeFigures f, Envelope envelope) =>
       spent: fromMinor(f.spentMinor),
       balance: fromMinor(f.balanceMinor),
       free: fromMinor(f.freeMinor),
+      role: roleFrom(f.role),
+      memberCount: f.memberCount,
     );
 
 // ----------------------------------------------------------------- allocations
@@ -134,3 +136,44 @@ api.SaveRecurringRule saveRuleOf(RecurringRule r) => api.SaveRecurringRule(
   note: r.note,
   active: r.active,
 );
+
+// --------------------------------------------------------------------- sharing
+
+EnvelopeRole roleFrom(api.Role role) => switch (role) {
+  api.Role.owner => EnvelopeRole.owner,
+  _ => EnvelopeRole.member,
+};
+
+api.Role roleOf(EnvelopeRole role) => switch (role) {
+  EnvelopeRole.owner => api.Role.owner,
+  EnvelopeRole.member => api.Role.member,
+};
+
+Member memberFrom(api.Member m) => Member(
+  userId: m.userId,
+  email: m.email,
+  name: m.name,
+  role: roleFrom(m.role),
+);
+
+Contribution contributionFrom(api.Contribution c) => Contribution(
+  envelopeId: c.envelopeId,
+  userId: c.userId,
+  amount: fromMinor(c.amountMinor),
+);
+
+Invitation invitationFrom(api.Invitation i) {
+  final by = i.invitedBy;
+  return Invitation(
+    id: i.id,
+    envelopeId: i.envelopeId,
+    envelopeName: i.envelopeName,
+    email: i.email,
+    role: roleFrom(i.role),
+    status: switch (i.status) {
+      api.InvitationStatus.accepted => InvitationStatus.accepted,
+      _ => InvitationStatus.invited,
+    },
+    invitedBy: by == null ? null : (by.name ?? by.email),
+  );
+}

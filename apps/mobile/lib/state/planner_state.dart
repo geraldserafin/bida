@@ -59,6 +59,11 @@ class PlannerState extends ChangeNotifier {
   List<RecurringRule> _recurringRules = const [];
   List<RecurringRule> get recurringRules => _recurringRules;
 
+  List<Invitation> _invitations = const [];
+
+  /// Invitations to share an envelope that wait for the user's answer.
+  List<Invitation> get invitations => _invitations;
+
   // ---- the month on screen ---------------------------------------------------
 
   int _firstDay = 1;
@@ -134,6 +139,7 @@ class PlannerState extends ChangeNotifier {
   Future<void> _forget() async {
     _envelopes = const [];
     _recurringRules = const [];
+    _invitations = const [];
     _overview = Overview.empty(month);
     _month = null;
     _loadError = null;
@@ -149,19 +155,28 @@ class PlannerState extends ChangeNotifier {
 
     try {
       await beforeLoad?.call();
-      final (envelopes, rules) = await (
+      final (envelopes, rules, invitations) = await (
         _repo.envelopes(),
         _repo.recurringRules(),
+        _repo.myInvitations(),
       ).wait;
       _envelopes = envelopes;
       _recurringRules = rules;
+      _invitations = invitations;
       _overview = await _repo.overview(month, _envelopesById);
     } on ApiException catch (error) {
       _loadError = error;
-    } on ParallelWaitError<Object?, (AsyncError?, AsyncError?)> catch (error) {
+    } on ParallelWaitError<
+      Object?,
+      (AsyncError?, AsyncError?, AsyncError?)
+    > catch (error) {
       // the requests ran side by side: report the first that failed
-      final (a, b) = error.errors;
-      _loadError = [a?.error, b?.error].whereType<ApiException>().firstOrNull;
+      final (a, b, c) = error.errors;
+      _loadError = [
+        a?.error,
+        b?.error,
+        c?.error,
+      ].whereType<ApiException>().firstOrNull;
       if (_loadError == null) rethrow;
     }
 
@@ -318,5 +333,68 @@ class PlannerState extends ChangeNotifier {
     final added = await _repo.applyRecurringRules(month);
     if (added > 0) await reloadOverview();
     return added;
+  }
+
+  // ---- sharing -----------------------------------------------------------------
+
+  /// The people who share the envelope (its parent's, for a sub-envelope).
+  Future<List<Member>> membersOf(String envelopeId) =>
+      _repo.members(envelopeId);
+
+  /// Who put how much into the envelope and its sub-envelopes.
+  Future<List<Contribution>> contributionsOf(String envelopeId) =>
+      _repo.contributions(envelopeId);
+
+  /// The invitations of the envelope that wait for an answer or for approval.
+  Future<List<Invitation>> invitationsOf(String envelopeId) =>
+      _repo.envelopeInvitations(envelopeId);
+
+  Future<void> invite(
+    String envelopeId, {
+    required String email,
+    required EnvelopeRole role,
+  }) async {
+    await _repo.invite(envelopeId, email: email, role: role);
+  }
+
+  Future<void> revokeInvitation(String envelopeId, String invitationId) =>
+      _repo.revokeInvitation(envelopeId, invitationId);
+
+  /// Lets in somebody who accepted an invitation.
+  Future<void> approveInvitation(String envelopeId, String invitationId) async {
+    await _repo.approveInvitation(envelopeId, invitationId);
+    await reloadOverview(); // the envelope has one more member now
+  }
+
+  Future<void> setRole(String envelopeId, String userId, EnvelopeRole role) =>
+      _repo.setRole(envelopeId, userId, role);
+
+  /// Removes a member. [leaving] is for the user taking themselves out, after
+  /// which the envelope is not theirs to see any more.
+  Future<void> removeMember(
+    String envelopeId,
+    String userId, {
+    bool leaving = false,
+  }) async {
+    await _repo.removeMember(envelopeId, userId);
+    _recurringRules = await _repo.recurringRules();
+    if (leaving) {
+      await _reloadAll();
+    } else {
+      await reloadOverview();
+    }
+  }
+
+  /// Says yes to an invitation. Nobody gets in before an owner approves.
+  Future<void> acceptInvitation(String invitationId) async {
+    await _repo.acceptInvitation(invitationId);
+    _invitations = await _repo.myInvitations();
+    notifyListeners();
+  }
+
+  Future<void> declineInvitation(String invitationId) async {
+    await _repo.declineInvitation(invitationId);
+    _invitations = await _repo.myInvitations();
+    notifyListeners();
   }
 }

@@ -199,6 +199,86 @@ class PlannerRepository {
   Future<void> deleteExpense(String id) =>
       guard(() => _api.expenses.expensesDelete(id: id));
 
+  // ------------------------------------------------------------------- sharing
+
+  /// The people who share the envelope (its parent's, for a sub-envelope).
+  Future<List<Member>> members(String envelopeId) => guard(() async {
+    final all = await _api.members.membersList(id: envelopeId);
+    return all.map(memberFrom).toList();
+  });
+
+  Future<void> setRole(String envelopeId, String userId, EnvelopeRole role) =>
+      guard(
+        () => _api.members.membersSetRole(
+          id: envelopeId,
+          userId: userId,
+          body: api.SetRole(role: roleOf(role)),
+        ),
+      );
+
+  /// Removes a member; removing yourself is leaving the envelope.
+  Future<void> removeMember(String envelopeId, String userId) =>
+      guard(() => _api.members.membersRemove(id: envelopeId, userId: userId));
+
+  /// Who put how much into the envelope and its sub-envelopes.
+  Future<List<Contribution>> contributions(String envelopeId) =>
+      guard(() async {
+        final all = await _api.members.membersContributions(id: envelopeId);
+        return all.map(contributionFrom).toList();
+      });
+
+  Future<Invitation> invite(
+    String envelopeId, {
+    required String email,
+    required EnvelopeRole role,
+  }) => guard(
+    () async => invitationFrom(
+      await _api.invitations.invitationsInvite(
+        id: envelopeId,
+        body: api.Invite(email: email, role: roleOf(role)),
+      ),
+    ),
+  );
+
+  /// The invitations of the envelope that wait for an answer or for approval.
+  Future<List<Invitation>> envelopeInvitations(String envelopeId) => guard(
+    () async {
+      final all = await _api.invitations.invitationsForEnvelope(id: envelopeId);
+      return all.map(invitationFrom).toList();
+    },
+  );
+
+  Future<void> revokeInvitation(String envelopeId, String invitationId) =>
+      guard(
+        () => _api.invitations.invitationsRevoke(
+          id: envelopeId,
+          invitationId: invitationId,
+        ),
+      );
+
+  /// Lets in somebody who accepted an invitation.
+  Future<void> approveInvitation(String envelopeId, String invitationId) =>
+      guard(
+        () => _api.invitations.invitationsApprove(
+          id: envelopeId,
+          invitationId: invitationId,
+        ),
+      );
+
+  /// The invitations for the address of the user that wait for an answer.
+  Future<List<Invitation>> myInvitations() => guard(() async {
+    final all = await _api.invitations.invitationsMine();
+    return all.map(invitationFrom).toList();
+  });
+
+  Future<void> acceptInvitation(String invitationId) => guard(
+    () => _api.invitations.invitationsAccept(invitationId: invitationId),
+  );
+
+  Future<void> declineInvitation(String invitationId) => guard(
+    () => _api.invitations.invitationsDecline(invitationId: invitationId),
+  );
+
   // ----------------------------------------------------------------- recurring
 
   Future<List<RecurringRule>> recurringRules() => guard(() async {

@@ -145,6 +145,8 @@ Map<String, Object?> figuresJson(
   int spent = 0,
   int? balance,
   int? free,
+  String role = 'owner',
+  int memberCount = 1,
 }) {
   final left = balance ?? opening + allocated - spent;
   return {
@@ -155,6 +157,8 @@ Map<String, Object?> figuresJson(
     'spentMinor': spent,
     'balanceMinor': left,
     'freeMinor': free ?? left,
+    'role': role,
+    'memberCount': memberCount,
   };
 }
 
@@ -258,6 +262,46 @@ Map<String, Object?> ruleJson(
   'active': active,
   'createdAt': _stamp,
   'updatedAt': _stamp,
+};
+
+Map<String, Object?> memberJson(
+  String userId,
+  String email, {
+  String? name,
+  String role = 'member',
+}) => {
+  'userId': userId,
+  'email': email,
+  'name': name,
+  'role': role,
+  'joinedAt': _stamp,
+};
+
+Map<String, Object?> contributionJson(
+  String envelopeId,
+  String userId,
+  int amountMinor,
+) => {'envelopeId': envelopeId, 'userId': userId, 'amountMinor': amountMinor};
+
+Map<String, Object?> invitationJson(
+  String id,
+  String envelopeId,
+  String email, {
+  String envelopeName = 'Home',
+  String status = 'invited',
+  String role = 'member',
+  String? invitedBy = 'ann@example.com',
+}) => {
+  'id': id,
+  'envelopeId': envelopeId,
+  'envelopeName': envelopeName,
+  'email': email,
+  'role': role,
+  'status': status,
+  'invitedBy': invitedBy == null ? null : {'email': invitedBy, 'name': null},
+  'acceptedBy': null,
+  'expiresAt': '2026-11-01T00:00:00.000Z',
+  'createdAt': _stamp,
 };
 
 Map<String, Object?> userJson(String email) => {

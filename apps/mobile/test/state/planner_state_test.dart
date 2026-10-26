@@ -22,6 +22,7 @@ void main() {
         ]),
       )
       ..on('GET /recurring-rules', (_) => const Reply([]))
+      ..on('GET /invitations', (_) => const Reply([]))
       ..on(
         'GET /overview',
         (_) => Reply(
@@ -382,4 +383,86 @@ void main() {
       });
     },
   );
+
+  group('sharing', () {
+    test('load fetches the invitations waiting for the user', () async {
+      backend.on(
+        'GET /invitations',
+        (_) => Reply([invitationJson('i1', 'e9', 'me@example.com')]),
+      );
+      final state = newState();
+
+      await state.load();
+
+      expect(state.invitations.single.envelopeName, 'Home');
+    });
+
+    test('accepting an invitation asks again what is left', () async {
+      var open = [invitationJson('i1', 'e9', 'me@example.com')];
+      backend
+        ..on('GET /invitations', (_) => Reply(open))
+        ..on(
+          'POST /invitations/i1/accept',
+          (_) => Reply(
+            invitationJson('i1', 'e9', 'me@example.com', status: 'accepted'),
+          ),
+        );
+      final state = newState();
+      await state.load();
+
+      open = [];
+      await state.acceptInvitation('i1');
+
+      expect(state.invitations, isEmpty);
+    });
+
+    test('declining works the same way', () async {
+      var open = [invitationJson('i1', 'e9', 'me@example.com')];
+      backend
+        ..on('GET /invitations', (_) => Reply(open))
+        ..on(
+          'POST /invitations/i1/decline',
+          (_) => const Reply(null, status: 204),
+        );
+      final state = newState();
+      await state.load();
+
+      open = [];
+      await state.declineInvitation('i1');
+
+      expect(state.invitations, isEmpty);
+      expect(backend.sent('POST /invitations/i1/decline'), hasLength(1));
+    });
+
+    test('leaving drops the envelope from the user', () async {
+      backend.on(
+        'DELETE /envelopes/e1/members/u1',
+        (_) => const Reply(null, status: 204),
+      );
+      final state = newState();
+      await state.load();
+      backend.on('GET /envelopes', (_) => Reply([envelopeJson('e3', 'Food')]));
+
+      await state.removeMember('e1', 'u1', leaving: true);
+
+      expect(state.envelopes.map((e) => e.name), ['Food']);
+    });
+
+    test(
+      'approving somebody asks again for the people in the envelope',
+      () async {
+        backend.on(
+          'POST /envelopes/e1/invitations/i1/approve',
+          (_) => Reply(memberJson('u2', 'bob@example.com')),
+        );
+        final state = newState();
+        await state.load();
+        final before = backend.sent('GET /overview').length;
+
+        await state.approveInvitation('e1', 'i1');
+
+        expect(backend.sent('GET /overview'), hasLength(before + 1));
+      },
+    );
+  });
 }

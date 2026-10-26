@@ -11,4 +11,5 @@ export 'income.dart';
 export 'month_summary.dart';
 export 'overview.dart';
 export 'recurring_rule.dart';
+export 'sharing.dart';
 export 'transaction.dart';

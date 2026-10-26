@@ -1069,6 +1069,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Take back'**
   String get takeBack;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// No description provided for @alreadyMember.
+  ///
+  /// In en, this message translates to:
+  /// **'This address already belongs to a member of the envelope.'**
+  String get alreadyMember;
+
+  /// No description provided for @approve.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approve;
+
+  /// No description provided for @awaitingAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for an answer'**
+  String get awaitingAnswer;
+
+  /// No description provided for @awaitingApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted, waiting for approval'**
+  String get awaitingApproval;
+
+  /// No description provided for @decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
+
+  /// No description provided for @formerMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Former member'**
+  String get formerMember;
+
+  /// No description provided for @invitationAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation accepted. An owner of the envelope still has to approve you.'**
+  String get invitationAccepted;
+
+  /// No description provided for @invitationBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'{inviter} invites you to the envelope “{envelope}”'**
+  String invitationBanner(String inviter, String envelope);
+
+  /// No description provided for @invitations.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitations'**
+  String get invitations;
+
+  /// No description provided for @invitationSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Invitation sent to {email}'**
+  String invitationSent(String email);
+
+  /// No description provided for @invite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get invite;
+
+  /// No description provided for @inviteByEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite by e-mail'**
+  String get inviteByEmail;
+
+  /// No description provided for @lastOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'An envelope needs at least one owner. Make somebody else an owner first.'**
+  String get lastOwner;
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
+  /// No description provided for @leaveEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the envelope'**
+  String get leaveEnvelope;
+
+  /// No description provided for @leaveEnvelopeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave “{name}”? The money you put into it and your expenses in it stay.'**
+  String leaveEnvelopeConfirm(String name);
+
+  /// No description provided for @leftEnvelope.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the envelope'**
+  String get leftEnvelope;
+
+  /// No description provided for @limitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit reached: an envelope has up to 10 people, and you can send 10 invitations an hour.'**
+  String get limitReached;
+
+  /// No description provided for @makeMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Make member'**
+  String get makeMember;
+
+  /// No description provided for @makeOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Make owner'**
+  String get makeOwner;
+
+  /// No description provided for @members.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get members;
+
+  /// No description provided for @membersOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Members of {name}'**
+  String membersOf(String name);
+
+  /// No description provided for @notShareable.
+  ///
+  /// In en, this message translates to:
+  /// **'Only a top-level envelope can be shared; sub-envelopes go with it.'**
+  String get notShareable;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn down'**
+  String get reject;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @removeMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from the envelope'**
+  String get removeMember;
+
+  /// No description provided for @removeMemberConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from the envelope? The money they put in and their expenses stay in it.'**
+  String removeMemberConfirm(String name);
+
+  /// No description provided for @revokeInvitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Revoke the invitation'**
+  String get revokeInvitation;
+
+  /// No description provided for @role.
+  ///
+  /// In en, this message translates to:
+  /// **'Role'**
+  String get role;
+
+  /// No description provided for @roleExplained.
+  ///
+  /// In en, this message translates to:
+  /// **'An owner manages the envelope and its members. A member adds expenses and puts in their own money.'**
+  String get roleExplained;
+
+  /// No description provided for @roleMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get roleMember;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get roleOwner;
+
+  /// No description provided for @sharedWith.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, other{Shared by {count} people}}'**
+  String sharedWith(int count);
+
+  /// No description provided for @someone.
+  ///
+  /// In en, this message translates to:
+  /// **'Somebody'**
+  String get someone;
+
+  /// No description provided for @whoPutHowMuch.
+  ///
+  /// In en, this message translates to:
+  /// **'Who put how much'**
+  String get whoPutHowMuch;
+
+  /// No description provided for @you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get you;
+
+  /// No description provided for @youWith.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} (you)'**
+  String youWith(String name);
 }
 
 class _AppLocalizationsDelegate

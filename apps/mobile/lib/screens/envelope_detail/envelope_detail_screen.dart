@@ -15,6 +15,8 @@ import '../add_expense/add_expense_screen.dart';
 import '../envelopes/envelope_editor.dart';
 import '../envelopes/envelopes_screen.dart';
 import '../funding/fund_sheet.dart';
+import '../sharing/contributions_card.dart';
+import '../sharing/members_screen.dart';
 import 'widgets/spending_line_chart.dart';
 
 /// Opens the expense editor and, if the expense was saved to a *different*
@@ -71,28 +73,39 @@ class EnvelopeDetailScreen extends StatelessWidget {
         title: Text(envelope.name),
         actions: [
           IconButton(
-            tooltip: l10n.editEnvelope,
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () async {
-              final edited = await showEnvelopeEditor(
-                context,
-                existing: envelope,
-              );
-              if (edited != null && context.mounted) {
-                await attempt(context, () => state.updateEnvelope(edited));
-              }
-            },
+            tooltip: l10n.members,
+            icon: const Icon(Icons.group_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => MembersScreen(envelopeId: envelopeId),
+              ),
+            ),
           ),
-          IconButton(
-            tooltip: l10n.deleteEnvelope,
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              if (await confirmDeleteEnvelope(context, envelope)) {
-                navigator.pop();
-              }
-            },
-          ),
+          if (progress.isOwner)
+            IconButton(
+              tooltip: l10n.editEnvelope,
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () async {
+                final edited = await showEnvelopeEditor(
+                  context,
+                  existing: envelope,
+                );
+                if (edited != null && context.mounted) {
+                  await attempt(context, () => state.updateEnvelope(edited));
+                }
+              },
+            ),
+          if (progress.isOwner)
+            IconButton(
+              tooltip: l10n.deleteEnvelope,
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                if (await confirmDeleteEnvelope(context, envelope)) {
+                  navigator.pop();
+                }
+              },
+            ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -129,24 +142,37 @@ class EnvelopeDetailScreen extends StatelessWidget {
               ),
             ],
           ),
+          if (progress.isShared) ...[
+            const SizedBox(height: 16),
+            ContributionsCard(
+              envelopeId: envelopeId,
+              version: (
+                progress.allocated,
+                progress.opening,
+                progress.free,
+                progress.memberCount,
+              ),
+            ),
+          ],
           if (envelope.isTopLevel) ...[
             const SizedBox(height: 20),
             _SectionTitle(l10n.subEnvelopes),
             const SizedBox(height: 8),
             for (final child in children) _SubEnvelopeTile(progress: child),
-            TextButton.icon(
-              onPressed: () async {
-                final created = await showEnvelopeEditor(
-                  context,
-                  parentId: envelopeId,
-                );
-                if (created != null && context.mounted) {
-                  await attempt(context, () => state.addEnvelope(created));
-                }
-              },
-              icon: const Icon(Icons.add),
-              label: Text(l10n.addSubEnvelope),
-            ),
+            if (progress.isOwner)
+              TextButton.icon(
+                onPressed: () async {
+                  final created = await showEnvelopeEditor(
+                    context,
+                    parentId: envelopeId,
+                  );
+                  if (created != null && context.mounted) {
+                    await attempt(context, () => state.addEnvelope(created));
+                  }
+                },
+                icon: const Icon(Icons.add),
+                label: Text(l10n.addSubEnvelope),
+              ),
           ],
           const SizedBox(height: 12),
           RemoteData<List<Allocation>>(
@@ -222,6 +248,20 @@ class _Header extends StatelessWidget {
           l10n.balance,
           style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
         ),
+        if (progress.isShared)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Row(
+              children: [
+                Icon(Icons.group_outlined, size: 16, color: scheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  l10n.sharedWith(progress.memberCount),
+                  style: TextStyle(color: scheme.primary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
         const SizedBox(height: 16),
         Row(
           children: [

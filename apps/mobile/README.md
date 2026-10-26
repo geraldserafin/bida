@@ -66,6 +66,7 @@ History
 | 📊 **Visual insight** | Donut chart of where the money is, available-vs-spent bars, spending-over-time line charts |
 | 🔁 **Recurring rules** | Templates for regular expenses (rent, subscriptions) that add themselves to the month with one tap |
 | 🧮 **Unallocated tracking** | Always know how much income is still free to put into envelopes |
+| 👥 **Shared envelopes** | Invite people by e-mail to an envelope; each puts money in from their own pool, everybody sees who put how much, owners approve who gets in |
 | 📅 **Months** | Step through months with the arrows; a list shows every month so far. The month can start on any day from 1 to 28 |
 | 🧭 **Bottom navigation** | Pulpit (dashboard) · Historia · Miesiące · Ustawienia, one tap away |
 | 🕓 **History** | Expenses of the month grouped by day, filtered by envelope, dates and time |
@@ -188,7 +189,7 @@ flutter test
 - [x] **Phase 6** — Read-only History view (past periods + charts), bottom navigation bar, edge-case polish
 - [x] **Phase 7** — Accounts and sign-in (e-mail code, Google), data on the server
 - [x] **Phase 8** — Envelope model: income and a pool, envelopes with sub-envelopes, allocations, balances that roll over, months instead of periods (see `docs/ENVELOPE_MODEL.md`)
-- [ ] **Phase 9** — Shared envelopes
+- [x] **Phase 9** — Shared envelopes: members with roles, invitations the owner approves, who put how much
 
 **Extras already in:** custom envelopes with icon/color picker · full Polish localization (`pl`) with zł currency · month switcher · bottom navigation bar.
 
