@@ -87,10 +87,10 @@ Przestrzenie i okresy ustępują kopertom z subkopertami, saldem toczącym się 
 - Eksport, import i CSV na nowym modelu; import kopii z pierwszej, offline'owej wersji
 - Aplikacja: pulpit miesiąca, szczegóły koperty, przydziały, wpływy, lista miesięcy, zarządzanie kopertami
 
-**Część 2 – współdzielenie.**
+**Część 2 – współdzielenie (zrobione).**
 - Członkowie koperty top-level, zaproszenia po e-mailu (zaproszony → akceptuje → właściciel zatwierdza), role `owner` i `member`
 - Widok „kto ile włożył" w kopercie i jej podkopertach
-- Wyjście z koperty, przekazanie własności, usuwanie
+- Wyjście z koperty, zmiana ról (kilku właścicieli zamiast przekazywania własności), usuwanie
 
 **Część 3 – automaty i polerka.**
 - Cykliczne przychody (wypłata) i reguły podziału („co miesiąc X zł na Dom")

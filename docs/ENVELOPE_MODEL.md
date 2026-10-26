@@ -1,10 +1,10 @@
 # Model kopert i współdzielenia
 
-Model danych i zachowania aplikacji. Zastąpił podział na **przestrzenie** i **okresy**. Część o współdzieleniu (rozdział „Współdzielenie") jest zaprojektowana, ale jeszcze nie wdrożona; reszta działa. Plan: [ROADMAP.md](ROADMAP.md), etap 9.
+Model danych i zachowania aplikacji. Zastąpił podział na **przestrzenie** i **okresy**. Działa także współdzielenie kopert. Plan dalszych prac: [ROADMAP.md](ROADMAP.md), etap 9.
 
 ## Idea w jednym akapicie
 
-Każdy użytkownik ma własną pulę pieniędzy: wpisuje **wpływy**, a z nich **przydziela pieniądze do kopert**. Koperta może mieć **podkoperty** (jeden poziom). Wydatki obniżają saldo koperty, przydziały je podnoszą, a saldo **toczy się** z miesiąca na miesiąc. Kopertę top-level będzie można **współdzielić**: dodani użytkownicy przydzielą do niej pieniądze ze swoich pul, każdy zobaczy, ile włożył on i ile włożyli inni, a nie zobaczy cudzych pozostałych kopert. Nie ma przestrzeni ani okresów.
+Każdy użytkownik ma własną pulę pieniędzy: wpisuje **wpływy**, a z nich **przydziela pieniądze do kopert**. Koperta może mieć **podkoperty** (jeden poziom). Wydatki obniżają saldo koperty, przydziały je podnoszą, a saldo **toczy się** z miesiąca na miesiąc. Kopertę top-level można **współdzielić**: dodani użytkownicy przydzielają do niej pieniądze ze swoich pul, każdy widzi, ile włożył on i ile włożyli inni, a nie widzi cudzych pozostałych kopert. Nie ma przestrzeni ani okresów.
 
 ## Pojęcia
 
@@ -45,17 +45,19 @@ Reguły spójności:
 
 Szczegóły koperty: saldo, dostępne, wydane, wolne (gdy ma podkoperty), podkoperty z saldami, przydziały, wykres narastających wydatków i lista wydatków miesiąca. Przyciski „Przydziel" i „Wycofaj".
 
-Po wdrożeniu współdzielenia wydatek zapisany przez kogoś innego we wspólnej kopercie nie zmniejszy mojej puli ani mojego „wydane": moje pieniądze opuściły pulę w chwili przydziału, a ile ostatecznie wydano, widać w kopercie. Wejście we wspólną kopertę pokaże dodatkowo, ile **ja** wkładam do niej i do każdej podkoperty oraz ile **każdy z pozostałych członków** (kto ile włożył).
+Wydatek zapisany przez kogoś innego we wspólnej kopercie nie zmniejsza mojej puli ani mojego „wydane": moje pieniądze opuściły pulę w chwili przydziału, a ile ostatecznie wydano, widać w kopercie. Saldo wspólnej koperty jest saldem całej koperty (pieniądze wszystkich), z ikoną grupy i liczbą osób.
 
-## Współdzielenie (zaprojektowane, jeszcze nie wdrożone)
+Wejście we wspólną kopertę pokazuje dodatkowo kartę „Kto ile włożył": ile **ja** włożyłem do koperty i do każdej podkoperty oraz ile **każdy z pozostałych członków** (od początku, netto po wycofaniach). Ekran „Członkowie" pokazuje osoby z rolami, a właścicielowi także otwarte zaproszenia.
 
-- **Zaproszenie** po adresie e-mail do koperty top-level. Przepływ: zaproszony → akceptuje → właściciel koperty zatwierdza. Limity: 10 członków koperty, 10 zaproszeń na godzinę.
-- **Uprawnienia.** Właściciel: członkowie i zaproszenia, edycja i usuwanie koperty oraz podkopert. Członek: widzi kopertę, dodaje wydatki (swoje edytuje i usuwa), przydziela i przypisuje **ze swojego** przydziału. Nikt nie edytuje cudzych przydziałów.
+## Współdzielenie
+
+- **Zaproszenie** po adresie e-mail do koperty top-level (podkoperty idą razem z nią). Przepływ: zaproszony → akceptuje → właściciel koperty zatwierdza i dopiero wtedy osoba dostaje dostęp. Zaproszenie ważne 14 dni; to samo zaproszenie można odnowić z inną rolą. Limity: 10 członków koperty (z otwartymi zaproszeniami), 10 zaproszeń na godzinę. Wszystkie kroki idą z mailem do drugiej strony.
+- **Uprawnienia.** Właściciel (może być kilku): członkowie, role i zaproszenia, edycja i usuwanie koperty oraz podkopert, edycja i usuwanie cudzych wydatków. Członek: widzi kopertę, dodaje wydatki (swoje edytuje i usuwa), przydziela i przypisuje **ze swojego** przydziału, zabiera z koperty tylko tyle, ile sam włożył. Nikt nie edytuje cudzych przydziałów.
 - **Prywatność.** Członek widzi kopertę (i podkoperty), jej członków, przydziały i wydatki w niej. Nie widzi niczego poza nią: ani innych kopert właściciela, ani wpływów, ani puli.
-- **Wyjście z koperty.** Przydziały zostają (to wspólne pieniądze). Apka ostrzega i pozwala najpierw wycofać wolną część. Wydatki zostają z autorem. Właściciel nie może wyjść, dopóki nie przekaże koperty innemu członkowi.
+- **Wyjście z koperty.** Przydziały zostają (to wspólne pieniądze), więc apka ostrzega i pozwala najpierw wycofać wolną część. Wydatki zostają z autorem, reguły cykliczne wychodzącego z tej koperty znikają. Ostatni właściciel nie może wyjść ani zostać zdegradowany (409 `LastOwner`): najpierw trzeba zrobić właścicielem kogoś innego, a gdy koperta jest sama, usunąć ją.
 - **Usunięcie koperty** (tylko właściciel, z potwierdzeniem) usuwa jej wydatki i przydziały, więc pieniądze wracają do pul osób, które je wkładały.
 
-Dziś każda koperta ma jednego członka: właściciela. Tabela `envelope_members` i sprawdzanie ról już działają, więc współdzielenie dokłada zaproszenia i widok „kto ile włożył".
+**Kopie zapasowe.** Eksport i import JSON obejmują tylko koperty, w których użytkownik jest sam. Wspólnych nie ma w kopii i import ich nie zastępuje, bo należą do kilku osób. CSV zawiera własne wydatki użytkownika także ze wspólnych kopert.
 
 ## Dane
 
@@ -67,6 +69,7 @@ envelope_members(envelope_id, user_id, role)      -- tylko koperty top-level
 allocations(id, envelope_id, user_id, amount_minor, made_on, note)
 expenses(id, envelope_id, created_by, amount_minor, spent_at, note, recurring_id, recurring_month)
 recurring_rules(id, user_id, envelope_id, amount_minor, frequency, note, active)
+invitations(id, envelope_id, email, role, status, invited_by, accepted_by, expires_at)
 ```
 
 - Każda koperta top-level ma wiersz w `envelope_members` (właściciel z rolą `owner`), więc dostęp to jedno zapytanie. Podkoperta dziedziczy dostęp po `parent_id`.
@@ -90,7 +93,7 @@ Skutek uboczny nowej semantyki: to, co w starym okresie zostało nieodsunięte z
 ## Etapy
 
 1. **Rdzeń (zrobione).** Wpływy, koperty z podkopertami, przydziały, wydatki, salda toczące się, widok miesiąca, migracja, usunięcie przestrzeni i okresów, nowe ekrany.
-2. **Współdzielenie.** Członkowie koperty, zaproszenia, role, widok „kto ile włożył", wyjście i usuwanie.
+2. **Współdzielenie (zrobione).** Członkowie koperty, zaproszenia, role, widok „kto ile włożył", wyjście i usuwanie.
 3. **Automaty.** Cykliczne wpływy (np. wypłata) i reguły podziału („co miesiąc X zł na Dom"), ekran zbiorczy i polerka.
 
 Całość idzie jedną gałęzią i jednym PR-em do `main`.

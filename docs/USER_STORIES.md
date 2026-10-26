@@ -1,6 +1,6 @@
 # User stories – Money Planner
 
-Co użytkownik może zrobić w aplikacji **dziś**. Model, na którym to stoi: [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md). Współdzielenie kopert (etap 2) jest tam opisane, ale jeszcze go nie ma, więc nie ma go poniżej.
+Co użytkownik może zrobić w aplikacji **dziś**. Model, na którym to stoi: [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md). Współdzielenie kopert opisują historie w sekcji 9.
 
 Oznaczenia: 🌐 = wymaga endpointu · 📱 = zostaje lokalnie w apce.
 
@@ -71,19 +71,33 @@ Pojęcia: **wpływ** (pieniądze, które weszły, np. wypłata), **pula** (wpły
 - **US-8.5** Dane z pierwszej, offline'owej wersji aplikacji przenoszą się na serwer przy pierwszym uruchomieniu (okres → wpływ i przydziały, kategoria → koperta). 🌐
 - **US-8.6** Apka jest po polsku. 📱
 
-## 9. Konto
+## 9. Współdzielenie koperty
 
-- **US-9.1** Loguję się adresem e-mail: dostaję kod i link, nie ma hasła. 🌐
-- **US-9.2** Loguję się przez Google (aplikacja i przeglądarka). 🌐
-- **US-9.3** Wylogowuję się; sesja kończy się na serwerze od razu. 🌐
-- **US-9.4** Moje dane widzę tylko ja. 🌐
+- **US-9.1** Zapraszam kogoś do koperty (głównej, podkoperty idą razem z nią) adresem e-mail i wybieram rolę: właściciel albo członek. Zaproszony dostaje mail. 🌐
+- **US-9.2** Po zalogowaniu tym adresem widzę zaproszenie na pulpicie i je przyjmuję albo odrzucam. Przyjęcie nie daje jeszcze dostępu: właściciel dostaje mail i musi mnie zatwierdzić. 🌐
+- **US-9.3** Jako właściciel widzę członków i otwarte zaproszenia (czekające na odpowiedź i czekające na zatwierdzenie), zatwierdzam, cofam i odrzucam je. 🌐
+- **US-9.4** Wspólna koperta jest na moim pulpicie z ikoną grupy i liczbą osób. Jej saldo to saldo całej koperty. 🌐
+- **US-9.5** Do wspólnej koperty i jej podkopert przydzielam pieniądze ze swojej puli; mogę zabrać tylko tyle, ile sam włożyłem. Cudzych pieniędzy ani cudzych przydziałów nie ruszam. 🌐
+- **US-9.6** W szczegółach wspólnej koperty widzę kartę „Kto ile włożył": ile włożyłem ja i ile każdy z pozostałych, do koperty i do każdej podkoperty. 🌐
+- **US-9.7** Wydatek dodany przez inną osobę widzę w kopercie z jej autorem, ale nie zmniejsza on mojej puli ani mojego „wydane". Własne wydatki edytuję i usuwam; cudze tylko jako właściciel. 🌐
+- **US-9.8** Jako właściciel zmieniam role członków (kilku właścicieli jest możliwych) i usuwam członków. Ostatniego właściciela nie można zdegradować ani usunąć. 🌐
+- **US-9.9** Opuszczam kopertę po potwierdzeniu: tracę do niej dostęp, a pieniądze, które włożyłem, i moje wydatki zostają w niej. 🌐
+- **US-9.10** Edytować i usuwać kopertę, dodawać do niej podkoperty może tylko właściciel; członek tych przycisków nie widzi. 🌐
+- **US-9.11** Nie widzę niczego poza wspólną kopertą jej właściciela: ani jego innych kopert, ani wpływów, ani puli. 🌐
 
-## 10. Blokada aplikacji (lokalna)
+## 10. Konto
 
-- **US-10.1** Ustawiam PIN (co najmniej 6 cyfr); jest przechowywany tylko jako solony hash PBKDF2. 📱
-- **US-10.2** Po włączeniu blokady muszę podać PIN przy wejściu do apki. 📱
-- **US-10.3** Zmieniam i wyłączam PIN. 📱
-- **US-10.4** Włączam odblokowanie biometryczne, jeśli urządzenie je obsługuje. 📱
+- **US-10.1** Loguję się adresem e-mail: dostaję kod i link, nie ma hasła. 🌐
+- **US-10.2** Loguję się przez Google (aplikacja i przeglądarka). 🌐
+- **US-10.3** Wylogowuję się; sesja kończy się na serwerze od razu. 🌐
+- **US-10.4** Moje dane widzę tylko ja. 🌐
+
+## 11. Blokada aplikacji (lokalna)
+
+- **US-11.1** Ustawiam PIN (co najmniej 6 cyfr); jest przechowywany tylko jako solony hash PBKDF2. 📱
+- **US-11.2** Po włączeniu blokady muszę podać PIN przy wejściu do apki. 📱
+- **US-11.3** Zmieniam i wyłączam PIN. 📱
+- **US-11.4** Włączam odblokowanie biometryczne, jeśli urządzenie je obsługuje. 📱
 
 ---
 
@@ -94,4 +108,5 @@ Obliczenia, które muszą być po stronie serwera, bo dotyczą pieniędzy i musi
 - reguły przydziałów: nie zabierzesz więcej, niż jest; nie przypiszesz więcej, niż włożyłeś do rodzica (US-3.2, 3.3, 3.4)
 - historia miesięcy z podziałem na budżetowy początek miesiąca (US-4.8)
 - idempotentne stosowanie reguł cyklicznych (US-7.3)
+- uprawnienia i zasady „czyje to pieniądze" we wspólnej kopercie, zaproszenia z zatwierdzaniem, limity (US-9.x)
 - import CSV z deduplikacją i import kopii z nowymi ID (US-8.3, 8.4)

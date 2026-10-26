@@ -25,6 +25,21 @@ Wszystko poza `/health` i `/auth/*` wymaga zalogowanego użytkownika (nagłówek
 | `PUT /envelopes/{id}` | zmienia nazwę, kolor i ikonę; miejsca w drzewie nie zmienia |
 | `DELETE /envelopes/{id}` | usuwa kopertę z subkopertami, przydziałami, wydatkami i regułami; przydzielone pieniądze wracają do puli |
 
+## Członkowie i zaproszenia
+
+| Endpoint | Opis |
+|---|---|
+| `GET /envelopes/{id}/members` | członkowie koperty (dla podkoperty: jej rodzica) |
+| `PUT /envelopes/{id}/members/{userId}` | zmiana roli; tylko właściciel; ostatni właściciel zostaje (409 `LastOwner`) |
+| `DELETE /envelopes/{id}/members/{userId}` | usunięcie członka, a dla siebie: opuszczenie koperty; przydziały i wydatki zostają |
+| `GET /envelopes/{id}/contributions` | ile który członek włożył do koperty i do każdej podkoperty, od początku, netto |
+| `POST /envelopes/{id}/invitations` | zaproszenie e-mailem (tylko właściciel, tylko koperta top-level); mail do zaproszonego |
+| `GET /envelopes/{id}/invitations` | otwarte zaproszenia koperty (właściciel) |
+| `DELETE /envelopes/{id}/invitations/{invitationId}` | cofnięcie zaproszenia albo odrzucenie przyjętego (właściciel) |
+| `POST /envelopes/{id}/invitations/{invitationId}/approve` | wpuszcza osobę, która przyjęła zaproszenie (właściciel) |
+| `GET /invitations` | zaproszenia dla mojego adresu, na które jeszcze nie odpowiedziałem |
+| `POST /invitations/{invitationId}/accept`, `/decline` | odpowiedź na zaproszenie; przyjęcie nie daje jeszcze dostępu, właściciel musi zatwierdzić |
+
 ## Przydziały
 
 | Endpoint | Opis |
@@ -63,13 +78,13 @@ Przydział do subkoperty dzieli to, co użytkownik włożył do rodzica (nie rus
 
 | Endpoint | Opis |
 |---|---|
-| `GET /overview?from&to&timeZone` | przychód, to, co włożono do kopert i wydano w zakresie dni, pula na koniec zakresu oraz liczby każdej koperty (otwarcie, przydzielone, wydane, saldo, wolne) |
+| `GET /overview?from&to&timeZone` | przychód, to, co włożono do kopert i wydano w zakresie dni, pula na koniec zakresu oraz liczby każdej koperty (otwarcie, przydzielone, wydane, saldo, wolne, rola użytkownika i liczba osób w kopercie) |
 | `GET /overview/months?startDay&timeZone` | historia miesięcy od pierwszej aktywności do dziś, najnowsze pierwsze |
 
 ## Eksport i import
 
 | Endpoint | Opis |
 |---|---|
-| `GET /export`, `POST /import/preview`, `POST /import` | pełna kopia danych użytkownika jako JSON; import zastępuje te dane w jednej transakcji i nadaje nowe ID |
-| `GET /export.csv`, `POST /import/csv` | wydatki jako CSV `Envelope,Subenvelope,Amount,Date,Note`; import tworzy brakujące koperty po nazwie i pomija duplikaty (ta sama koperta, kwota, dzień i notatka) |
+| `GET /export`, `POST /import/preview`, `POST /import` | pełna kopia danych użytkownika jako JSON (bez kopert współdzielonych); import zastępuje te dane w jednej transakcji i nadaje nowe ID |
+| `GET /export.csv`, `POST /import/csv` | własne wydatki użytkownika (także ze wspólnych kopert) jako CSV `Envelope,Subenvelope,Amount,Date,Note`; import tworzy brakujące koperty po nazwie i pomija duplikaty (ta sama koperta, kwota, dzień i notatka) |
 | `POST /import/legacy` | kopia z pierwszej, offline'owej wersji aplikacji (okres → przychód i przydziały, kategoria → koperta) |

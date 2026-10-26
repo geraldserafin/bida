@@ -34,7 +34,7 @@ apps/api/src/
       <module>.module.ts         # jedyny publiczny plik modułu
 ```
 
-Moduły: `envelopes` (koperty, subkoperty i przydziały pieniędzy), `incomes` (przychody), `expenses`, `recurring`, `overview` (salda i historia miesięcy), `transfer` (eksport, import, CSV), `auth` (konta i sesje), `system` (health). Model danych opisuje [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md).
+Moduły: `envelopes` (koperty, subkoperty i przydziały pieniędzy), `members` (członkowie i role), `invitations` (zaproszenia), `incomes` (przychody), `expenses`, `recurring`, `overview` (salda i historia miesięcy), `transfer` (eksport, import, CSV), `auth` (konta i sesje), `system` (health). Model danych opisuje [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md).
 
 ## Warstwy
 
@@ -77,7 +77,7 @@ Layery są memoizowane po referencji, więc moduł użyty przez kilka innych bud
 ### Reguły zależności
 
 1. Moduł importuje z innego modułu wyłącznie `*.module.ts` (serwis). Nigdy repozytorium, SQL ani tabele. Egzekwuje to reguła `noRestrictedImports` w Biome.
-2. Graf zależności jest acykliczny: `envelopes ← expenses ← recurring`, a `transfer` zależy od `envelopes` i `expenses`. `incomes` i `overview` nie zależą od żadnego modułu.
+2. Graf zależności jest acykliczny: `envelopes ← members ← invitations` i `envelopes ← expenses ← recurring`, a `transfer` zależy od `envelopes` i `expenses`. `incomes` i `overview` nie zależą od żadnego modułu.
 3. Gdy dwa moduły potrzebowałyby siebie nawzajem, cykl rozwiązuje baza, a nie kod. Przykład: usunięcie koperty kasuje jej wydatki, przydziały i reguły przez `FOREIGN KEY ... ON DELETE CASCADE`, więc `envelopes` nie zna `expenses` ani `recurring`.
 
 ### Składanie aplikacji
@@ -142,11 +142,14 @@ Pełny opis zasad i widoku użytkownika: [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md).
 - **Właścicielem danych jest użytkownik**, nie osobna encja. Przychód ma `user_id`, koperta `owner_id`, przydział `user_id` (kto wpłacił), wydatek `created_by`, reguła cykliczna `user_id`. Nie ma kolumny najemcy w każdej tabeli.
 - **Dostęp do koperty** daje wiersz w `envelope_members` (`role` = `owner` albo `member`) dla koperty top-level; subkoperta dziedziczy dostęp po `parent_id`. Zapytania łączą się przez `COALESCE(parent_id, id)`. Koperta, której użytkownik nie widzi, nie istnieje: 404 (`EnvelopeNotFound`). Widoczna, ale bez prawa zmiany: 403 (`Forbidden`).
 - **Serwisy przyjmują `userId`** (`UserId`) jako pierwszy parametr, a handlery HTTP biorą go z `CurrentUser` (middleware `Authenticated`). Nie ma ukrytego kontekstu.
+- **Uprawnienia wynikają z roli, nie z `owner_id`.** `owner_id` to twórca koperty. To, co wolno (edycja, usuwanie, podkoperty, zaproszenia, zmiana ról, usuwanie cudzych wydatków), zależy od roli w `envelope_members`; koperta może mieć kilku właścicieli.
 - **Głębokość jest pilnowana w serwisie**: rodzic musi być kopertą top-level (`ParentMustBeTopLevel`). Baza pilnuje tylko `parent_id <> id`.
 - **Salda nie są przechowywane.** Liczy je SQL z tabel `allocations` i `expenses`. Moduł `overview` czyta tabele innych modułów wprost, bo suma to pytanie o wszystkie naraz; to świadomy wyjątek od zasady o importach. Zakres dni dzieli sumy na „przed” (otwarcie) i „w zakresie”, a salda przechodzą między miesiącami.
 - **Reguły przydziałów** (`EnvelopesService.checkChange`) są sprawdzane w transakcji, po zablokowaniu koperty top-level blokadą doradczą (`pg_advisory_xact_lock(hashtext(id))`), żeby dwa równoległe przydziały nie przekroczyły sald. Naruszenie to 409 `NotEnoughMoney` z `availableMinor`. Ujemna pula i ujemne saldo od wydatków są dozwolone.
+- **Członkowie** (`members`): lista, zmiana roli, usunięcie i opuszczenie koperty to jedna operacja `remove` (właściciel usuwa każdego, każdy usuwa siebie), w transakcji pod blokadą doradczą na kopertę. Koperta zawsze ma co najmniej jednego właściciela (409 `LastOwner`), a członków może być `MAX_MEMBERS_PER_ENVELOPE` (10). Ktoś, kto odchodzi, zostawia przydziały i wydatki, a jego reguły cykliczne z tej koperty są kasowane. `GET /envelopes/{id}/contributions` zwraca sumę przydziałów per członek i per koperta (dla top-level także podkoperty).
+- **Zaproszenia** (`invitations`) są do adresu e-mail, nie do linku: `invited` → `accepted` (zaproszony przyjął) → `approved` (właściciel zatwierdził, dopiero wtedy dostaje dostęp). Pozostałe końce (odrzucone, cofnięte, wygasłe po 14 dniach) zostają w tabeli. Jedno otwarte zaproszenie na adres i kopertę (unikalny indeks); ponowne zaproszenie odnawia je i ustawia nową rolę. Limity: 10 zaproszeń na godzinę na osobę i 10 członków (łącznie z otwartymi zaproszeniami). Mail dostaje zaproszony, a po przyjęciu właściciele; po zatwierdzeniu zaproszony. Zapraszać można tylko do koperty top-level (422 `NotShareable`).
 - **Usuwanie** koperty kasuje kaskadą subkoperty, przydziały, wydatki i reguły (`ON DELETE CASCADE`).
-- **Eksport i import** (`transfer`) dotyczą kopert, których użytkownik jest właścicielem, razem z przychodami i regułami. Import zastępuje te dane w jednej transakcji i nadaje wszystkiemu nowe ID (ID są globalne, więc dokument może pochodzić od kogokolwiek). Opis ścieżek: [BACKEND.md](BACKEND.md).
+- **Eksport i import** (`transfer`) dotyczą kopert, których użytkownik jest **jedynym członkiem**, razem z przychodami i regułami do nich. Koperty współdzielone nie wchodzą do kopii i import ich nie rusza, bo nie należą do niego samego. Eksport CSV zawiera za to własne wydatki użytkownika także ze współdzielonych kopert. Import zastępuje te dane w jednej transakcji i nadaje wszystkiemu nowe ID (ID są globalne, więc dokument może pochodzić od kogokolwiek). Opis ścieżek: [BACKEND.md](BACKEND.md).
 - **Migracja 0009** przeniosła dane z przestrzeni i okresów do tego modelu (kategoria → koperta o tym samym ID, dochód okresu → przychód, plan okresu → przydział, oba z datą początku okresu). Przestrzeń bez członków (nieprzejęta przestrzeń domyślna) nie miała komu oddać danych i została usunięta.
 - **Testy** idą przez prawdziwe serwisy na bazie testowej (`insertUser`, `resetDb`, `TestAuthenticated` z `platform/testing.ts`), bo reguły o pieniądzach, klucze obce i sumy są sednem. Czas w testach to `TestClock` zaczynający od 1970 roku.
 
@@ -220,4 +223,4 @@ Wnioski ze spike'u na `swagger_parser` i OpenAPI 3.1 wygenerowanym przez Effect 
 
 ## Stan na dziś
 
-Działa pełny backend: konta i sesje (link i kod z e-maila, Google), koperty z subkopertami, przychody, przydziały, wydatki, reguły cykliczne, przegląd miesięcy z saldami toczącymi się, eksport, import i CSV. Aplikacja mobilna i webowa pracują na tym modelu. Współdzielenie kopert (członkowie, zaproszenia, role) to następny etap, patrz [ROADMAP.md](ROADMAP.md).
+Działa pełny backend: konta i sesje (link i kod z e-maila, Google), koperty z subkopertami, przychody, przydziały, wydatki, reguły cykliczne, przegląd miesięcy z saldami toczącymi się, eksport, import i CSV. Aplikacja mobilna i webowa pracują na tym modelu. Koperty można współdzielić: członkowie z rolami `owner` i `member`, zaproszenia z zatwierdzaniem przez właściciela, widok „kto ile włożył". Dalsze plany (cykliczne wpływy, reguły podziału): [ROADMAP.md](ROADMAP.md).
