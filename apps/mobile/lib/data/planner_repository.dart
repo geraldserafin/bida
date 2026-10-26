@@ -20,6 +20,26 @@ class PlannerRepository {
   /// Expenses come in pages of this size (the API allows at most 200).
   final int pageSize;
 
+  // ---------------------------------------------------------------- households
+
+  Future<List<Household>> households() => guard(() async {
+    final all = await _api.spaces.spacesList();
+    return all.map(householdFrom).toList();
+  });
+
+  /// The household every other request works in.
+  Future<Household> currentHousehold() =>
+      guard(() async => householdFrom(await _api.spaces.spacesCurrent()));
+
+  Future<Household> renameHousehold(Household household, String name) =>
+      guard(() async {
+        final saved = await _api.spaces.spacesUpdate(
+          id: household.id,
+          body: saveSpaceOf(name, household.currency),
+        );
+        return householdFrom(saved);
+      });
+
   // ---------------------------------------------------------------- categories
 
   Future<List<Category>> categories() => guard(() async {

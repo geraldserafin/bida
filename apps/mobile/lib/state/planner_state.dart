@@ -51,6 +51,11 @@ class PlannerState extends ChangeNotifier {
   ApiException? _loadError;
   ApiException? get loadError => _loadError;
 
+  Household? _household;
+
+  /// The household being worked in, or null when it could not be fetched.
+  Household? get household => _household;
+
   Period? _currentPeriod;
   Period? get currentPeriod => _currentPeriod;
 
@@ -84,6 +89,28 @@ class PlannerState extends ChangeNotifier {
 
   bool get isOverAllocated => unallocated < 0;
 
+  /// What is left of the income once the spending is taken off.
+  double get balance => income - totalSpent;
+
+  // ---- period navigation ----------------------------------------------------
+
+  List<Period> get _periodsByStart =>
+      [..._periods]..sort((a, b) => a.startDate.compareTo(b.startDate));
+
+  /// The period before the current one, or null when it is the first.
+  Period? get previousPeriod => _neighbour(-1);
+
+  /// The period after the current one, or null when it is the last.
+  Period? get nextPeriod => _neighbour(1);
+
+  Period? _neighbour(int step) {
+    final sorted = _periodsByStart;
+    final i = sorted.indexWhere((p) => p.id == _currentPeriod?.id);
+    if (i < 0) return null;
+    final j = i + step;
+    return j >= 0 && j < sorted.length ? sorted[j] : null;
+  }
+
   // ---- lifecycle ------------------------------------------------------------
 
   bool _signedIn = false;
@@ -103,6 +130,7 @@ class PlannerState extends ChangeNotifier {
     _periods = const [];
     _progress = const [];
     _currentPeriod = null;
+    _household = null;
     _loadError = null;
     _loading = true;
     await _storage.delete(key: _kCurrentPeriod);
@@ -132,6 +160,7 @@ class PlannerState extends ChangeNotifier {
           _periods.where((p) => p.id == storedId).firstOrNull ??
           _periods.firstOrNull;
       await _refreshProgress();
+      await _refreshHousehold();
     } on ApiException catch (error) {
       _loadError = error;
     } on ParallelWaitError<Object?, _Failures> catch (error) {
@@ -166,11 +195,30 @@ class PlannerState extends ChangeNotifier {
         : await _repo.categoryProgress(period, _categoriesById);
   }
 
+  /// The household only names the budget, so the app works without it.
+  Future<void> _refreshHousehold() async {
+    try {
+      _household = await _repo.currentHousehold();
+    } on ApiException {
+      _household = null;
+    }
+  }
+
   Map<String, Category> get _categoriesById => {
     for (final c in _categories) c.id!: c,
   };
 
   String get _currency => _currentPeriod?.currency ?? Period.defaultCurrency;
+
+  // ---- households -----------------------------------------------------------
+
+  Future<List<Household>> households() => _repo.households();
+
+  Future<void> renameHousehold(String name) async {
+    final household = _household ?? await _repo.currentHousehold();
+    _household = await _repo.renameHousehold(household, name);
+    notifyListeners();
+  }
 
   // ---- periods --------------------------------------------------------------
 
@@ -218,6 +266,15 @@ class PlannerState extends ChangeNotifier {
     _currentPeriod = updated;
     await _refreshProgress();
     notifyListeners();
+  }
+
+  /// Adds money that came in to the current period's income, keeping the
+  /// envelopes as they are.
+  Future<void> addIncome(double amount) {
+    return editCurrentPeriodPlan(
+      income: income + amount,
+      plannedByCategory: {for (final p in _progress) p.category.id!: p.planned},
+    );
   }
 
   /// Deletes a period and all its data. If it was the current one, falls back
@@ -329,6 +386,10 @@ class PlannerState extends ChangeNotifier {
     _recurringRules = await _repo.recurringRules();
     notifyListeners();
   }
+
+  /// Turns a rule on or off without changing anything else about it.
+  Future<void> setRuleActive(RecurringRule rule, bool active) =>
+      saveRecurringRule(rule.copyWith(active: active));
 
   Future<void> deleteRecurringRule(String ruleId) async {
     await _repo.deleteRecurringRule(ruleId);

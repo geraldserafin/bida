@@ -20,6 +20,17 @@ String currencyCode(api.Currency currency) =>
 
 api.Currency currencyOf(String code) => api.Currency.fromJson(code);
 
+// ------------------------------------------------------------------ households
+
+Household householdFrom(api.Space s) => Household(
+  id: s.id,
+  name: s.name,
+  currency: currencyCode(s.defaultCurrency),
+);
+
+api.SaveSpace saveSpaceOf(String name, String currency) =>
+    api.SaveSpace(name: name, defaultCurrency: currencyOf(currency));
+
 // ------------------------------------------------------------------ categories
 
 Category categoryFrom(api.Category c) =>

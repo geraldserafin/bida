@@ -6,5 +6,6 @@ export 'category.dart';
 export 'period.dart';
 export 'envelope.dart';
 export 'expense.dart';
+export 'household.dart';
 export 'recurring_rule.dart';
 export 'transaction.dart';
