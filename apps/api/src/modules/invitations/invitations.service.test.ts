@@ -11,6 +11,7 @@ import { assert, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { SqlClient } from "effect/sql";
 import { DbLive } from "../../platform/db.ts";
+import { Mailer } from "../../platform/mailer.ts";
 import {
   insertUser,
   outbox,
@@ -331,6 +332,47 @@ layer(TestLayer)("InvitationsService", (it) => {
         .pipe(Effect.flip);
       assert.instanceOf(error, LimitReached);
       assert.strictEqual(error.limit, MAX_INVITATIONS_PER_HOUR);
+    }),
+  );
+});
+
+// A mail that cannot be sent (the mail server refuses) must not stop the
+// invitation: it is in the app for the invited person anyway.
+const BrokenMailer = Layer.succeed(
+  Mailer,
+  Mailer.of({ send: () => Effect.die("the mail server is down") }),
+);
+
+const BrokenMailLayer = Layer.mergeAll(
+  InvitationsModule,
+  MembersModule,
+  EnvelopesModule,
+).pipe(Layer.provideMerge(BrokenMailer), Layer.provideMerge(DbLive));
+
+layer(BrokenMailLayer)("InvitationsService without working e-mail", (it) => {
+  it.effect("the whole invitation still goes through, in the app", () =>
+    Effect.gen(function* () {
+      const { ann, bob, home } = yield* setup;
+      const invitations = yield* InvitationsService;
+      const envelopes = yield* EnvelopesService;
+
+      const invitation = yield* invitations.invite(
+        ann.id,
+        home.id,
+        bob.email,
+        "member",
+      );
+      assert.deepStrictEqual(
+        (yield* invitations.mine(bob.email)).map((i) => i.id),
+        [invitation.id],
+      );
+
+      yield* invitations.accept(bob.id, bob.email, invitation.id);
+      yield* invitations.approve(ann.id, home.id, invitation.id);
+      assert.deepStrictEqual(
+        (yield* envelopes.list(bob.id)).map((e) => e.name),
+        ["Home", "Rent"],
+      );
     }),
   );
 });

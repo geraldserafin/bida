@@ -1127,7 +1127,7 @@ abstract class AppLocalizations {
   /// No description provided for @invitationSent.
   ///
   /// In en, this message translates to:
-  /// **'Invitation sent to {email}'**
+  /// **'Invited {email}. They will see the invitation in the app once signed in with that address.'**
   String invitationSent(String email);
 
   /// No description provided for @invite.
