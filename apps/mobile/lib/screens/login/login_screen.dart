@@ -41,6 +41,32 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _busy = false;
   String? _error;
 
+  /// Google sign-ins that came back without signing the user in. After a few
+  /// the button is turned off, so nobody keeps trying something that does not
+  /// work, and the e-mail code is offered instead.
+  int _googleFailures = 0;
+  static const _googleAttempts = 3;
+  bool get _googleGaveUp => _googleFailures >= _googleAttempts;
+
+  @override
+  void initState() {
+    super.initState();
+    _restorePendingCode();
+  }
+
+  /// Back on the code step when a code was sent shortly before: the user went
+  /// to their mail for it and Android closed the app meanwhile.
+  Future<void> _restorePendingCode() async {
+    final email = await context.read<AuthState>().pendingCodeEmail();
+    if (email == null || !mounted || _sentTo != null) return;
+    setState(() {
+      _emailController.text = email;
+      _sentTo = email;
+      // a code is only sent once the consent is given
+      _consent = true;
+    });
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -103,25 +129,45 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    if (!_consented()) return;
+    if (_busy || _googleGaveUp || !_consented()) return;
     final l10n = AppLocalizations.of(context);
     final auth = context.read<AuthState>();
-    final GoogleCredential? credential;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    GoogleCredential? credential;
+    String? problem;
     try {
       credential = await signInToGoogle();
+      // the window closed without an account: say so instead of nothing
+      if (credential == null) problem = l10n.googleSignInNoAccount;
     } on GoogleSignInFailed {
-      if (mounted) setState(() => _error = l10n.googleSignInFailed);
-      return;
+      problem = l10n.googleSignInFailed;
     }
-    // null: the user closed Google's window
-    if (credential == null || !mounted) return;
-    await _run(() => auth.signInWithGoogle(credential!));
+    if (!mounted) return;
+    setState(() => _busy = false);
+    final signedIn =
+        credential != null &&
+        await _run(() => auth.signInWithGoogle(credential!));
+    if (signedIn || !mounted) return;
+    setState(() {
+      _googleFailures++;
+      if (_googleGaveUp) {
+        _error = l10n.googleSignInGaveUp;
+      } else if (problem != null) {
+        _error = problem;
+      }
+    });
   }
 
-  void _useOtherEmail() => setState(() {
-    _sentTo = null;
-    _error = null;
-  });
+  void _useOtherEmail() {
+    context.read<AuthState>().forgetPendingCode();
+    setState(() {
+      _sentTo = null;
+      _error = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +259,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(height: 24),
                         GoogleButton(
                           label: l10n.signInWithGoogle,
-                          onPressed: _busy ? null : _signInWithGoogle,
+                          onPressed: _busy || _googleGaveUp
+                              ? null
+                              : _signInWithGoogle,
                         ),
                       ],
                     ],

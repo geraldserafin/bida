@@ -78,14 +78,24 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
     if (_initializing) {
       return const SizedBox.shrink();
     }
-    if (!_hasPin || !_locked) {
-      return widget.child;
-    }
-    return LockScreen(
-      auth: _auth,
-      onUnlocked: () => setState(() => _locked = false),
-      onBiometricStart: () => _authInProgress = true,
-      onBiometricEnd: () => _authInProgress = false,
+    final locked = _hasPin && _locked;
+    // The app stays built under the lock screen, so whatever was on screen
+    // (e.g. a half-done sign-in) is still there once unlocked.
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Offstage(
+          offstage: locked,
+          child: TickerMode(enabled: !locked, child: widget.child),
+        ),
+        if (locked)
+          LockScreen(
+            auth: _auth,
+            onUnlocked: () => setState(() => _locked = false),
+            onBiometricStart: () => _authInProgress = true,
+            onBiometricEnd: () => _authInProgress = false,
+          ),
+      ],
     );
   }
 }

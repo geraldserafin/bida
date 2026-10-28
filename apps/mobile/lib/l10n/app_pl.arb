@@ -99,6 +99,8 @@
   "signOutConfirm": "Wylogować z tego urządzenia?",
   "signInWithGoogle": "Kontynuuj z Google",
   "googleSignInFailed": "Logowanie przez Google nie udało się. Spróbuj ponownie albo użyj kodu z e-maila.",
+  "googleSignInNoAccount": "Google nie zwrócił konta, więc nie zalogowano. Spróbuj jeszcze raz albo użyj kodu z e-maila.",
+  "googleSignInGaveUp": "Logowanie przez Google teraz nie działa. Zaloguj się kodem z e-maila.",
   "orSeparator": "albo",
   "addEnvelope": "Dodaj kopertę",
   "addIncome": "Dodaj wpływ",
