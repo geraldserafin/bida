@@ -1,19 +1,15 @@
 import {
-  type CategoryId,
-  type Currency,
-  CurrentSpace,
+  type EnvelopeId,
   type Frequency,
   RecurringRule,
   type RecurringRuleId,
 } from "@bida/api-contract";
 import { Context, Effect, Layer, type Option, Schema } from "effect";
 import { SqlClient, SqlSchema } from "effect/sql";
-import type { InSpace } from "../../platform/space.ts";
 
 export interface RuleChanges {
-  readonly categoryId: CategoryId;
+  readonly envelopeId: EnvelopeId;
   readonly amountMinor: number;
-  readonly currency: Currency;
   readonly frequency: Frequency;
   readonly note: string | null;
   readonly active: boolean;
@@ -23,16 +19,19 @@ export interface RuleChanges {
 export class RecurringRepository extends Context.Service<
   RecurringRepository,
   {
-    /** Newest first. */
-    list: InSpace<ReadonlyArray<RecurringRule>>;
-    insert(input: typeof RecurringRule.insert.Type): InSpace<RecurringRule>;
-    /** `None` when the row does not exist. */
+    /** The user's own rules, newest first. */
+    list(userId: string): Effect.Effect<ReadonlyArray<RecurringRule>>;
+    insert(
+      input: typeof RecurringRule.insert.Type,
+    ): Effect.Effect<RecurringRule>;
+    /** `None` when the user has no such rule. */
     update(
+      userId: string,
       id: RecurringRuleId,
       changes: RuleChanges,
-    ): InSpace<Option.Option<RecurringRule>>;
+    ): Effect.Effect<Option.Option<RecurringRule>>;
     /** Returns false when there was nothing to delete. */
-    remove(id: RecurringRuleId): InSpace<boolean>;
+    remove(userId: string, id: RecurringRuleId): Effect.Effect<boolean>;
   }
 >()("bida/recurring/RecurringRepository") {
   static readonly layer = Layer.effect(
@@ -41,82 +40,67 @@ export class RecurringRepository extends Context.Service<
       const sql = yield* SqlClient.SqlClient;
 
       // bigint comes back from pg as a string, so cast it
-      const columns = sql`id, category_id, amount_minor::float8 AS amount_minor, currency,
+      const columns = sql`id, user_id, envelope_id, amount_minor::float8 AS amount_minor,
         frequency, note, active, created_at, updated_at`;
 
-      // every query runs in the space of the current request
-      const inSpace = <A, E>(run: (spaceId: string) => Effect.Effect<A, E>) =>
-        Effect.flatMap(CurrentSpace, (space) => run(space.id));
-
       const list = SqlSchema.findAll({
-        Request: Schema.Void,
+        Request: Schema.String,
         Result: RecurringRule,
-        execute: () =>
-          inSpace(
-            (spaceId) =>
-              sql`SELECT ${columns} FROM recurring_rules WHERE space_id = ${spaceId}
-                ORDER BY created_at DESC, id DESC`,
-          ),
+        execute: (userId) =>
+          sql`SELECT ${columns} FROM recurring_rules WHERE user_id = ${userId}
+            ORDER BY created_at DESC, id DESC`,
       });
       const insert = SqlSchema.findOne({
         Request: RecurringRule.insert,
         Result: RecurringRule,
         execute: (request) =>
-          inSpace(
-            (spaceId) =>
-              sql`INSERT INTO recurring_rules ${sql.insert({ ...request, spaceId })}
-                RETURNING ${columns}`,
-          ),
+          sql`INSERT INTO recurring_rules ${sql.insert(request)}
+            RETURNING ${columns}`,
       });
       const update = SqlSchema.findOneOption({
         Request: Schema.Struct({
+          userId: Schema.String,
           id: Schema.String,
-          categoryId: Schema.String,
+          envelopeId: Schema.String,
           amountMinor: Schema.Int,
-          currency: Schema.String,
           frequency: Schema.String,
           note: Schema.NullOr(Schema.String),
           active: Schema.Boolean,
         }),
         Result: RecurringRule,
         execute: ({
+          userId,
           id,
-          categoryId,
+          envelopeId,
           amountMinor,
-          currency,
           frequency,
           note,
           active,
         }) =>
-          inSpace(
-            (spaceId) =>
-              sql`UPDATE recurring_rules SET category_id = ${categoryId},
-                amount_minor = ${amountMinor}, currency = ${currency},
-                frequency = ${frequency}, note = ${note}, active = ${active},
-                updated_at = now()
-                WHERE id = ${id} AND space_id = ${spaceId} RETURNING ${columns}`,
-          ),
+          sql`UPDATE recurring_rules SET envelope_id = ${envelopeId},
+            amount_minor = ${amountMinor}, frequency = ${frequency},
+            note = ${note}, active = ${active}, updated_at = now()
+            WHERE id = ${id} AND user_id = ${userId} RETURNING ${columns}`,
       });
       const remove = SqlSchema.findAll({
-        Request: Schema.String,
+        Request: Schema.Struct({ userId: Schema.String, id: Schema.String }),
         Result: Schema.Struct({ id: Schema.String }),
-        execute: (id) =>
-          inSpace(
-            (spaceId) =>
-              sql`DELETE FROM recurring_rules
-                WHERE id = ${id} AND space_id = ${spaceId} RETURNING id`,
-          ),
+        execute: ({ userId, id }) =>
+          sql`DELETE FROM recurring_rules
+            WHERE id = ${id} AND user_id = ${userId} RETURNING id`,
       });
 
       return RecurringRepository.of({
-        list: list().pipe(
-          Effect.orDie,
-          Effect.withSpan("RecurringRepository.list"),
-        ),
+        list: (userId) =>
+          list(userId).pipe(
+            Effect.orDie,
+            Effect.withSpan("RecurringRepository.list"),
+          ),
         insert: (input) => insert(input).pipe(Effect.orDie),
-        update: (id, changes) => update({ id, ...changes }).pipe(Effect.orDie),
-        remove: (id) =>
-          remove(id).pipe(
+        update: (userId, id, changes) =>
+          update({ userId, id, ...changes }).pipe(Effect.orDie),
+        remove: (userId, id) =>
+          remove({ userId, id }).pipe(
             Effect.map((rows) => rows.length > 0),
             Effect.orDie,
           ),

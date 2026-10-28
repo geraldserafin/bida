@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/category_progress.dart';
-import '../../models/period.dart';
+import '../../models/models.dart';
 import '../../state/auth_state.dart';
 import '../../state/planner_state.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/category_visuals.dart';
+import '../../theme/envelope_visuals.dart';
 import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
+import '../../util/month_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/avatar.dart';
@@ -21,14 +21,16 @@ import '../../widgets/surface_card.dart';
 import '../../widgets/transaction_row.dart';
 import '../add_expense/add_expense_screen.dart';
 import '../add_income/add_income_screen.dart';
-import '../category_detail/category_detail_screen.dart';
+import '../envelope_detail/envelope_detail_screen.dart';
+import '../funding/fund_sheet.dart';
 import '../home/home_shell.dart';
-import '../period_setup/new_period_screen.dart';
-import '../periods/periods_screen.dart';
+import '../months/months_screen.dart';
 import '../setup_wizard/setup_wizard_screen.dart';
+import '../sharing/invitations_card.dart';
+import 'widgets/pending_rules_card.dart';
 
-/// Home tab ("Pulpit"): the household, the chosen period's money in and out,
-/// and how full each envelope is.
+/// Home tab ("Pulpit"): the month's money in and out, what is not in any
+/// envelope yet, and how much is left in each envelope.
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -36,7 +38,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<PlannerState>();
-    final period = state.currentPeriod;
+    final empty = state.envelopes.isEmpty && state.isEmpty;
 
     return Scaffold(
       body: SafeArea(
@@ -50,12 +52,12 @@ class DashboardScreen extends StatelessWidget {
             if (loadError != null) {
               return ErrorView(error: loadError, onRetry: state.load);
             }
-            if (period == null) return const _SetUpPrompt();
-            return _PeriodView(state: state, period: period);
+            if (empty) return const _SetUpPrompt();
+            return _MonthView(state: state);
           },
         ),
       ),
-      floatingActionButton: period == null || state.isLoading
+      floatingActionButton: empty || state.isLoading || state.loadError != null
           ? null
           : Row(
               mainAxisSize: MainAxisSize.min,
@@ -82,7 +84,8 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-/// Shown before the first period exists: leads into the set-up wizard.
+/// Shown before there is anything: the invitations to shared envelopes, and
+/// the way into the set-up wizard.
 class _SetUpPrompt extends StatelessWidget {
   const _SetUpPrompt();
 
@@ -96,6 +99,7 @@ class _SetUpPrompt extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const InvitationsCard(),
             const Align(alignment: Alignment.centerLeft, child: LogoBox()),
             const SizedBox(height: 14),
             Text(l10n.wizardStartTitle, style: theme.textTheme.headlineMedium),
@@ -120,25 +124,26 @@ class _SetUpPrompt extends StatelessWidget {
   }
 }
 
-class _PeriodView extends StatelessWidget {
-  const _PeriodView({required this.state, required this.period});
+class _MonthView extends StatelessWidget {
+  const _MonthView({required this.state});
   final PlannerState state;
-  final Period period;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         _Header(state: state),
-        _PeriodSwitcher(state: state, period: period),
+        _MonthSwitcher(state: state),
         Expanded(
           child: ListView(
             // room for the add buttons floating over the end of the list
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
             children: [
+              const InvitationsCard(),
+              const PendingRulesCard(),
               _SummaryCard(state: state),
               const SizedBox(height: 12),
-              _EnvelopesCard(state: state, period: period),
+              _EnvelopesCard(state: state),
             ],
           ),
         ),
@@ -147,8 +152,8 @@ class _PeriodView extends StatelessWidget {
   }
 }
 
-/// The household's name (tapping it opens the household tab) and its
-/// members.
+/// The app's name over how many envelopes are shared; tapping it opens the
+/// envelopes tab.
 class _Header extends StatelessWidget {
   const _Header({required this.state});
   final PlannerState state;
@@ -158,7 +163,7 @@ class _Header extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final c = AppColors.of(context);
     final email = context.watch<AuthState>().email ?? '';
-    final name = state.household?.name ?? l10n.appTitle;
+    final shared = state.topLevelProgress.where((p) => p.isShared).length;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
@@ -169,7 +174,7 @@ class _Header extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               onTap: () => context
                   .findAncestorStateOfType<HomeShellState>()
-                  ?.select(AppTab.household),
+                  ?.select(AppTab.envelopes),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -177,7 +182,7 @@ class _Header extends StatelessWidget {
                     children: [
                       Flexible(
                         child: Text(
-                          name,
+                          l10n.appTitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -193,7 +198,9 @@ class _Header extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    l10n.soloSubtitle,
+                    shared == 0
+                        ? l10n.soloSubtitle
+                        : l10n.sharedEnvelopes(shared),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -207,63 +214,49 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// The period's name between arrows to the previous and the next one.
-/// Tapping the name lists all periods.
-class _PeriodSwitcher extends StatelessWidget {
-  const _PeriodSwitcher({required this.state, required this.period});
+/// The month on screen between arrows to the previous and the next one.
+/// Tapping the name lists the months with something in them.
+class _MonthSwitcher extends StatelessWidget {
+  const _MonthSwitcher({required this.state});
   final PlannerState state;
-  final Period period;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final previous = state.previousPeriod;
-    final next = state.nextPeriod;
-
-    void go(Period? to) {
-      if (to == null) return;
-      attempt(context, () => state.selectPeriod(to.id!));
-    }
 
     return SizedBox(
       height: 44,
       child: Row(
         children: [
-          Opacity(
-            opacity: previous == null ? 0.3 : 1,
-            child: AppIconButton(
-              AppIcon.chevronLeft,
-              tooltip: l10n.previousPeriod,
-              onPressed: previous == null ? null : () => go(previous),
-            ),
+          AppIconButton(
+            AppIcon.chevronLeft,
+            tooltip: l10n.previousMonth,
+            onPressed: () => attempt(context, state.previousMonth),
           ),
           Expanded(
             child: Center(
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PeriodsScreen()),
-                ),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const MonthsScreen())),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
                     vertical: 4,
                   ),
                   child: Text(
-                    period.name,
+                    monthLabel(state.month),
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
               ),
             ),
           ),
-          Opacity(
-            opacity: next == null ? 0.3 : 1,
-            child: AppIconButton(
-              AppIcon.chevronRight,
-              tooltip: l10n.nextPeriod,
-              onPressed: next == null ? null : () => go(next),
-            ),
+          AppIconButton(
+            AppIcon.chevronRight,
+            tooltip: l10n.nextMonth,
+            onPressed: () => attempt(context, state.nextMonth),
           ),
         ],
       ),
@@ -271,7 +264,7 @@ class _PeriodSwitcher extends StatelessWidget {
   }
 }
 
-/// Money in, money out, the balance, and what is not in any envelope.
+/// Money in, money out, what is not in any envelope, and what went in.
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({required this.state});
   final PlannerState state;
@@ -301,7 +294,7 @@ class _SummaryCard extends StatelessWidget {
               Expanded(
                 child: _Stat(
                   label: l10n.expenses,
-                  value: formatZloty(state.totalSpent),
+                  value: formatZloty(state.spent),
                 ),
               ),
             ],
@@ -315,20 +308,20 @@ class _SummaryCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  l10n.periodBalance,
+                  over ? l10n.overAllocated : l10n.unallocatedToEnvelopes,
                   style: TextStyle(
                     fontSize: 15,
                     height: 1.5,
-                    color: c.textSoft,
+                    color: over ? c.danger : c.textSoft,
                   ),
                 ),
               ),
               Text(
-                formatZloty(state.balance),
+                formatZloty(state.pool),
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
-                  color: state.balance < 0 ? c.danger : c.accent,
+                  color: over ? c.danger : c.accent,
                 ),
               ),
             ],
@@ -336,9 +329,8 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 14),
           ValueRow(
             small: true,
-            label: over ? l10n.overAllocated : l10n.unallocatedToEnvelopes,
-            value: formatZloty(state.unallocated),
-            valueColor: over ? c.danger : null,
+            label: l10n.allocatedThisMonth,
+            value: formatZloty(state.allocated),
           ),
         ],
       ),
@@ -371,11 +363,10 @@ class _Stat extends StatelessWidget {
   }
 }
 
-/// Every envelope of the period with what was spent of it.
+/// Every top-level envelope with what was spent of what it had this month.
 class _EnvelopesCard extends StatelessWidget {
-  const _EnvelopesCard({required this.state, required this.period});
+  const _EnvelopesCard({required this.state});
   final PlannerState state;
-  final Period period;
 
   @override
   Widget build(BuildContext context) {
@@ -397,15 +388,13 @@ class _EnvelopesCard extends StatelessWidget {
               ),
               InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => NewPeriodScreen(editPeriod: period),
-                  ),
-                ),
+                onTap: state.envelopes.isEmpty
+                    ? null
+                    : () => showFundSheet(context),
                 child: Padding(
                   padding: const EdgeInsets.all(4),
                   child: Text(
-                    l10n.editPlan,
+                    l10n.allocate,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -417,10 +406,10 @@ class _EnvelopesCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          if (state.progress.isEmpty)
+          if (state.topLevelProgress.isEmpty)
             Text(l10n.noEnvelopes, style: Theme.of(context).textTheme.bodySmall)
           else
-            for (final (i, p) in state.progress.indexed) ...[
+            for (final (i, p) in state.topLevelProgress.indexed) ...[
               if (i > 0) const SizedBox(height: 12),
               _envelope(context, p),
             ],
@@ -429,16 +418,19 @@ class _EnvelopesCard extends StatelessWidget {
     );
   }
 
-  Widget _envelope(BuildContext context, CategoryProgress p) {
+  Widget _envelope(BuildContext context, EnvelopeProgress p) {
+    final l10n = AppLocalizations.of(context);
     return EnvelopeBar(
-      color: p.category.displayColor,
-      name: p.category.name,
-      amounts: '${formatPlain(p.spent)} / ${formatZloty(p.planned)}',
+      color: p.envelope.displayColor,
+      name: p.isShared
+          ? '${p.envelope.name} · ${l10n.sharedWith(p.memberCount)}'
+          : p.envelope.name,
+      amounts: '${formatPlain(p.spent)} / ${formatZloty(p.available)}',
       fraction: p.fraction,
       overspent: p.isOverspent,
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => CategoryDetailScreen(envelopeId: p.envelope.id!),
+          builder: (_) => EnvelopeDetailScreen(envelopeId: p.envelope.id!),
         ),
       ),
     );

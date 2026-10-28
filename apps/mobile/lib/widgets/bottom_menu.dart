@@ -5,9 +5,9 @@ import '../theme/app_theme.dart';
 import 'app_icon.dart';
 
 /// The four places of the app, in the order of the bottom menu.
-enum AppTab { dashboard, history, recurring, household }
+enum AppTab { dashboard, history, recurring, envelopes }
 
-/// The bottom menu ("Menu dolne"): Pulpit, Historia, Cykliczne, Gospodarstwo.
+/// The bottom menu ("Menu dolne"): Pulpit, Historia, Cykliczne, Koperty.
 class BottomMenu extends StatelessWidget {
   const BottomMenu({super.key, required this.current, required this.onSelect});
 
@@ -48,8 +48,8 @@ class BottomMenu extends StatelessWidget {
                 AppIcon.navRecurringActive,
               ),
               _item(
-                AppTab.household,
-                l10n.householdTab,
+                AppTab.envelopes,
+                l10n.envelopesTab,
                 AppIcon.navHousehold,
                 AppIcon.navHouseholdActive,
               ),

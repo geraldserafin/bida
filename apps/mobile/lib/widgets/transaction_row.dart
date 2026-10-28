@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'surface_card.dart';
 
-/// The 10 px dot in a category's colour that starts most rows.
+/// The 10 px dot in an envelope's colour that starts most rows.
 class CategoryDot extends StatelessWidget {
   const CategoryDot(this.color, {super.key, this.size = 10});
 
@@ -99,7 +99,7 @@ class TransactionRow extends StatelessWidget {
 }
 
 /// One envelope of the dashboard ("Koperta"): name, spent of planned, and a
-/// bar in the category's colour.
+/// bar in the envelope's colour.
 class EnvelopeBar extends StatelessWidget {
   const EnvelopeBar({
     super.key,

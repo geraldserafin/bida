@@ -12,95 +12,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'PLNing';
 
   @override
-  String get dashboardEmptyTitle => 'Your envelope budget lives here.';
-
-  @override
-  String get dashboardEmptyBody =>
-      'Create a period and split your income to get started.';
-
-  @override
-  String get newPeriod => 'New period';
-
-  @override
   String get addExpense => 'Add expense';
 
   @override
   String get envelopes => 'Envelopes';
 
   @override
-  String get noEnvelopes => 'No categories allocated yet.';
+  String get noEnvelopes => 'No envelopes yet.';
 
   @override
   String get income => 'Income';
 
   @override
-  String get planned => 'Planned';
-
-  @override
   String get spent => 'Spent';
 
   @override
-  String get unallocated => 'Unallocated';
-
-  @override
   String get overAllocated => 'Over-allocated';
-
-  @override
-  String get remaining => 'Remaining';
-
-  @override
-  String remainingIn(String period) {
-    return 'Remaining · $period';
-  }
-
-  @override
-  String amountLeft(String amount) {
-    return '$amount left';
-  }
-
-  @override
-  String overBy(String amount) {
-    return 'Over by $amount';
-  }
-
-  @override
-  String get periodName => 'Period name';
-
-  @override
-  String get enterName => 'Enter a name';
-
-  @override
-  String get start => 'Start';
-
-  @override
-  String get end => 'End';
-
-  @override
-  String get incomeForPeriod => 'Income for this period';
-
-  @override
-  String get enterIncome => 'Enter your income';
-
-  @override
-  String get splitAcrossCategories => 'Split across categories';
-
-  @override
-  String overAllocationWarning(String amount) {
-    return 'You\'ve allocated $amount more than your income. You can still continue.';
-  }
-
-  @override
-  String get createPeriod => 'Create period';
-
-  @override
-  String get editPlan => 'Edit plan';
 
   @override
   String get saveChanges => 'Save changes';
 
   @override
   String get noEnvelopesForExpense =>
-      'This period has no envelopes yet. Add categories to the period before logging expenses.';
+      'You have no envelopes yet. Add one before saving an expense.';
 
   @override
   String get envelope => 'Envelope';
@@ -127,18 +61,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editExpense => 'Edit expense';
 
   @override
-  String get categories => 'Categories';
-
-  @override
-  String get manageCategories => 'Manage categories';
-
-  @override
-  String get newCategory => 'New category';
-
-  @override
-  String get editCategory => 'Edit category';
-
-  @override
   String get name => 'Name';
 
   @override
@@ -152,19 +74,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get delete => 'Delete';
-
-  @override
-  String get addCategory => 'Add category';
-
-  @override
-  String get noCategories => 'No categories yet. Add your first one.';
-
-  @override
-  String get categoryInUse =>
-      'Can\'t delete a category that\'s used in a period.';
-
-  @override
-  String get period => 'Period';
 
   @override
   String get expenses => 'Expenses';
@@ -187,34 +96,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expenseDeleted => 'Expense deleted';
 
   @override
-  String get plannedSplit => 'Planned split';
-
-  @override
-  String get plannedVsSpent => 'Planned vs. spent';
-
-  @override
   String get spendingOverTime => 'Spending over time';
 
   @override
   String get notEnoughData => 'Not enough data yet.';
 
   @override
-  String get recurringRules => 'Recurring rules';
-
-  @override
   String get newRule => 'New rule';
 
   @override
   String get editRule => 'Edit rule';
-
-  @override
-  String get addRule => 'Add rule';
-
-  @override
-  String get category => 'Category';
-
-  @override
-  String get note => 'Note';
 
   @override
   String get frequency => 'Frequency';
@@ -231,27 +122,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noRecurringRules =>
       'No recurring rules yet. Add templates for regular income or expenses.';
-
-  @override
-  String get prefillFromRecurring => 'Pre-fill from recurring';
-
-  @override
-  String get applyRecurring => 'Add recurring to this period';
-
-  @override
-  String recurringApplied(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Added $count recurring expenses',
-      one: 'Added 1 recurring expense',
-      zero: 'Everything is already up to date',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get needCategoryFirst => 'Add a category first.';
 
   @override
   String get settings => 'Settings';
@@ -381,15 +251,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addNew => 'New';
 
   @override
-  String remainingInCategory(String category) {
-    return 'Remaining in $category';
-  }
-
-  @override
   String get history => 'History';
-
-  @override
-  String get periods => 'Periods';
 
   @override
   String get all => 'All';
@@ -401,41 +263,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMatchingExpenses => 'No expenses match the filters.';
 
   @override
-  String get yesterday => 'Yesterday';
-
-  @override
-  String get noPeriodsYet => 'No periods yet.';
-
-  @override
-  String get upcoming => 'Upcoming';
-
-  @override
-  String get currentSet => 'Current';
-
-  @override
-  String get earlier => 'Earlier';
-
-  @override
   String get newExpense => 'New expense';
 
   @override
-  String get deletePeriod => 'Delete period';
-
-  @override
-  String deletePeriodConfirm(String name) {
-    return 'Delete \"$name\" and all its data?';
-  }
-
-  @override
-  String get periodDeleted => 'Period deleted';
-
-  @override
   String get dashboard => 'Dashboard';
-
-  @override
-  String periodRange(String start, String end) {
-    return '$start – $end';
-  }
 
   @override
   String get errorUnreachable =>
@@ -470,13 +301,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorRateLimited => 'Too many tries. Wait a while and try again.';
 
   @override
-  String get signInTitle => 'Sign in';
-
-  @override
-  String get signInSubtitle =>
-      'Enter your e-mail address. We will send you a code and a link to sign in; there is no password.';
-
-  @override
   String get emailAddress => 'E-mail address';
 
   @override
@@ -491,9 +315,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get signInCode => 'Code';
-
-  @override
   String get enterCode => 'Enter the 6-digit code';
 
   @override
@@ -501,9 +322,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get useOtherEmail => 'Use another address';
-
-  @override
-  String get resendCode => 'Send the code again';
 
   @override
   String get invalidCode => 'The code is wrong or has expired.';
@@ -533,6 +351,376 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orSeparator => 'or';
 
   @override
+  String get addEnvelope => 'Add envelope';
+
+  @override
+  String get addIncome => 'Add income';
+
+  @override
+  String get addSubEnvelope => 'Add sub-envelope';
+
+  @override
+  String get allocate => 'Allocate';
+
+  @override
+  String get allocated => 'Allocated';
+
+  @override
+  String get allocationDeleted => 'Allocation deleted';
+
+  @override
+  String get allocations => 'Allocations';
+
+  @override
+  String get available => 'Available';
+
+  @override
+  String get balance => 'Balance';
+
+  @override
+  String balanceOfEnvelope(String envelope) {
+    return 'Balance of $envelope';
+  }
+
+  @override
+  String canTakeBack(String amount) {
+    return 'Can take back: $amount';
+  }
+
+  @override
+  String get deleteAllocation => 'Delete allocation';
+
+  @override
+  String deleteAllocationConfirm(String amount) {
+    return 'Delete the allocation of $amount?';
+  }
+
+  @override
+  String get deleteEnvelope => 'Delete envelope';
+
+  @override
+  String deleteEnvelopeConfirm(String name) {
+    return 'Delete “$name” with its sub-envelopes, expenses and allocations? The money put into it goes back to the pool.';
+  }
+
+  @override
+  String get deleteIncome => 'Delete income';
+
+  @override
+  String deleteIncomeConfirm(String amount) {
+    return 'Delete the income of $amount?';
+  }
+
+  @override
+  String get editEnvelope => 'Edit envelope';
+
+  @override
+  String get editIncome => 'Edit income';
+
+  @override
+  String get envelopeDeleted => 'Envelope deleted';
+
+  @override
+  String get firstDayOfMonthHint => 'Budget months start on this day';
+
+  @override
+  String get freeInEnvelope => 'Free in envelope';
+
+  @override
+  String get fromEarlierMonths => 'From earlier months';
+
+  @override
+  String get incomeDeleted => 'Income deleted';
+
+  @override
+  String get incomeNoteHint => 'e.g. Salary';
+
+  @override
+  String get incomes => 'Income';
+
+  @override
+  String get manageEnvelopes => 'Manage envelopes';
+
+  @override
+  String monthLine(String income, String allocated) {
+    return 'Income $income · allocated $allocated';
+  }
+
+  @override
+  String get months => 'Months';
+
+  @override
+  String get needEnvelopeFirst => 'Add an envelope first.';
+
+  @override
+  String get newEnvelope => 'New envelope';
+
+  @override
+  String get nextMonth => 'Next month';
+
+  @override
+  String get noAllocations => 'Nothing allocated yet.';
+
+  @override
+  String get noIncomes =>
+      'No income yet. Add your first payday, then split it between envelopes.';
+
+  @override
+  String get noMonthsYet => 'No months yet.';
+
+  @override
+  String get noParent => 'None (top-level envelope)';
+
+  @override
+  String notEnoughMoney(String amount) {
+    return 'Not enough money. Available: $amount.';
+  }
+
+  @override
+  String get parentEnvelope => 'Parent envelope';
+
+  @override
+  String parentFreeCaption(String parent, String amount) {
+    return 'Free in “$parent”: $amount';
+  }
+
+  @override
+  String poolCaption(String amount) {
+    return 'Unallocated: $amount';
+  }
+
+  @override
+  String get previousMonth => 'Previous month';
+
+  @override
+  String get subEnvelopes => 'Sub-envelopes';
+
+  @override
+  String get takeBack => 'Take back';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get alreadyMember =>
+      'This address already belongs to a member of the envelope.';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get awaitingAnswer => 'Waiting for an answer';
+
+  @override
+  String get awaitingApproval => 'Accepted, waiting for approval';
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String get formerMember => 'Former member';
+
+  @override
+  String get invitationAccepted =>
+      'Invitation accepted. An owner of the envelope still has to approve you.';
+
+  @override
+  String invitationBanner(String inviter, String envelope) {
+    return '$inviter invites you to the envelope “$envelope”';
+  }
+
+  @override
+  String get invitations => 'Invitations';
+
+  @override
+  String invitationSent(String email) {
+    return 'Invitation sent to $email';
+  }
+
+  @override
+  String get invite => 'Invite';
+
+  @override
+  String get inviteByEmail => 'Invite by e-mail';
+
+  @override
+  String get lastOwner =>
+      'An envelope needs at least one owner. Make somebody else an owner first.';
+
+  @override
+  String get leave => 'Leave';
+
+  @override
+  String get leaveEnvelope => 'Leave the envelope';
+
+  @override
+  String leaveEnvelopeConfirm(String name) {
+    return 'Leave “$name”? The money you put into it and your expenses in it stay.';
+  }
+
+  @override
+  String get leftEnvelope => 'You left the envelope';
+
+  @override
+  String get limitReached =>
+      'Limit reached: an envelope has up to 10 people, and you can send 10 invitations an hour.';
+
+  @override
+  String get makeMember => 'Make member';
+
+  @override
+  String get makeOwner => 'Make owner';
+
+  @override
+  String get members => 'Members';
+
+  @override
+  String membersOf(String name) {
+    return 'Members · $name';
+  }
+
+  @override
+  String get notShareable =>
+      'Only a top-level envelope can be shared; sub-envelopes go with it.';
+
+  @override
+  String get reject => 'Turn down';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get removeMember => 'Remove from the envelope';
+
+  @override
+  String removeMemberConfirm(String name) {
+    return 'Remove $name from the envelope? The money they put in and their expenses stay in it.';
+  }
+
+  @override
+  String get revokeInvitation => 'Revoke the invitation';
+
+  @override
+  String get role => 'Role';
+
+  @override
+  String get roleExplained =>
+      'An owner manages the envelope and its members. A member adds expenses and puts in their own money.';
+
+  @override
+  String get roleMember => 'Member';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String sharedWith(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: 'only you',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get someone => 'Somebody';
+
+  @override
+  String get whoPutHowMuch => 'Who put how much';
+
+  @override
+  String get you => 'You';
+
+  @override
+  String youWith(String name) {
+    return '$name (you)';
+  }
+
+  @override
+  String get addPending => 'Add';
+
+  @override
+  String get appliedNothing => 'Everything is up to date';
+
+  @override
+  String appliedSummary(String parts) {
+    return 'Added: $parts.';
+  }
+
+  @override
+  String countAllocations(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count allocations',
+      one: '$count allocation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countExpenses(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '$count expense',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String countIncomes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count incomes',
+      one: '$count income',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dayOfMonth => 'Day of the month';
+
+  @override
+  String get editAllocationRule => 'Edit allocation rule';
+
+  @override
+  String get editIncomeRule => 'Edit recurring income';
+
+  @override
+  String everyMonthOn(int day) {
+    return 'Every month on the $day.';
+  }
+
+  @override
+  String get newAllocationRule => 'New allocation rule';
+
+  @override
+  String get newIncomeRule => 'New recurring income';
+
+  @override
+  String get noAllocationRules =>
+      'No allocation rules. Add how much goes into an envelope every month, e.g. 1000 zł into Home.';
+
+  @override
+  String get noRecurringIncomes =>
+      'No recurring income. Add a salary that comes in on the same day every month.';
+
+  @override
+  String pendingTitle(String parts) {
+    return 'To add this month: $parts';
+  }
+
+  @override
+  String skippedAllocations(int count) {
+    return 'Allocations skipped for lack of money in the envelope: $count.';
+  }
+
+  @override
   String get loginHeadline => 'Household budget,\ntogether or solo';
 
   @override
@@ -560,15 +748,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringTab => 'Recurring';
 
   @override
-  String get householdTab => 'Household';
-
-  @override
-  String get incomes => 'Income';
-
-  @override
-  String get periodBalance => 'Period balance';
-
-  @override
   String get unallocatedToEnvelopes => 'Not in any envelope';
 
   @override
@@ -581,17 +760,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soloSubtitle => 'Solo · just you';
 
   @override
-  String get previousPeriod => 'Previous period';
-
-  @override
-  String get nextPeriod => 'Next period';
-
-  @override
   String get wizardStartTitle => 'Let\'s set up your budget';
 
   @override
   String get wizardStartBody =>
-      'Five short steps: name, people, income, bills and envelopes.';
+      'Five short steps: envelopes, sharing, income, bills and putting the money into envelopes.';
 
   @override
   String get wizardStart => 'Let\'s start';
@@ -611,18 +784,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back => 'Back';
 
   @override
-  String get wizardNameTitle => 'What will you call your household?';
-
-  @override
-  String get wizardNameBody =>
-      'It can be “Home”, “The flat” or “Mine”. You can add more later.';
-
-  @override
   String get currencyPln => 'PLN – złoty';
-
-  @override
-  String get starterCategories =>
-      'We\'ll add these categories to start with – change them any time';
 
   @override
   String get starterFood => 'Food';
@@ -646,9 +808,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get starterOther => 'Other';
 
   @override
-  String wizardWhoTitle(String name) {
-    return 'Who will use “$name”?';
-  }
+  String get wizardWhoTitle => 'Who will use the envelopes?';
 
   @override
   String get soloTitle => 'Just me · Solo';
@@ -657,41 +817,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get soloBody => 'A private budget. You can share it later.';
 
   @override
-  String get multiTitle => 'With others · Multi';
+  String get multiTitle => 'With others · shared envelopes';
 
   @override
   String get multiBody =>
       'Everyone sees the same data. You\'ll say who each entry is for.';
 
   @override
-  String get inviteByEmail => 'Invite by e-mail';
-
-  @override
-  String get inviteHint => 'name@example.com';
+  String get inviteHint => 'their@address.com';
 
   @override
   String get send => 'Send';
-
-  @override
-  String get sharingSoon =>
-      'Shared households and invitations are coming soon. For now the budget is just yours.';
 
   @override
   String get wizardIncomeTitle => 'Where does the money come from?';
 
   @override
   String wizardIncomeBody(String period) {
-    return 'First period: $period. Enter an amount you don\'t know yet as an estimate – correct it once it arrives.';
+    return 'This month: $period. Mark a salary as recurring – it is added every month when you apply the rules.';
   }
 
   @override
   String get newIncome => 'New income';
-
-  @override
-  String get fixedAmount => 'Fixed';
-
-  @override
-  String get estimatedAmount => 'Estimated';
 
   @override
   String get incomeNameHint => 'e.g. Salary';
@@ -700,14 +847,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addIncomeAction => 'Add income';
 
   @override
-  String get periodIncome => 'Period income';
-
-  @override
   String get wizardBillsTitle => 'Bills that come back every month';
 
   @override
   String get wizardBillsBody =>
-      'Fixed ones like rent and variable ones like electricity. “Apply” adds them to every period.';
+      'Fixed ones like rent and variable ones like electricity. “Apply” adds them to every month.';
 
   @override
   String get addRecurringExpense => '+ Add a recurring expense';
@@ -717,18 +861,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wizardEnvelopesBody =>
-      'How much you plan to spend in each category this period. Amounts of recurring bills are filled in.';
+      'How much money to put into each envelope. Amounts of recurring bills are filled in.';
 
   @override
   String fromRecurring(String amount) {
     return 'recurring: $amount';
   }
-
-  @override
-  String get addCategoryPlus => '+ Add a category';
-
-  @override
-  String get allocated => 'Allocated';
 
   @override
   String get unallocatedShort => 'Unallocated';
@@ -755,14 +893,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringIncome => 'Recurring';
 
   @override
-  String get recurringIncomeSoon => 'Recurring income is coming soon.';
-
-  @override
-  String incomeGoesTo(String period) {
-    return 'The income is added to $period.';
-  }
-
-  @override
   String get saveIncome => 'Save income';
 
   @override
@@ -772,7 +902,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringMark => 'recurring';
 
   @override
-  String get noTransactions => 'No expenses in this period.';
+  String get noTransactions => 'No expenses this month.';
 
   @override
   String get newRulePlus => '+ New rule';
@@ -787,39 +917,77 @@ class AppLocalizationsEn extends AppLocalizations {
       'Adds entries of the active rules. Ones already added aren\'t doubled.';
 
   @override
-  String get ruleFixed => 'fixed';
-
-  @override
   String get ruleOff => 'off';
-
-  @override
-  String get households => 'Households';
-
-  @override
-  String get newHouseholdPlus => '+ New household';
-
-  @override
-  String membersOf(String name) {
-    return 'Members · $name';
-  }
-
-  @override
-  String youMark(String name) {
-    return '$name (you)';
-  }
-
-  @override
-  String get owner => 'owner';
-
-  @override
-  String get invitePerson => 'Invite someone';
 
   @override
   String get more => 'More';
 
   @override
-  String get renameHousehold => 'Rename';
+  String get enterIncome => 'Enter your income';
 
   @override
-  String get householdName => 'Household name';
+  String get envelopesTab => 'Envelopes';
+
+  @override
+  String get newEnvelopePlus => '+ New envelope';
+
+  @override
+  String get addEnvelopePlus => '+ Add envelope';
+
+  @override
+  String get sharingPerEnvelope =>
+      'An envelope can be shared with other people: open it and go to “Members”.';
+
+  @override
+  String sharedEnvelopes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count shared envelopes',
+      one: '1 shared envelope',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get allocatedThisMonth => 'Put into envelopes this month';
+
+  @override
+  String get incomeGoesToPool =>
+      'The money goes to the pool, from which you put it into envelopes.';
+
+  @override
+  String get recurringIncomeHint =>
+      'The income shows up every month on this day when you apply the recurring rules.';
+
+  @override
+  String get recurringIncomeAdded => 'Recurring income added';
+
+  @override
+  String get wizardStartersTitle => 'What do you spend money on?';
+
+  @override
+  String get wizardStartersBody =>
+      'Every kind of spending is an envelope. Untick the ones you don\'t need – you can add more at any time.';
+
+  @override
+  String get starterEnvelopes => 'Envelopes to start with';
+
+  @override
+  String get shareWhichEnvelope => 'Which envelope to share?';
+
+  @override
+  String invitedPeople(String emails) {
+    return 'Invited: $emails. They get access once they accept and you approve.';
+  }
+
+  @override
+  String get monthIncome => 'Income this month';
+
+  @override
+  String get repeatMonthly => 'Repeat every month';
+
+  @override
+  String get repeatMonthlyHint =>
+      'These amounts go into the envelopes every month (allocation rules).';
 }

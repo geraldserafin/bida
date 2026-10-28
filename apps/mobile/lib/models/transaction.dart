@@ -1,12 +1,12 @@
-import 'category.dart';
+import 'envelope.dart';
 import 'expense.dart';
 
-/// A logged expense joined with its category — a row in the history screen.
+/// A logged expense joined with its envelope — a row in the history screen.
 class Transaction {
   final Expense expense;
-  final Category category;
+  final Envelope envelope;
 
-  const Transaction({required this.expense, required this.category});
+  const Transaction({required this.expense, required this.envelope});
 
   String get id => expense.id!;
   double get amount => expense.amount;

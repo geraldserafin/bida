@@ -4,8 +4,8 @@
 
 **An envelope-budgeting app that helps you _plan_ your money — not just track it.**
 
-Plan your income across categories at the start of each period, then watch
-*planned vs. spent vs. remaining* update as you log real spending.
+Put your income into envelopes, then watch what is left in each of them as you
+log real spending. What is left carries over to the next month.
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart&logoColor=white)](https://dart.dev)
@@ -21,17 +21,19 @@ Plan your income across categories at the start of each period, then watch
 Most finance apps are *trackers* — they tell you where your money went after it's
 gone. Money Planner is a **planner**. It's built around **envelope budgeting**:
 
-1. **Enter your income** for a period (e.g. July 2026).
-2. **Split** that income across categories — Rent, Food, Savings, Fun… Each
-   category is a virtual *envelope* you fill up front.
-3. As the period goes on, **log spending** against each envelope.
-4. See, per category and overall: **planned vs. spent vs. remaining** — with charts.
+1. **Add your income** when it comes in — it lands in a pool of unallocated money.
+2. **Put money into envelopes** — Rent, Food, Savings, Fun… An envelope can have
+   sub-envelopes (Rent → Utilities, say).
+3. **Log spending** against an envelope. Its balance drops.
+4. See, per envelope and overall: **what was available, what was spent, what is
+   left** — with charts. Whatever is left rolls over into the next month.
 
-Delete a category mid-period? Its unspent allocation flows back into an
-**Unallocated** pool, ready to re-split — while its past expenses stay on record
-so your history is never distorted.
+Took too much out of the pool? It goes negative and the app tells you, but it
+never blocks you: an expense is a fact and has to be recordable.
 
 ## 📱 Screenshots
+
+_These show the earlier, period-based version of the app._
 
 <div align="center">
 <table>
@@ -60,13 +62,14 @@ History
 
 | | |
 |---|---|
-| 🧧 **Envelope budgeting** | Allocate income to categories; spend against the plan |
-| 📊 **Visual insight** | Pie chart of your split, progress bars for spent-vs-planned, spending-over-time line charts |
-| 🔁 **Recurring rules** | Templates for regular expenses (rent, subscriptions) that pre-fill new periods and add themselves with one tap |
-| 🧮 **Unallocated tracking** | Always know how much income is still free to assign |
-| 📌 **Persistent balance bar** | Remaining balance stays visible on every screen |
-| 🧭 **Bottom navigation** | Pulpit (dashboard) · Historia · Okresy · Ustawienia, one tap away |
-| 🕓 **History** | Read-only summaries and charts for past periods |
+| 🧧 **Envelope budgeting** | Put income into envelopes and sub-envelopes; spend from them; balances roll over |
+| 📊 **Visual insight** | Donut chart of where the money is, available-vs-spent bars, spending-over-time line charts |
+| 🔁 **Recurring rules** | Rent and subscriptions, a salary that comes in every month, and sums that go into envelopes on a fixed day: one tap adds them all to the month, and the dashboard says what is due |
+| 🧮 **Unallocated tracking** | Always know how much income is still free to put into envelopes |
+| 👥 **Shared envelopes** | Invite people by e-mail to an envelope; each puts money in from their own pool, everybody sees who put how much, owners approve who gets in |
+| 📅 **Months** | Step through months with the arrows; a list shows every month so far. The month can start on any day from 1 to 28 |
+| 🧭 **Bottom navigation** | Pulpit (dashboard) · Historia · Miesiące · Ustawienia, one tap away |
+| 🕓 **History** | Expenses of the month grouped by day, filtered by envelope, dates and time |
 | 🔐 **Local security** | PIN + biometric unlock (`local_auth`) |
 | ☁️ **Server-backed** | Your data lives on the Money Planner API, so it survives a lost phone and is the base for sharing a budget |
 
@@ -81,21 +84,23 @@ lib/
 ├── main.dart                 # Entry point
 ├── app.dart                  # MaterialApp: providers, theming, routing
 ├── models/                   # What the UI works with (pure Dart)
-│   ├── period.dart, category.dart, expense.dart, recurring_rule.dart
-│   ├── envelope.dart         # the plan: income → category allocation
-│   ├── category_progress.dart, period_summary.dart, transaction.dart
+│   ├── envelope.dart         # a pot of money; top-level or a sub-envelope
+│   ├── allocation.dart, income.dart, expense.dart, recurring_rule.dart
+│   ├── budget_month.dart     # the days a month covers (any first day)
+│   ├── envelope_progress.dart, overview.dart, month_summary.dart
+│   └── transaction.dart      # an expense with its envelope
 ├── data/                     # Everything that talks to the backend
 │   ├── planner_repository.dart  # the one entry point, in the app's terms
 │   ├── mappers.dart          # API types <-> models
-│   ├── money.dart            # minor units (grosze) <-> whole units
+│   ├── money.dart            # grosze <-> złoty
 │   ├── api_client.dart       # Dio setup, API_URL
 │   ├── api_exception.dart    # failures the UI can react to
 │   └── legacy_migrator.dart  # one-off: old local database -> server
 ├── state/
-│   ├── planner_state.dart    # current period, progress, totals (Provider)
+│   ├── planner_state.dart    # envelopes, the month on screen, totals (Provider)
 │   └── app_settings.dart     # theme, first day of month (on the device)
 ├── widgets/                  # shared widgets (error view, remote data, …)
-└── screens/                  # dashboard, history, periods, settings, …
+└── screens/                  # dashboard, envelope detail, funding, incomes, months, history, settings, …
 ```
 
 **Layers.** Screens only talk to `PlannerState`; the state talks to
@@ -105,10 +110,13 @@ are typed and cannot drift from the API. Models use whole units (zł) and
 `DateTime`; the API uses minor units and ISO strings, and `data/mappers.dart`
 is where they meet.
 
-**Money.** Amounts are integers in the minor unit of the period's currency
-(12.34 PLN is 1234; JPY has none). Periods carry a currency, PLN by default;
-choosing another one is not in the UI yet, but nothing assumes złoty except
-how amounts are printed.
+**Money.** Amounts are integers in grosze on the wire (12.34 zł is 1234) and
+doubles in złoty in the app. There is one currency, the złoty.
+
+**Months.** A month is just a range of days (`BudgetMonth`), starting on the
+day set in Settings. The server computes what is in each envelope over that
+range (`GET /overview`); balances roll over, so a month shows what was left
+from before, what came in, what was spent and what is left now.
 
 **Failures.** Repository methods throw `ApiException` (unreachable, not found,
 conflict, invalid, server). Screens run changes through `attempt(...)`, which
@@ -126,7 +134,8 @@ has, and keeps the file if anything goes wrong so the next launch can retry.
 
 - **Unlock** — biometric via `local_auth`, with a PIN fallback stored as a
   **salted hash** (never plaintext). This only guards the app on the device;
-  there are no accounts yet, so the server does not authenticate requests.
+  The server has its own sign-in (an e-mail code or link, or Google), and the
+  session is kept in secure storage on a phone and in a cookie in a browser.
 - The PIN hash and a few preferences live in `flutter_secure_storage`.
 
 ## 🛠️ Tech stack
@@ -144,8 +153,9 @@ has, and keeps the file if anything goes wrong so the next launch can retry.
 ## 🚀 Getting started
 
 From the repository root, `devenv shell` and `devenv up` start Postgres, the
-API and the docs; `devenv up` also starts an emulator and runs the app on it.
-To run the app by hand:
+API, the docs and the web app on <http://localhost:8080>. `start-mobile` starts
+the emulator (if it is not running) and runs the phone app on it. To run the
+app by hand:
 
 ```bash
 cd apps/mobile
@@ -177,10 +187,11 @@ flutter test
 - [x] **Phase 4** — PIN (salted PBKDF2) + biometric lock screen, Settings security section
 - [x] **Phase 5** — Encrypted GitHub sync (replaced by the API: data now lives on the server)
 - [x] **Phase 6** — Read-only History view (past periods + charts), bottom navigation bar, edge-case polish
+- [x] **Phase 7** — Accounts and sign-in (e-mail code, Google), data on the server
+- [x] **Phase 8** — Envelope model: income and a pool, envelopes with sub-envelopes, allocations, balances that roll over, months instead of periods (see `docs/ENVELOPE_MODEL.md`)
+- [x] **Phase 9** — Shared envelopes: members with roles, invitations the owner approves, who put how much
 
-🎉 **All planned phases are complete.**
-
-**Extras already in:** custom categories with icon/color picker · full Polish localization (`pl`) with zł currency · period switcher · bottom navigation bar.
+**Extras already in:** custom envelopes with icon/color picker · full Polish localization (`pl`) with zł currency · month switcher · bottom navigation bar.
 
 ## 🤝 Contributing
 

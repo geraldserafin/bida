@@ -6,13 +6,11 @@ import {
   OpenApi,
 } from "effect/http-api";
 import { Authenticated } from "../auth/authenticated.ts";
-import { EnvelopePlan, PeriodId, PeriodNotFound } from "../budgets/index.ts";
-import { CategoryNotFound } from "../categories/index.ts";
-import { Currency } from "../currency/index.ts";
+import { EnvelopeNotFound } from "../envelopes/index.ts";
 import { wire } from "../errors.ts";
-import { SpaceContext } from "../spaces/space-context.ts";
 import { RecurringRuleNotFound } from "./recurring.errors.ts";
 import {
+  ApplyRecurring,
   ApplyResult,
   RecurringRuleId,
   RecurringRuleJson,
@@ -26,13 +24,13 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
     }).annotateMerge(
       OpenApi.annotations({
         summary: "List recurring rules",
-        description: "Newest first.",
+        description: "The user's own, newest first.",
       }),
     ),
     HttpApiEndpoint.post("create", "/recurring-rules", {
       payload: SaveRecurringRule,
       success: RecurringRuleJson.pipe(HttpApiSchema.status(201)),
-      error: wire(CategoryNotFound),
+      error: wire(EnvelopeNotFound),
     }).annotateMerge(
       OpenApi.annotations({ summary: "Create a recurring rule" }),
     ),
@@ -40,7 +38,7 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
       params: { id: RecurringRuleId },
       payload: SaveRecurringRule,
       success: RecurringRuleJson,
-      error: [wire(RecurringRuleNotFound), wire(CategoryNotFound)],
+      error: [wire(RecurringRuleNotFound), wire(EnvelopeNotFound)],
     }).annotateMerge(
       OpenApi.annotations({
         summary: "Edit a recurring rule",
@@ -56,28 +54,26 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
         description: "Expenses it already generated are kept.",
       }),
     ),
-    HttpApiEndpoint.get("suggestedPlan", "/recurring-rules/suggested-plan", {
-      query: { currency: Schema.optional(Currency) },
-      success: Schema.Array(EnvelopePlan),
+    HttpApiEndpoint.get("pending", "/recurring-rules/pending", {
+      query: ApplyRecurring,
+      success: ApplyResult,
     }).annotateMerge(
       OpenApi.annotations({
-        summary: "Suggested envelope amounts",
+        summary: "What applying would add",
         description:
-          "Sum of the active rules in one currency per category, to prefill a new period's plan.",
+          "Counts of the recurring incomes, allocation rules and expenses that have not been applied to the stretch yet. Changes nothing.",
       }),
     ),
-    HttpApiEndpoint.post("apply", "/periods/:periodId/recurring/apply", {
-      params: { periodId: PeriodId },
+    HttpApiEndpoint.post("apply", "/recurring-rules/apply", {
+      payload: ApplyRecurring,
       success: ApplyResult,
-      error: wire(PeriodNotFound),
     }).annotateMerge(
       OpenApi.annotations({
-        summary: "Apply recurring rules to a period",
+        summary: "Apply the recurring rules to a stretch of time",
         description:
-          "Adds one expense for every active rule not applied in this period yet, creating a missing envelope with the rule's amount as its plan. Safe to call repeatedly.",
+          "Adds, for every active rule not applied for this `from` yet: the recurring incomes (dated on their day of the month), then the allocation rules (the same), then the expenses (dated today when today is in the stretch, else `from`). Safe to call repeatedly. An allocation the envelope cannot take is skipped and counted.",
       }),
     ),
   )
-  .middleware(SpaceContext)
   .middleware(Authenticated)
   .annotateMerge(OpenApi.annotations({ title: "Recurring" })) {}

@@ -6,21 +6,12 @@ import {
   OpenApi,
 } from "effect/http-api";
 import { Authenticated } from "../auth/authenticated.ts";
-import {
-  EnvelopeId,
-  EnvelopeNotFound,
-  PeriodId,
-  PeriodNotFound,
-} from "../budgets/index.ts";
-import { CategoryId } from "../categories/index.ts";
+import { EnvelopeId, EnvelopeNotFound, Forbidden } from "../envelopes/index.ts";
 import { wire } from "../errors.ts";
-import { SpaceContext } from "../spaces/space-context.ts";
 import {
   CreateExpense,
   ExpenseId,
   ExpenseJson,
-  PeriodProgress,
-  PeriodSummary,
   UpdateExpense,
 } from "./expense.model.ts";
 import { ExpenseNotFound } from "./expenses.errors.ts";
@@ -41,16 +32,26 @@ export class ExpensesApi extends HttpApiGroup.make("expenses")
       params: { id: ExpenseId },
       payload: UpdateExpense,
       success: ExpenseJson,
-      error: [wire(ExpenseNotFound), wire(EnvelopeNotFound)],
-    }).annotateMerge(OpenApi.annotations({ summary: "Edit an expense" })),
+      error: [wire(ExpenseNotFound), wire(EnvelopeNotFound), wire(Forbidden)],
+    }).annotateMerge(
+      OpenApi.annotations({
+        summary: "Edit an expense",
+        description:
+          "Its author and the owner of the envelope can. The new envelope has to be one the user can see.",
+      }),
+    ),
     HttpApiEndpoint.delete("delete", "/expenses/:id", {
       params: { id: ExpenseId },
-      error: wire(ExpenseNotFound),
-    }).annotateMerge(OpenApi.annotations({ summary: "Delete an expense" })),
-    HttpApiEndpoint.get("listForPeriod", "/periods/:periodId/expenses", {
-      params: { periodId: PeriodId },
+      error: [wire(ExpenseNotFound), wire(Forbidden)],
+    }).annotateMerge(
+      OpenApi.annotations({
+        summary: "Delete an expense",
+        description: "Its author and the owner of the envelope can.",
+      }),
+    ),
+    HttpApiEndpoint.get("list", "/expenses", {
       query: {
-        categoryId: Schema.optional(CategoryId),
+        /** For a top-level envelope this includes its sub-envelopes. */
         envelopeId: Schema.optional(EnvelopeId),
         /** Inclusive lower bound of `spentAt` (ISO timestamp). */
         from: Schema.optional(Schema.DateTimeUtcFromString),
@@ -70,32 +71,14 @@ export class ExpensesApi extends HttpApiGroup.make("expenses")
         ),
       },
       success: Schema.Array(ExpenseJson),
-      error: wire(PeriodNotFound),
+      error: wire(EnvelopeNotFound),
     }).annotateMerge(
       OpenApi.annotations({
-        summary: "List the expenses of a period",
-        description: "Newest first. Defaults to 50 rows, at most 200.",
-      }),
-    ),
-    HttpApiEndpoint.get("periodSummaries", "/periods/summaries", {
-      success: Schema.Array(PeriodSummary),
-    }).annotateMerge(
-      OpenApi.annotations({
-        summary: "Planned and spent for every period",
-        description: "Newest first. One call instead of one per period.",
-      }),
-    ),
-    HttpApiEndpoint.get("progress", "/periods/:periodId/progress", {
-      params: { periodId: PeriodId },
-      success: PeriodProgress,
-      error: wire(PeriodNotFound),
-    }).annotateMerge(
-      OpenApi.annotations({
-        summary: "Planned versus spent",
-        description: "Totals for the period and for each envelope.",
+        summary: "List expenses",
+        description:
+          "Of the envelopes the user can see, newest first. Defaults to 50 rows, at most 200.",
       }),
     ),
   )
-  .middleware(SpaceContext)
   .middleware(Authenticated)
   .annotateMerge(OpenApi.annotations({ title: "Expenses" })) {}

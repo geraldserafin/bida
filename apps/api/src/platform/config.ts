@@ -29,9 +29,6 @@ export const AppConfig = Config.all({
   mailFrom: Config.String("MAIL_FROM").pipe(
     Config.withDefault("PLNing <no-reply@localhost>"),
   ),
-  // The first person to sign in with this address takes over the data that
-  // exists before accounts did (the default space).
-  claimEmail: Config.String("CLAIM_EMAIL").pipe(Config.withDefault("")),
   // OAuth client ids of the Google apps allowed to sign users in (the web
   // client, and the Android and iOS ones). Empty turns Google sign-in off.
   googleClientIds: list("GOOGLE_CLIENT_IDS"),

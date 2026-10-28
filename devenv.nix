@@ -13,6 +13,13 @@
   env.GOOGLE_CLIENT_ID = "67840222616-r4pocur8m07i39b87h88n8psd21f2o3s.apps.googleusercontent.com";
   env.GOOGLE_CLIENT_IDS = config.env.GOOGLE_CLIENT_ID;
 
+  # The web app of `devenv up` calls the api from this origin, so the api allows
+  # it and sends the session cookie over plain http; the sign-in e-mails link
+  # to it.
+  env.CORS_ORIGINS = "http://localhost:8080";
+  env.APP_URL = "http://localhost:8080";
+  env.COOKIE_SECURE = "false";
+
   services.postgres = {
     enable = true;
     listen_addresses = "127.0.0.1";
@@ -60,40 +67,22 @@
     process-compose.shutdown.timeout_seconds = 5;
   };
 
-  # The emulator runs in the foreground (`emu` ends with `exec emulator`), so
-  # stopping or restarting this process stops or restarts the emulator. It is
-  # healthy once Android has finished booting. is_tty forwards keyboard input to
-  # the emulator when the process is focused in the process-compose TUI.
-  processes.emulator = {
-    exec = "emu";
-    process-compose = {
-      is_tty = true;
-      # graceful stop, saves the quickboot snapshot
-      shutdown.command = "adb -e emu kill || true";
-      readiness_probe = {
-        exec.command = ''[ "$(adb -e shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]'';
-        initial_delay_seconds = 10;
-        period_seconds = 3;
-        failure_threshold = 100;
-      };
-    };
-  };
-
-  # The Flutter app on the emulator, started once the emulator is booted and
-  # the api is up. is_tty lets you type r / R for hot reload when the process
-  # is focused in the process-compose TUI. Restart it to rebuild.
-  processes.mobile = {
+  # The web app on http://localhost:8080, served by Flutter's dev server. The
+  # port is fixed because the api only lets that origin call it (CORS_ORIGINS)
+  # and Google sign-in is registered for it. is_tty lets you type r / R for hot
+  # reload when the process is focused in the process-compose TUI; restart the
+  # process to rebuild. The phone app runs with `start-mobile`.
+  processes.web = {
     exec = ''
       cd "$DEVENV_ROOT/apps/mobile"
       # with GOOGLE_CLIENT_ID set the app offers "Sign in with Google"
-      exec flutter run -d emulator-5554 ''${GOOGLE_CLIENT_ID:+--dart-define=GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID}
+      exec flutter run -d web-server --web-hostname localhost --web-port 8080 \
+        --dart-define=API_URL=http://localhost:3000 \
+        ''${GOOGLE_CLIENT_ID:+--dart-define=GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID}
     '';
     process-compose = {
       is_tty = true;
-      depends_on = {
-        emulator.condition = "process_healthy";
-        api.condition = "process_started";
-      };
+      depends_on.api.condition = "process_started";
     };
   };
 
@@ -140,6 +129,25 @@
     # the host keyboard (hw.keyboard = no), so typing in the window does nothing.
     sed -i -E '/^(hw\.ramSize|hw\.cpu\.ncore|hw\.gpu\.enabled|hw\.gpu\.mode|vm\.heapSize|hw\.keyboard) *=/d' "$cfg"
     printf 'hw.ramSize = 3072\nhw.cpu.ncore = 4\nhw.gpu.enabled = yes\nhw.gpu.mode = host\nvm.heapSize = 512\nhw.keyboard = yes\n' >> "$cfg"
+  '';
+
+  # Runs the phone app on the emulator: starts the emulator when it is not
+  # running, waits until Android has booted, then `flutter run` (type r / R for
+  # hot reload, q to quit; the emulator keeps running). The api has to be up
+  # (`devenv up`).
+  scripts.start-mobile.exec = ''
+    if ! adb devices | grep -q "^emulator-5554.*device$"; then
+      echo "starting the emulator..."
+      emu > "$DEVENV_STATE/emulator.log" 2>&1 &
+      adb wait-for-device
+      until [ "$(adb -e shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = 1 ]; do
+        sleep 2
+      done
+    fi
+    cd "$DEVENV_ROOT/apps/mobile"
+    # with GOOGLE_CLIENT_ID set the app offers "Sign in with Google"
+    exec flutter run -d emulator-5554 \
+      ''${GOOGLE_CLIENT_ID:+--dart-define=GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID} "$@"
   '';
 
   scripts.emu.exec = ''

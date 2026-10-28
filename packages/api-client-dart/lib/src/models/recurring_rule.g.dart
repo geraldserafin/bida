@@ -9,9 +9,9 @@ part of 'recurring_rule.dart';
 RecurringRule _$RecurringRuleFromJson(Map<String, dynamic> json) =>
     RecurringRule(
       id: json['id'] as String,
-      categoryId: json['categoryId'] as String,
+      userId: json['userId'] as String,
+      envelopeId: json['envelopeId'] as String,
       amountMinor: (json['amountMinor'] as num).toInt(),
-      currency: Currency.fromJson(json['currency'] as String),
       frequency: RecurringRuleFrequency.fromJson(json['frequency'] as String),
       note: json['note'] as String?,
       active: json['active'] as bool,
@@ -22,30 +22,15 @@ RecurringRule _$RecurringRuleFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$RecurringRuleToJson(RecurringRule instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'categoryId': instance.categoryId,
+      'userId': instance.userId,
+      'envelopeId': instance.envelopeId,
       'amountMinor': instance.amountMinor,
-      'currency': _$CurrencyEnumMap[instance.currency]!,
       'frequency': _$RecurringRuleFrequencyEnumMap[instance.frequency]!,
       'note': instance.note,
       'active': instance.active,
       'createdAt': instance.createdAt,
       'updatedAt': instance.updatedAt,
     };
-
-const _$CurrencyEnumMap = {
-  Currency.pln: 'PLN',
-  Currency.eur: 'EUR',
-  Currency.usd: 'USD',
-  Currency.gbp: 'GBP',
-  Currency.chf: 'CHF',
-  Currency.czk: 'CZK',
-  Currency.sek: 'SEK',
-  Currency.nok: 'NOK',
-  Currency.dkk: 'DKK',
-  Currency.huf: 'HUF',
-  Currency.jpy: 'JPY',
-  Currency.$unknown: r'$unknown',
-};
 
 const _$RecurringRuleFrequencyEnumMap = {
   RecurringRuleFrequency.weekly: 'weekly',

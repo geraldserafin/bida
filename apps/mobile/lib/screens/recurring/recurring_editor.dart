@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/category.dart';
-import '../../models/period.dart';
+import '../../models/envelope.dart';
 import '../../models/recurring_rule.dart';
+import '../../util/amounts.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/labeled_field.dart';
 import '../../widgets/pill_chip.dart';
@@ -14,7 +14,7 @@ import '../../widgets/toggle_switch.dart';
 /// when given, is offered for an existing rule and closes the editor.
 Future<RecurringRule?> showRecurringEditor(
   BuildContext context, {
-  required List<Category> categories,
+  required List<Envelope> envelopes,
   RecurringRule? existing,
   VoidCallback? onDelete,
 }) {
@@ -23,7 +23,7 @@ Future<RecurringRule?> showRecurringEditor(
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _RecurringEditorSheet(
-      categories: categories,
+      envelopes: envelopes,
       existing: existing,
       onDelete: onDelete,
     ),
@@ -32,12 +32,12 @@ Future<RecurringRule?> showRecurringEditor(
 
 class _RecurringEditorSheet extends StatefulWidget {
   const _RecurringEditorSheet({
-    required this.categories,
+    required this.envelopes,
     this.existing,
     this.onDelete,
   });
 
-  final List<Category> categories;
+  final List<Envelope> envelopes;
   final RecurringRule? existing;
   final VoidCallback? onDelete;
 
@@ -48,7 +48,7 @@ class _RecurringEditorSheet extends StatefulWidget {
 class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
   late final TextEditingController _amountController;
   late final TextEditingController _noteController;
-  late String _categoryId;
+  late String _envelopeId;
   late RecurrenceFrequency _frequency;
   late bool _active;
   String? _amountError;
@@ -58,10 +58,10 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
     super.initState();
     final e = widget.existing;
     _amountController = TextEditingController(
-      text: e == null ? '' : e.amount.toString().replaceAll('.', ','),
+      text: e == null ? '' : amountText(e.amount),
     );
     _noteController = TextEditingController(text: e?.note ?? '');
-    _categoryId = e?.categoryId ?? widget.categories.first.id!;
+    _envelopeId = e?.envelopeId ?? widget.envelopes.first.id!;
     _frequency = e?.frequency ?? RecurrenceFrequency.monthly;
     _active = e?.active ?? true;
   }
@@ -74,9 +74,7 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
   }
 
   void _submit() {
-    final amount = double.tryParse(
-      _amountController.text.trim().replaceAll(',', '.'),
-    );
+    final amount = parseAmount(_amountController.text);
     if (amount == null || amount <= 0) {
       setState(() => _amountError = AppLocalizations.of(context).enterAmount);
       return;
@@ -84,9 +82,8 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
     Navigator.of(context).pop(
       RecurringRule(
         id: widget.existing?.id,
-        categoryId: _categoryId,
+        envelopeId: _envelopeId,
         amount: amount,
-        currency: widget.existing?.currency ?? Period.defaultCurrency,
         frequency: _frequency,
         note: _noteController.text.trim().isEmpty
             ? null
@@ -142,15 +139,15 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
               ),
             ],
             const SizedBox(height: 18),
-            FieldLabel(l10n.category),
+            FieldLabel(l10n.envelope),
             const SizedBox(height: 10),
             ChipWrap(
               children: [
-                for (final c in widget.categories)
+                for (final e in widget.envelopes)
                   PillChip(
-                    label: c.name,
-                    selected: c.id == _categoryId,
-                    onTap: () => setState(() => _categoryId = c.id!),
+                    label: e.isTopLevel ? e.name : '› ${e.name}',
+                    selected: e.id == _envelopeId,
+                    onTap: () => setState(() => _envelopeId = e.id!),
                   ),
               ],
             ),

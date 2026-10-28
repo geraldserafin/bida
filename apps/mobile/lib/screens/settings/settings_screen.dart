@@ -13,7 +13,8 @@ import '../../state/auth_state.dart';
 import '../../state/planner_state.dart';
 import '../../util/api_errors.dart';
 import '../../util/csv_save.dart';
-import '../categories/categories_screen.dart';
+import '../envelopes/envelopes_screen.dart';
+import '../incomes/incomes_screen.dart';
 
 /// App settings: general, appearance, security, data.
 class SettingsScreen extends StatefulWidget {
@@ -105,6 +106,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final path = await saveCsv(csv!);
     if (path == null) return; // user cancelled the dialog
     messenger.showSnackBar(SnackBar(content: Text(l10n.csvExported(path))));
+  }
+
+  Future<void> _pickFirstDay(AppSettings settings) async {
+    final l10n = AppLocalizations.of(context);
+    final day = await showDialog<int>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(l10n.firstDayOfMonth),
+        children: [
+          SizedBox(
+            width: double.maxFinite,
+            height: 320,
+            child: RadioGroup<int>(
+              groupValue: settings.firstDayOfMonth,
+              onChanged: (v) => Navigator.of(ctx).pop(v),
+              child: ListView(
+                children: [
+                  for (var d = 1; d <= 28; d++)
+                    RadioListTile<int>(value: d, title: Text('$d')),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (day != null) await settings.setFirstDayOfMonth(day);
   }
 
   Future<void> _signOut() async {
@@ -219,6 +247,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
 
+          // ---- Months ----
+          _SectionHeader(l10n.general),
+          _Group(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.calendar_month_outlined),
+                title: Text(l10n.firstDayOfMonth),
+                subtitle: Text(l10n.firstDayOfMonthHint),
+                trailing: Text(
+                  '${settings.firstDayOfMonth}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                onTap: () => _pickFirstDay(settings),
+              ),
+            ],
+          ),
+
           // ---- Account ----
           _SectionHeader(l10n.account),
           _Group(
@@ -289,10 +334,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.grid_view_outlined),
-                title: Text(l10n.manageCategories),
+                title: Text(l10n.manageEnvelopes),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                  MaterialPageRoute(builder: (_) => const EnvelopesScreen()),
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.payments_outlined),
+                title: Text(l10n.incomes),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const IncomesScreen()),
                 ),
               ),
             ],

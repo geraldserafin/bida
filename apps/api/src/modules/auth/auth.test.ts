@@ -1,15 +1,13 @@
 import {
-  DEFAULT_SPACE_ID,
   InvalidLogin,
   TooManyRequests,
   Unauthorized,
 } from "@bida/api-contract";
 import { assert, layer } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer } from "effect";
+import { Effect, Layer } from "effect";
 import { SqlClient } from "effect/sql";
 import { DbLive } from "../../platform/db.ts";
 import { outbox, resetDb, TestMailer } from "../../platform/testing.ts";
-import { SpacesModule, SpacesService } from "../spaces/spaces.module.ts";
 import { AuthModule, AuthService, GoogleVerifier } from "./auth.module.ts";
 
 /** Google tokens are `subject|email|name` here; the real check has its own test. */
@@ -31,19 +29,10 @@ const TestGoogle = Layer.succeed(
   }),
 );
 
-const TestLayer = Layer.mergeAll(AuthModule, SpacesModule).pipe(
+const TestLayer = AuthModule.pipe(
   Layer.provideMerge(TestGoogle),
   Layer.provideMerge(TestMailer),
   Layer.provideMerge(DbLive),
-);
-
-/** The same, with the first sign-in of one address claiming the old data. */
-const ClaimLayer = TestLayer.pipe(
-  Layer.provide(
-    ConfigProvider.layerAdd(
-      ConfigProvider.fromUnknown({ CLAIM_EMAIL: "Owner@Example.com" }),
-    ),
-  ),
 );
 
 const lastMail = () => {
@@ -66,7 +55,6 @@ layer(TestLayer)("sign-in", (it) => {
     Effect.gen(function* () {
       yield* start;
       const auth = yield* AuthService;
-      const spaces = yield* SpacesService;
 
       yield* auth.requestLink("  Ann@Example.com ");
       const mail = lastMail();
@@ -79,8 +67,6 @@ layer(TestLayer)("sign-in", (it) => {
         "tests",
       );
       assert.strictEqual(signedIn.user.email, "ann@example.com");
-      // the first space of a new account is theirs
-      assert.strictEqual((yield* spaces.listFor(signedIn.user.id)).length, 1);
 
       const current = yield* auth.authenticate(signedIn.token);
       assert.strictEqual(current.user.id, signedIn.user.id);
@@ -180,11 +166,10 @@ layer(TestLayer)("sign-in", (it) => {
     }),
   );
 
-  it.effect("signing in again finds the same account and its space", () =>
+  it.effect("signing in again finds the same account", () =>
     Effect.gen(function* () {
       yield* start;
       const auth = yield* AuthService;
-      const spaces = yield* SpacesService;
 
       yield* auth.requestLink("ida@example.com");
       const first = yield* auth.verifyCode(
@@ -201,7 +186,6 @@ layer(TestLayer)("sign-in", (it) => {
 
       assert.strictEqual(first.user.id, second.user.id);
       assert.notStrictEqual(first.token, second.token);
-      assert.strictEqual((yield* spaces.listFor(first.user.id)).length, 1);
       // both devices stay signed in
       yield* auth.authenticate(first.token);
       yield* auth.authenticate(second.token);
@@ -212,7 +196,6 @@ layer(TestLayer)("sign-in", (it) => {
     Effect.gen(function* () {
       yield* start;
       const auth = yield* AuthService;
-      const spaces = yield* SpacesService;
 
       const first = yield* auth.signInWithGoogle(
         "g1|Gus@Example.com|Gus",
@@ -220,7 +203,6 @@ layer(TestLayer)("sign-in", (it) => {
       );
       assert.strictEqual(first.user.email, "gus@example.com");
       assert.strictEqual(first.user.name, "Gus");
-      assert.strictEqual((yield* spaces.listFor(first.user.id)).length, 1);
       assert.strictEqual(
         (yield* auth.authenticate(first.token)).user.id,
         first.user.id,
@@ -231,7 +213,6 @@ layer(TestLayer)("sign-in", (it) => {
         null,
       );
       assert.strictEqual(again.user.id, first.user.id);
-      assert.strictEqual((yield* spaces.listFor(first.user.id)).length, 1);
     }),
   );
 
@@ -239,7 +220,6 @@ layer(TestLayer)("sign-in", (it) => {
     Effect.gen(function* () {
       yield* start;
       const auth = yield* AuthService;
-      const spaces = yield* SpacesService;
 
       yield* auth.requestLink("hal@example.com");
       const byMail = yield* auth.verifyCode(
@@ -253,7 +233,6 @@ layer(TestLayer)("sign-in", (it) => {
       );
 
       assert.strictEqual(byGoogle.user.id, byMail.user.id);
-      assert.strictEqual((yield* spaces.listFor(byMail.user.id)).length, 1);
     }),
   );
 
@@ -280,7 +259,6 @@ layer(TestLayer)("sign-in", (it) => {
     Effect.gen(function* () {
       yield* start;
       const auth = yield* AuthService;
-      const spaces = yield* SpacesService;
 
       yield* auth.requestLink("jo@example.com");
       const byMail = yield* auth.verifyCode(
@@ -294,7 +272,6 @@ layer(TestLayer)("sign-in", (it) => {
       );
 
       assert.strictEqual(byBrowser.user.id, byMail.user.id);
-      assert.strictEqual((yield* spaces.listFor(byMail.user.id)).length, 1);
       const refused = yield* auth
         .signInWithGoogleAccessToken("nonsense", null)
         .pipe(Effect.flip);
@@ -321,37 +298,6 @@ layer(TestLayer)("sign-in", (it) => {
           Unauthorized,
         );
       }
-    }),
-  );
-});
-
-layer(ClaimLayer)("the first sign-in of the claim address", (it) => {
-  it.effect("takes over the data from before accounts", () =>
-    Effect.gen(function* () {
-      yield* start;
-      const auth = yield* AuthService;
-      const spaces = yield* SpacesService;
-
-      yield* auth.requestLink("someone@example.com");
-      const someone = yield* auth.verifyCode(
-        "someone@example.com",
-        lastMail().code,
-        null,
-      );
-      yield* auth.requestLink("owner@example.com");
-      const owner = yield* auth.verifyCode(
-        "owner@example.com",
-        lastMail().code,
-        null,
-      );
-
-      assert.deepStrictEqual(
-        (yield* spaces.listFor(owner.user.id)).map((s) => s.id),
-        [DEFAULT_SPACE_ID],
-      );
-      const others = yield* spaces.listFor(someone.user.id);
-      assert.strictEqual(others.length, 1);
-      assert.notStrictEqual(others[0]?.id, DEFAULT_SPACE_ID);
     }),
   );
 });

@@ -3,6 +3,7 @@ import { assert, it } from "@effect/vitest";
 import { DateTime, Effect } from "effect";
 import { convertLegacy } from "./legacy.ts";
 
+const userId = "00000000-0000-4000-8000-0000000000aa";
 const now = DateTime.makeUnsafe("2026-10-25T12:00:00Z");
 
 const backup = (patch: Partial<LegacyBackup["data"]> = {}): LegacyBackup => ({
@@ -45,26 +46,27 @@ const backup = (patch: Partial<LegacyBackup["data"]> = {}): LegacyBackup => ({
 
 it("converts ids, amounts and dates", () =>
   Effect.gen(function* () {
-    const doc = yield* convertLegacy({ backup: backup() }, now);
+    const doc = yield* convertLegacy({ backup: backup() }, userId, now);
 
-    const [category] = doc.categories;
-    const [period] = doc.periods;
     const [envelope] = doc.envelopes;
+    const [income] = doc.incomes;
+    const [allocation] = doc.allocations;
     const [rule] = doc.recurringRules;
     const [expense] = doc.expenses;
 
-    assert.strictEqual(category?.name, "Food");
-    assert.strictEqual(period?.startDate, "2026-07-01");
-    assert.strictEqual(period?.endDate, "2026-07-31");
-    assert.strictEqual(period?.incomeMinor, 500050);
-    assert.strictEqual(envelope?.plannedMinor, 120025);
-    assert.strictEqual(envelope?.periodId, period?.id);
-    assert.strictEqual(envelope?.categoryId, category?.id);
+    assert.strictEqual(envelope?.name, "Food");
+    assert.strictEqual(envelope?.parentId, null);
+    assert.strictEqual(envelope?.ownerId, userId);
+    // a period gives an income and what it planned for the category
+    assert.strictEqual(income?.amountMinor, 500050);
+    assert.strictEqual(income?.receivedOn, "2026-07-01");
+    assert.strictEqual(allocation?.amountMinor, 120025);
+    assert.strictEqual(allocation?.madeOn, "2026-07-01");
+    assert.strictEqual(allocation?.envelopeId, envelope?.id);
     assert.strictEqual(rule?.amountMinor, 9999);
     assert.isTrue(rule?.active);
     assert.strictEqual(expense?.amountMinor, 4599);
     assert.strictEqual(expense?.envelopeId, envelope?.id);
-    assert.strictEqual(expense?.periodId, period?.id);
     assert.strictEqual(expense?.recurringId, rule?.id);
     // 10:30 in Warsaw (UTC+2 in July) is 08:30 UTC
     assert.strictEqual(
@@ -77,6 +79,7 @@ it("honours the time zone", () =>
   Effect.gen(function* () {
     const doc = yield* convertLegacy(
       { backup: backup(), timeZone: "UTC" },
+      userId,
       now,
     );
     assert.strictEqual(
@@ -93,6 +96,7 @@ it("fails on dangling references and bad values", () =>
           splits: [{ id: 3, period_id: 99, category_id: 1, planned_amount: 1 }],
         }),
       },
+      userId,
       now,
     ).pipe(Effect.flip);
     assert.instanceOf(dangling, InvalidImport);
@@ -112,6 +116,7 @@ it("fails on dangling references and bad values", () =>
           ],
         }),
       },
+      userId,
       now,
     ).pipe(Effect.flip);
     assert.instanceOf(zero, InvalidImport);
@@ -131,12 +136,14 @@ it("fails on dangling references and bad values", () =>
           ],
         }),
       },
+      userId,
       now,
     ).pipe(Effect.flip);
     assert.instanceOf(frequency, InvalidImport);
 
     const zone = yield* convertLegacy(
       { backup: backup(), timeZone: "Mars/Phobos" },
+      userId,
       now,
     ).pipe(Effect.flip);
     assert.instanceOf(zone, InvalidImport);

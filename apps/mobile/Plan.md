@@ -1,5 +1,7 @@
 # Local Money Planner — Build Plan (Flutter)
 
+> **Historical.** This is the plan of the first, offline version (periods, categories, a local SQLite database). The app now works on envelopes with balances that roll over, on top of a server; see `docs/ENVELOPE_MODEL.md`.
+
 ## 1. Concept
 
 A **planner**, not just a tracker:

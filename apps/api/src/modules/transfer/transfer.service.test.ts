@@ -1,373 +1,409 @@
 import {
+  type EnvelopeId,
   ExportDocument,
   InvalidCsv,
   InvalidImport,
   type LegacyBackup,
+  type UserId,
 } from "@bida/api-contract";
 import { assert, layer } from "@effect/vitest";
 import { DateTime, Effect, Layer, Schema } from "effect";
 import { DbLive } from "../../platform/db.ts";
-import { resetDb, TestSpace } from "../../platform/testing.ts";
-import { BudgetsModule, BudgetsService } from "../budgets/budgets.module.ts";
+import { insertUser, resetDb } from "../../platform/testing.ts";
 import {
-  CategoriesModule,
-  CategoriesService,
-} from "../categories/categories.module.ts";
+  EnvelopesModule,
+  EnvelopesService,
+} from "../envelopes/envelopes.module.ts";
 import {
   ExpensesModule,
   ExpensesService,
 } from "../expenses/expenses.module.ts";
+import { IncomesModule, IncomesService } from "../incomes/incomes.module.ts";
+import { MembersModule, MembersService } from "../members/members.module.ts";
 import {
   RecurringModule,
   RecurringService,
 } from "../recurring/recurring.module.ts";
 import { TransferModule, TransferService } from "./transfer.module.ts";
 
-// Real services on the test database: restore and CSV import are about what
-// ends up in the tables (ids, foreign keys, rollbacks).
+// Real services on the test database: ownership, foreign keys and the
+// replacement of all data are the point of these tests.
 const TestLayer = Layer.mergeAll(
   TransferModule,
-  RecurringModule,
+  EnvelopesModule,
+  IncomesModule,
   ExpensesModule,
-  BudgetsModule,
-  CategoriesModule,
-).pipe(Layer.provideMerge(DbLive), Layer.provideMerge(TestSpace()));
+  RecurringModule,
+  MembersModule,
+).pipe(Layer.provideMerge(DbLive));
 
-const encode = Schema.encodeSync(ExportDocument);
-/** The exported document as plain JSON, without the export time. */
-const plain = (doc: ExportDocument) => {
-  const { exportedAt: _, ...rest } = encode(doc);
-  return rest;
-};
+const look = { color: "#112233", icon: null } as const;
 
-/** A small but complete data set: every table has rows. */
-const seed = Effect.gen(function* () {
-  const categories = yield* CategoriesService;
-  const budgets = yield* BudgetsService;
+/** Ann has Home (with Rent) and Food, income, money in them, expenses and a rule. */
+const setup = Effect.gen(function* () {
+  yield* resetDb;
+  const envelopes = yield* EnvelopesService;
+  const incomes = yield* IncomesService;
   const expenses = yield* ExpensesService;
   const recurring = yield* RecurringService;
-  const food = yield* categories.create({
-    name: "Food",
-    color: "#22C55E",
-    icon: "restaurant",
+  const ann = yield* insertUser();
+  const bob = yield* insertUser();
+
+  const home = yield* envelopes.create(ann.id, {
+    parentId: null,
+    name: "Home",
+    ...look,
   });
-  const rent = yield* categories.create({
+  const rent = yield* envelopes.create(ann.id, {
+    parentId: home.id,
     name: "Rent",
-    color: "#EC4899",
-    icon: null,
+    ...look,
   });
-  const period = yield* budgets.createPeriod({
-    name: "July",
-    startDate: "2026-07-01",
-    endDate: "2026-07-31",
-    incomeMinor: 500_000,
-    envelopes: [
-      { categoryId: food.id, plannedMinor: 50_000 },
-      { categoryId: rent.id, plannedMinor: 200_000 },
-    ],
+  const food = yield* envelopes.create(ann.id, {
+    parentId: null,
+    name: "Food",
+    ...look,
   });
-  const foodEnvelope = period.envelopes.find((e) => e.categoryId === food.id)!;
-  yield* expenses.create({
-    envelopeId: foodEnvelope.id,
-    amountMinor: 4_599,
-    spentAt: DateTime.makeUnsafe("2026-07-03T10:30:00Z"),
-    note: 'Biedronka, "fresh"',
+  yield* incomes.create(ann.id, {
+    amountMinor: 500_000,
+    receivedOn: "2026-07-01",
+    note: null,
   });
-  yield* recurring.create({
-    categoryId: rent.id,
-    amountMinor: 200_000,
+  for (const [envelopeId, amountMinor] of [
+    [home.id, 100_000],
+    [rent.id, 40_000],
+    [food.id, 30_000],
+  ] as const) {
+    yield* envelopes.createAllocation(ann.id, {
+      envelopeId,
+      amountMinor,
+      madeOn: "2026-07-01",
+      note: null,
+    });
+  }
+  const rule = yield* recurring.create(ann.id, {
+    envelopeId: rent.id,
+    amountMinor: 40_000,
     frequency: "monthly",
-    note: "Rent",
+    note: "rent",
     active: true,
   });
-  yield* recurring.applyToPeriod(period.period.id);
-  return { food, rent, period };
+  yield* recurring.apply(ann.id, { from: "2026-07-01", to: "2026-07-31" });
+  // rules for next time, not applied yet
+  yield* recurring.createIncome(ann.id, {
+    amountMinor: 500_000,
+    dayOfMonth: 1,
+    note: "salary",
+    active: true,
+  });
+  yield* recurring.createAllocationRule(ann.id, {
+    envelopeId: food.id,
+    amountMinor: 30_000,
+    dayOfMonth: 2,
+    note: null,
+    active: true,
+  });
+  yield* expenses.create(ann.id, {
+    envelopeId: food.id,
+    amountMinor: 4_599,
+    spentAt: DateTime.makeUnsafe("2026-07-03T10:30:00Z"),
+    note: "bread",
+  });
+  return { ann, bob, home, rent, food, rule };
 });
 
-const legacy = (): LegacyBackup => ({
-  version: 1,
-  data: {
-    categories: [{ id: 1, name: "Food", color: "#22C55E", icon: "restaurant" }],
-    periods: [
-      {
-        id: 7,
-        name: "July",
-        start_date: "2026-07-01T00:00:00.000",
-        end_date: "2026-07-31T00:00:00.000",
-        income: 5000.5,
-      },
-    ],
-    splits: [{ id: 3, period_id: 7, category_id: 1, planned_amount: 1200.25 }],
-    recurring_rules: [
-      {
-        id: 9,
-        category_id: 1,
-        amount: 99.99,
-        frequency: "monthly",
-        note: "Gym",
-        active: 1,
-      },
-    ],
-    expenses: [
-      {
-        id: 5,
-        split_id: 3,
-        amount: 45.99,
-        date: "2026-07-03T10:30:00.000",
-        note: "Biedronka",
-        recurring_id: 9,
-      },
-      {
-        id: 6,
-        split_id: 3,
-        amount: 10,
-        date: "2026-07-04T18:00:00.000",
-        note: null,
-        recurring_id: null,
-      },
-    ],
-  },
-});
+const counts = {
+  envelopes: 3,
+  allocations: 3,
+  incomes: 1,
+  expenses: 2,
+  recurringRules: 1,
+  recurringIncomes: 1,
+  allocationRules: 1,
+};
+
+/** The document as it would arrive over the wire. */
+const roundTrip = (doc: ExportDocument) =>
+  Schema.decodeUnknownSync(ExportDocument)(
+    JSON.parse(JSON.stringify(Schema.encodeSync(ExportDocument)(doc))),
+  );
 
 layer(TestLayer)("TransferService", (it) => {
-  it.effect("an export restores into an empty database identically", () =>
+  it.effect("exports the data of the user and nobody else's", () =>
     Effect.gen(function* () {
-      yield* resetDb;
+      const { ann, bob } = yield* setup;
       const transfer = yield* TransferService;
-      yield* seed;
-      const before = yield* transfer.export;
+      const mine = yield* transfer.export(ann.id);
+      assert.strictEqual(mine.version, 2);
       assert.deepStrictEqual(
-        [
-          before.categories.length,
-          before.periods.length,
-          before.envelopes.length,
-          before.expenses.length,
-          before.recurringRules.length,
-        ],
-        [2, 1, 2, 2, 1],
+        {
+          envelopes: mine.envelopes.length,
+          allocations: mine.allocations.length,
+          incomes: mine.incomes.length,
+          expenses: mine.expenses.length,
+          recurringRules: mine.recurringRules.length,
+          recurringIncomes: mine.recurringIncomes.length,
+          allocationRules: mine.allocationRules.length,
+        },
+        counts,
+      );
+      const empty = yield* transfer.export(bob.id);
+      assert.strictEqual(empty.envelopes.length, 0);
+      assert.strictEqual(empty.expenses.length, 0);
+    }),
+  );
+
+  it.effect("a document loads as the data of whoever imports it", () =>
+    Effect.gen(function* () {
+      const { ann, bob } = yield* setup;
+      const transfer = yield* TransferService;
+      const envelopes = yield* EnvelopesService;
+      const doc = roundTrip(yield* transfer.export(ann.id));
+
+      assert.deepStrictEqual(
+        yield* transfer.importDocument(bob.id, doc),
+        counts,
       );
 
-      yield* resetDb;
-      const counts = yield* transfer.importDocument(before);
-      assert.deepStrictEqual(counts, {
-        categories: 2,
-        periods: 1,
-        envelopes: 2,
-        expenses: 2,
-        recurringRules: 1,
+      const bobs = yield* transfer.export(bob.id);
+      assert.deepStrictEqual(bobs.envelopes.map((e) => e.name).sort(), [
+        "Food",
+        "Home",
+        "Rent",
+      ]);
+      assert.isTrue(bobs.envelopes.every((e) => e.ownerId === bob.id));
+      assert.isTrue(bobs.allocations.every((a) => a.userId === bob.id));
+      assert.isTrue(bobs.expenses.every((x) => x.createdBy === bob.id));
+      // the structure survives, with new ids
+      const home = bobs.envelopes.find((e) => e.name === "Home");
+      assert.strictEqual(
+        bobs.envelopes.find((e) => e.name === "Rent")?.parentId,
+        home?.id,
+      );
+      const original = (yield* envelopes.list(ann.id)).map((e) => e.id);
+      assert.isFalse(bobs.envelopes.some((e) => original.includes(e.id)));
+
+      // Ann still has everything
+      assert.strictEqual((yield* transfer.export(ann.id)).envelopes.length, 3);
+    }),
+  );
+
+  it.effect("importing replaces what the user had, also their own backup", () =>
+    Effect.gen(function* () {
+      const { ann } = yield* setup;
+      const transfer = yield* TransferService;
+      const envelopes = yield* EnvelopesService;
+      const doc = roundTrip(yield* transfer.export(ann.id));
+      yield* envelopes.create(ann.id, {
+        parentId: null,
+        name: "Extra",
+        ...look,
       });
-      assert.deepStrictEqual(plain(yield* transfer.export), plain(before));
-    }).pipe(Effect.provide(TestLayer)),
-  );
 
-  it.effect("an import replaces the current data", () =>
-    Effect.gen(function* () {
-      yield* resetDb;
-      const transfer = yield* TransferService;
-      const categories = yield* CategoriesService;
-      yield* seed;
-      const snapshot = yield* transfer.export;
-
-      // something that is not part of the snapshot
-      yield* categories.create({ name: "Extra", color: "#112233", icon: null });
-      const preview = yield* transfer.previewImport(snapshot);
-      assert.strictEqual(preview.incoming.categories, 2);
-      assert.strictEqual(preview.current.categories, 3);
-
-      yield* transfer.importDocument(snapshot);
       assert.deepStrictEqual(
-        (yield* categories.list).map((c) => c.name).sort(),
-        ["Food", "Rent"],
+        yield* transfer.importDocument(ann.id, doc),
+        counts,
       );
-    }).pipe(Effect.provide(TestLayer)),
+      assert.deepStrictEqual(
+        (yield* envelopes.list(ann.id)).map((e) => e.name),
+        ["Food", "Home", "Rent"],
+      );
+      // loaded twice it is still one copy
+      yield* transfer.importDocument(ann.id, doc);
+      assert.strictEqual((yield* transfer.export(ann.id)).envelopes.length, 3);
+    }),
   );
 
-  it.effect("a broken document is refused and nothing changes", () =>
+  it.effect(
+    "a shared envelope is not in a backup and an import leaves it alone",
+    () =>
+      Effect.gen(function* () {
+        const { ann, bob, home } = yield* setup;
+        const transfer = yield* TransferService;
+        const members = yield* MembersService;
+        const envelopes = yield* EnvelopesService;
+        const expenses = yield* ExpensesService;
+        yield* members.add(home.id, bob.id, "member");
+
+        // Home (and Rent, which is in it) is shared, so only Food is left
+        const doc = roundTrip(yield* transfer.export(ann.id));
+        assert.deepStrictEqual(
+          doc.envelopes.map((e) => e.name),
+          ["Food"],
+        );
+        assert.deepStrictEqual(doc.recurringRules, []);
+
+        yield* transfer.importDocument(ann.id, doc);
+        assert.deepStrictEqual(
+          (yield* envelopes.list(bob.id)).map((e) => e.name),
+          ["Home", "Rent"],
+        );
+        assert.deepStrictEqual(
+          (yield* envelopes.list(ann.id)).map((e) => e.name),
+          ["Food", "Home", "Rent"],
+        );
+        // the money in the shared envelope is still there
+        assert.strictEqual(
+          (yield* expenses.list(bob.id, { envelopeId: home.id })).length,
+          1,
+        );
+
+        // the CSV has the expenses of the user, also from shared envelopes
+        const csv = yield* transfer.exportCsv(ann.id);
+        assert.include(csv, "Home,Rent,400.00");
+      }),
+  );
+
+  it.effect("previews what an import would replace", () =>
+    Effect.gen(function* () {
+      const { ann, bob } = yield* setup;
+      const transfer = yield* TransferService;
+      const doc = roundTrip(yield* transfer.export(ann.id));
+      const preview = yield* transfer.previewImport(bob.id, doc);
+      assert.deepStrictEqual(preview.incoming, counts);
+      assert.strictEqual(preview.current.envelopes, 0);
+    }),
+  );
+
+  it.effect(
+    "refuses a document that does not hold together and keeps the data",
+    () =>
+      Effect.gen(function* () {
+        const { ann } = yield* setup;
+        const transfer = yield* TransferService;
+        const doc = roundTrip(yield* transfer.export(ann.id));
+        const broken = {
+          ...doc,
+          expenses: doc.expenses.map((x) => ({
+            ...x,
+            envelopeId: "019845e1-682f-4b02-a706-3b2422d13aec" as EnvelopeId,
+          })),
+        };
+        const error = yield* transfer
+          .importDocument(ann.id, broken)
+          .pipe(Effect.flip);
+        assert.instanceOf(error, InvalidImport);
+        assert.strictEqual(
+          (yield* transfer.export(ann.id)).envelopes.length,
+          3,
+        );
+      }),
+  );
+
+  it.effect(
+    "exports expenses as CSV with the sub-envelope in its own column",
+    () =>
+      Effect.gen(function* () {
+        const { ann } = yield* setup;
+        const transfer = yield* TransferService;
+        const lines = (yield* transfer.exportCsv(ann.id)).trim().split("\n");
+        assert.strictEqual(lines[0], "Envelope,Subenvelope,Amount,Date,Note");
+        // the rule was applied with the clock at the start, so it is dated the first of July
+        assert.deepStrictEqual(lines.slice(1), [
+          "Food,,45.99,2026-07-03,bread",
+          "Home,Rent,400.00,2026-07-01,rent",
+        ]);
+      }),
+  );
+
+  it.effect(
+    "imports CSV: creates envelopes by name and skips what is there",
+    () =>
+      Effect.gen(function* () {
+        yield* resetDb;
+        const transfer = yield* TransferService;
+        const envelopes = yield* EnvelopesService;
+        const expenses = yield* ExpensesService;
+        const ann = yield* insertUser();
+        const csv = [
+          "Envelope,Subenvelope,Amount,Date,Note",
+          "Home,Rent,400.00,2026-07-01,rent",
+          "home,,12.5,2026-07-02,",
+          "Food,,45.99,2026-07-03,bread",
+          "Food,,45.99,2026-07-03,bread",
+        ].join("\n");
+
+        // the same row twice in one file is one expense
+        assert.deepStrictEqual(yield* transfer.importCsv(ann.id, csv), {
+          imported: 3,
+          skipped: 1,
+        });
+        const names = (yield* envelopes.list(ann.id)).map((e) => e.name);
+        assert.deepStrictEqual(names, ["Food", "Home", "Rent"]);
+        assert.strictEqual((yield* expenses.list(ann.id, {})).length, 3);
+
+        // loading it again adds nothing
+        assert.deepStrictEqual(yield* transfer.importCsv(ann.id, csv), {
+          imported: 0,
+          skipped: 4,
+        });
+      }),
+  );
+
+  it.effect("imports nothing from a CSV with a bad row", () =>
     Effect.gen(function* () {
       yield* resetDb;
       const transfer = yield* TransferService;
-      yield* seed;
-      const snapshot = yield* transfer.export;
-      const before = plain(snapshot);
-
-      // an envelope whose period is not in the document
-      const broken = { ...snapshot, periods: [] };
-      const error = yield* transfer.importDocument(broken).pipe(Effect.flip);
-      assert.instanceOf(error, InvalidImport);
-      assert.deepStrictEqual(plain(yield* transfer.export), before);
-
-      // a document that passes the checks but breaks a constraint rolls back
-      const duplicated = {
-        ...snapshot,
-        categories: [...snapshot.categories, ...snapshot.categories],
-      };
-      const constraint = yield* transfer
-        .importDocument(duplicated)
+      const envelopes = yield* EnvelopesService;
+      const ann = yield* insertUser();
+      const error = yield* transfer
+        .importCsv(
+          ann.id,
+          "Envelope,Subenvelope,Amount,Date,Note\nHome,,10,2026-07-01,\nHome,,x,2026-07-01,\n",
+        )
         .pipe(Effect.flip);
-      assert.instanceOf(constraint, InvalidImport);
-      assert.deepStrictEqual(plain(yield* transfer.export), before);
-    }).pipe(Effect.provide(TestLayer)),
+      assert.instanceOf(error, InvalidCsv);
+      assert.strictEqual(error.line, 3);
+      assert.deepStrictEqual(yield* envelopes.list(ann.id), []);
+    }),
   );
 
   it.effect("imports a backup of the offline app", () =>
     Effect.gen(function* () {
       yield* resetDb;
       const transfer = yield* TransferService;
-      const expenses = yield* ExpensesService;
-      const budgets = yield* BudgetsService;
-
-      const counts = yield* transfer.importLegacy({ backup: legacy() });
-      assert.deepStrictEqual(counts, {
-        categories: 1,
-        periods: 1,
-        envelopes: 1,
-        expenses: 2,
-        recurringRules: 1,
-      });
-
-      const [period] = yield* budgets.listPeriods;
-      assert.strictEqual(period?.incomeMinor, 500_050);
-      const detail = yield* budgets.getPeriod(period!.id);
-      assert.strictEqual(detail.plannedMinor, 120_025);
-      const listed = yield* expenses.listForPeriod(period!.id, {});
-      assert.deepStrictEqual(
-        listed.map((e) => e.amountMinor),
-        [1_000, 4_599],
-      );
-      // 10:30 Warsaw time in July is 08:30 UTC
-      assert.strictEqual(
-        DateTime.formatIso(listed[1]!.spentAt),
-        "2026-07-03T08:30:00.000Z",
-      );
-      assert.isNotNull(listed[1]?.recurringId);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect("refuses a legacy backup with dangling references", () =>
-    Effect.gen(function* () {
-      yield* resetDb;
-      const transfer = yield* TransferService;
-      const backup = legacy();
-      const bad = {
-        ...backup,
+      const ann = yield* insertUser();
+      const backup: LegacyBackup = {
+        version: 1,
         data: {
-          ...backup.data,
-          splits: [{ id: 3, period_id: 99, category_id: 1, planned_amount: 1 }],
+          categories: [{ id: 1, name: "Food", color: "#22C55E", icon: null }],
+          periods: [
+            {
+              id: 7,
+              name: "July",
+              start_date: "2026-07-01T00:00:00.000",
+              end_date: "2026-07-31T00:00:00.000",
+              income: 5000,
+            },
+          ],
+          splits: [
+            { id: 3, period_id: 7, category_id: 1, planned_amount: 1200 },
+          ],
+          recurring_rules: [],
+          expenses: [
+            {
+              id: 5,
+              split_id: 3,
+              amount: 45.99,
+              date: "2026-07-03T10:30:00.000",
+              note: null,
+              recurring_id: null,
+            },
+          ],
         },
       };
-      const error = yield* transfer
-        .importLegacy({ backup: bad })
-        .pipe(Effect.flip);
-      assert.instanceOf(error, InvalidImport);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect("exports expenses as CSV", () =>
-    Effect.gen(function* () {
-      yield* resetDb;
-      const transfer = yield* TransferService;
-      const budgets = yield* BudgetsService;
-      const { food } = yield* seed;
-      // pin a second expense on an earlier day so the order is visible
-      const detail = yield* budgets.getPeriod(
-        (yield* budgets.listPeriods)[0]!.id,
-      );
-      const expenses = yield* ExpensesService;
-      yield* expenses.create({
-        envelopeId: detail.envelopes.find((e) => e.categoryId === food.id)!.id,
-        amountMinor: 100,
-        spentAt: DateTime.makeUnsafe("2026-07-01T09:00:00Z"),
-        note: null,
+      assert.deepStrictEqual(yield* transfer.importLegacy(ann.id, { backup }), {
+        envelopes: 1,
+        allocations: 1,
+        incomes: 1,
+        expenses: 1,
+        recurringRules: 0,
+        recurringIncomes: 0,
+        allocationRules: 0,
       });
-
-      const csv = yield* transfer.exportCsv;
-      const lines = csv.trimEnd().split("\n");
-      assert.strictEqual(lines[0], "Period,Category,Amount,Date,Note,Currency");
-      assert.strictEqual(lines.length, 4); // header + 3 expenses
-      assert.include(csv, 'July,Food,45.99,2026-07-03,"Biedronka, ""fresh"""');
-      assert.include(csv, "July,Food,1.00,2026-07-01,");
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect("imports CSV, creating periods, categories and envelopes", () =>
-    Effect.gen(function* () {
-      yield* resetDb;
-      const transfer = yield* TransferService;
-      const budgets = yield* BudgetsService;
-      const categories = yield* CategoriesService;
-      const expenses = yield* ExpensesService;
-
-      const csv = [
-        "Period,Category,Amount,Date,Note,Currency",
-        "June 2026,Food,12.34,2026-06-03,lunch",
-        'June 2026,food,5,2026-06-04,"a, b"',
-        "June 2026,Fun,7.5,2026-06-05,",
-      ].join("\n");
-      const result = yield* transfer.importCsv(csv);
-      assert.deepStrictEqual(result, { imported: 3, skipped: 0 });
-
-      // "Food" and "food" are one category
-      assert.deepStrictEqual(
-        (yield* categories.list).map((c) => c.name).sort(),
-        ["Food", "Fun"],
-      );
-      const [period] = yield* budgets.listPeriods;
-      assert.strictEqual(period?.name, "June 2026");
-      assert.strictEqual(period?.startDate, "2026-06-01");
-      assert.strictEqual(period?.endDate, "2026-06-30");
-      assert.strictEqual(period?.incomeMinor, 0);
-      const detail = yield* budgets.getPeriod(period!.id);
-      assert.strictEqual(detail.envelopes.length, 2);
-      assert.strictEqual(detail.plannedMinor, 0);
-      const listed = yield* expenses.listForPeriod(period!.id, {});
-      assert.deepStrictEqual(
-        listed.map((e) => e.amountMinor),
-        [750, 500, 1234],
-      );
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect("importing the same CSV twice adds nothing the second time", () =>
-    Effect.gen(function* () {
-      yield* resetDb;
-      const transfer = yield* TransferService;
-      const csv =
-        "Period,Category,Amount,Date,Note,Currency\nJune,Food,12.34,2026-06-03,lunch\nJune,Food,12.34,2026-06-03,lunch\n";
-
-      // the duplicate inside the file counts as skipped too
-      assert.deepStrictEqual(yield* transfer.importCsv(csv), {
-        imported: 1,
-        skipped: 1,
-      });
-      assert.deepStrictEqual(yield* transfer.importCsv(csv), {
-        imported: 0,
-        skipped: 2,
-      });
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect("an exported CSV can be imported back", () =>
-    Effect.gen(function* () {
-      yield* resetDb;
-      const transfer = yield* TransferService;
-      yield* seed;
-      const csv = yield* transfer.exportCsv;
-      const result = yield* transfer.importCsv(csv);
-      assert.deepStrictEqual(result, { imported: 0, skipped: 2 });
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect("a bad CSV row refuses the whole file", () =>
-    Effect.gen(function* () {
-      yield* resetDb;
-      const transfer = yield* TransferService;
-      const budgets = yield* BudgetsService;
-      const csv =
-        "Period,Category,Amount,Date,Note,Currency\nJune,Food,1,2026-06-03,ok\nJune,Food,nope,2026-06-03,bad\n";
-      const error = yield* transfer.importCsv(csv).pipe(Effect.flip);
-      assert.instanceOf(error, InvalidCsv);
-      assert.strictEqual(error.line, 3);
-      assert.deepStrictEqual(yield* budgets.listPeriods, []);
-    }).pipe(Effect.provide(TestLayer)),
+      const doc = yield* transfer.export(ann.id as UserId);
+      assert.strictEqual(doc.incomes[0]?.amountMinor, 500_000);
+      assert.strictEqual(doc.allocations[0]?.amountMinor, 120_000);
+    }),
   );
 });

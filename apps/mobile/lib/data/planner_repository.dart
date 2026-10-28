@@ -1,9 +1,7 @@
 import 'package:bida_api_client/bida_api_client.dart' as api;
 import 'package:dio/dio.dart';
 
-import '../models/category_progress.dart';
 import '../models/models.dart';
-import '../models/period_summary.dart';
 import 'api_exception.dart';
 import 'mappers.dart';
 import 'money.dart';
@@ -20,211 +18,266 @@ class PlannerRepository {
   /// Expenses come in pages of this size (the API allows at most 200).
   final int pageSize;
 
-  // ---------------------------------------------------------------- households
+  // ----------------------------------------------------------------- envelopes
 
-  Future<List<Household>> households() => guard(() async {
-    final all = await _api.spaces.spacesList();
-    return all.map(householdFrom).toList();
+  /// Every envelope the user can see, by name.
+  Future<List<Envelope>> envelopes() => guard(() async {
+    final all = await _api.envelopes.envelopesList();
+    return all.map(envelopeFrom).toList();
   });
 
-  /// The household every other request works in.
-  Future<Household> currentHousehold() =>
-      guard(() async => householdFrom(await _api.spaces.spacesCurrent()));
-
-  Future<Household> renameHousehold(Household household, String name) =>
-      guard(() async {
-        final saved = await _api.spaces.spacesUpdate(
-          id: household.id,
-          body: saveSpaceOf(name, household.currency),
-        );
-        return householdFrom(saved);
-      });
-
-  // ---------------------------------------------------------------- categories
-
-  Future<List<Category>> categories() => guard(() async {
-    final all = await _api.categories.categoriesList();
-    return all.map(categoryFrom).toList();
-  });
-
-  Future<Category> createCategory(Category category) => guard(
-    () async => categoryFrom(
-      await _api.categories.categoriesCreate(body: createCategoryOf(category)),
+  Future<Envelope> createEnvelope(Envelope envelope) => guard(
+    () async => envelopeFrom(
+      await _api.envelopes.envelopesCreate(body: createEnvelopeOf(envelope)),
     ),
   );
 
-  Future<Category> updateCategory(Category category) => guard(
-    () async => categoryFrom(
-      await _api.categories.categoriesUpdate(
-        id: category.id!,
-        body: updateCategoryOf(category),
+  Future<Envelope> updateEnvelope(Envelope envelope) => guard(
+    () async => envelopeFrom(
+      await _api.envelopes.envelopesUpdate(
+        id: envelope.id!,
+        body: updateEnvelopeOf(envelope),
       ),
     ),
   );
 
-  /// Returns false, and deletes nothing, when an envelope still uses it.
-  Future<bool> deleteCategory(String id) async {
-    try {
-      await guard(() => _api.categories.categoriesDelete(id: id));
-      return true;
-    } on ApiException catch (error) {
-      if (error.tag == 'CategoryInUse') return false;
-      rethrow;
-    }
-  }
+  /// Deletes the envelope with its sub-envelopes, expenses and allocations.
+  Future<void> deleteEnvelope(String id) =>
+      guard(() => _api.envelopes.envelopesDelete(id: id));
 
-  // ------------------------------------------------------------------- periods
+  // ------------------------------------------------------------------ overview
 
-  /// Newest first.
-  Future<List<Period>> periods() => guard(() async {
-    final all = await _api.periods.periodsList();
-    return all.map(periodFrom).toList();
+  /// The user's money over [month], with the figures of every envelope that is
+  /// in [envelopes] (the others are left out).
+  Future<Overview> overview(
+    BudgetMonth month,
+    Map<String, Envelope> envelopes,
+  ) => guard(() async {
+    final o = await _api.overview.overviewGet(
+      from: formatDay(month.from),
+      to: formatDay(month.to),
+    );
+    return Overview(
+      month: month,
+      income: fromMinor(o.incomeMinor),
+      allocated: fromMinor(o.allocatedMinor),
+      spent: fromMinor(o.spentMinor),
+      pool: fromMinor(o.poolMinor),
+      envelopes: [
+        for (final f in o.envelopes)
+          if (envelopes[f.envelopeId] case final envelope?)
+            progressFrom(f, envelope),
+      ],
+    );
   });
 
-  Future<List<PeriodSummary>> periodSummaries() => guard(() async {
-    final all = await _api.expenses.expensesPeriodSummaries();
+  /// Every month with something in it, newest first.
+  Future<List<MonthSummary>> months({int firstDay = 1}) => guard(() async {
+    final all = await _api.overview.overviewMonths(startDay: '$firstDay');
     return [
-      for (final s in all)
-        PeriodSummary(
-          period: periodFrom(s.period),
-          planned: fromMinor(s.plannedMinor, currencyCode(s.period.currency)),
-          spent: fromMinor(s.spentMinor, currencyCode(s.period.currency)),
+      for (final m in all)
+        MonthSummary(
+          month: BudgetMonth(parseDay(m.from), parseDay(m.to)),
+          income: fromMinor(m.incomeMinor),
+          allocated: fromMinor(m.allocatedMinor),
+          spent: fromMinor(m.spentMinor),
         ),
     ];
   });
 
-  /// Creates the period together with its envelopes. Categories planned at 0
-  /// get none.
-  Future<Period> createPeriod({
-    required String name,
-    required DateTime startDate,
-    required DateTime endDate,
-    required double income,
-    required Map<String, double> plannedByCategory,
-    String currency = Period.defaultCurrency,
-  }) => guard(() async {
-    final created = await _api.periods.periodsCreate(
-      body: api.CreatePeriod(
-        name: name,
-        startDate: formatDay(startDate),
-        endDate: formatDay(endDate),
-        incomeMinor: toMinor(income, currency),
-        currency: currencyOf(currency),
-        envelopes: envelopePlansOf(plannedByCategory, currency),
-      ),
-    );
-    return periodFrom(created.period);
-  });
+  // ------------------------------------------------------------------- incomes
 
-  /// Sets the income and the planned amount of the listed categories. An
-  /// amount of 0 removes the envelope, or keeps it empty when it already has
-  /// expenses.
-  Future<Period> setPlan(
-    Period period, {
-    required double income,
-    required Map<String, double> plannedByCategory,
-  }) => guard(() async {
-    final updated = await _api.periods.periodsSetPlan(
-      id: period.id!,
-      body: api.SetPlan(
-        incomeMinor: toMinor(income, period.currency),
-        envelopes: envelopePlansOf(plannedByCategory, period.currency),
-      ),
-    );
-    return periodFrom(updated.period);
-  });
-
-  /// Deletes the period with its envelopes and expenses.
-  Future<void> deletePeriod(String id) =>
-      guard(() => _api.periods.periodsDelete(id: id));
-
-  // ----------------------------------------------------------------- envelopes
-
-  /// Planned versus spent for each envelope of the period. Envelopes of a
-  /// category that is not in [categories] are left out.
-  Future<List<CategoryProgress>> categoryProgress(
-    Period period,
-    Map<String, Category> categories,
-  ) => guard(() async {
-    final progress = await _api.expenses.expensesProgress(periodId: period.id!);
-    return [
-      for (final row in progress.envelopes)
-        if (categories[row.categoryId] case final category?)
-          CategoryProgress(
-            category: category,
-            envelope: envelopeFrom(row, period.id!, period.currency),
-            spent: fromMinor(row.spentMinor, period.currency),
-          ),
-    ];
-  });
-
-  /// An empty envelope for the category, so it can be spent from right away.
-  Future<Envelope> addEnvelope(Period period, String categoryId) =>
+  /// Newest first. Both days are included.
+  Future<List<Income>> incomes({DateTime? from, DateTime? to}) =>
       guard(() async {
-        final created = await _api.periods.periodsAddEnvelope(
-          id: period.id!,
-          body: api.EnvelopePlan(categoryId: categoryId, plannedMinor: 0),
+        final all = await _api.incomes.incomesList(
+          from: from == null ? null : formatDay(from),
+          to: to == null ? null : formatDay(to),
         );
-        return Envelope(
-          id: created.id,
-          periodId: created.periodId,
-          categoryId: created.categoryId,
-          plannedAmount: 0,
-        );
+        return all.map(incomeFrom).toList();
       });
+
+  Future<Income> saveIncome(Income income) => guard(() async {
+    final saved = income.id == null
+        ? await _api.incomes.incomesCreate(body: saveIncomeOf(income))
+        : await _api.incomes.incomesUpdate(
+            id: income.id!,
+            body: saveIncomeOf(income),
+          );
+    return incomeFrom(saved);
+  });
+
+  Future<void> deleteIncome(String id) =>
+      guard(() => _api.incomes.incomesDelete(id: id));
+
+  // --------------------------------------------------------------- allocations
+
+  /// What was put into the envelope (and, for a top-level one, its
+  /// sub-envelopes), newest first.
+  Future<List<Allocation>> allocations({String? envelopeId}) => guard(() async {
+    final all = await _api.allocations.allocationsList(envelopeId: envelopeId);
+    return all.map(allocationFrom).toList();
+  });
+
+  /// Puts money into an envelope, or takes it out when the amount is negative.
+  /// Throws an [ApiException] tagged `NotEnoughMoney` when it cannot.
+  Future<Allocation> saveAllocation(Allocation allocation) => guard(() async {
+    final saved = allocation.id == null
+        ? await _api.allocations.allocationsCreate(
+            body: createAllocationOf(allocation),
+          )
+        : await _api.allocations.allocationsUpdate(
+            id: allocation.id!,
+            body: updateAllocationOf(allocation),
+          );
+    return allocationFrom(saved);
+  });
+
+  Future<void> deleteAllocation(String id) =>
+      guard(() => _api.allocations.allocationsDelete(id: id));
 
   // ------------------------------------------------------------------ expenses
 
-  /// All expenses of the period, newest first. [envelopeId] narrows it to one
-  /// envelope.
-  Future<List<Expense>> expenses(Period period, {String? envelopeId}) =>
-      guard(() async {
-        final all = <Expense>[];
-        for (var offset = 0; ; offset += pageSize) {
-          final page = await _api.expenses.expensesListForPeriod(
-            periodId: period.id!,
-            envelopeId: envelopeId,
-            limit: '$pageSize',
-            offset: '$offset',
-          );
-          all.addAll(page.map((e) => expenseFrom(e, period.currency)));
-          if (page.length < pageSize) return all;
-        }
-      });
+  /// Expenses between the two days (both included), newest first.
+  /// [envelopeId] narrows it to one envelope and its sub-envelopes.
+  Future<List<Expense>> expenses({
+    BudgetMonth? month,
+    String? envelopeId,
+  }) => guard(() async {
+    // the days are local, the API wants instants: from the start of the first
+    // to the start of the day after the last
+    final from = month?.from.toUtc().toIso8601String();
+    final to = month == null
+        ? null
+        : DateTime(
+            month.to.year,
+            month.to.month,
+            month.to.day + 1,
+          ).toUtc().toIso8601String();
+    final all = <Expense>[];
+    for (var offset = 0; ; offset += pageSize) {
+      final page = await _api.expenses.expensesList(
+        envelopeId: envelopeId,
+        from: from,
+        to: to,
+        limit: '$pageSize',
+        offset: '$offset',
+      );
+      all.addAll(page.map(expenseFrom));
+      if (page.length < pageSize) return all;
+    }
+  });
 
-  /// The period's expenses joined with their category, newest first.
-  /// [categoryByEnvelope] says which category an envelope belongs to.
+  /// The expenses of [month] joined with their envelope, newest first.
   Future<List<Transaction>> transactions(
-    Period period,
-    Map<String, Category> categoryByEnvelope,
+    BudgetMonth month,
+    Map<String, Envelope> envelopes,
   ) async {
-    final all = await expenses(period);
+    final all = await expenses(month: month);
     return [
       for (final expense in all)
-        if (categoryByEnvelope[expense.envelopeId] case final category?)
-          Transaction(expense: expense, category: category),
+        if (envelopes[expense.envelopeId] case final envelope?)
+          Transaction(expense: expense, envelope: envelope),
     ];
   }
 
-  Future<Expense> createExpense(Expense expense, String currency) =>
-      guard(() async {
-        final created = await _api.expenses.expensesCreate(
-          body: createExpenseOf(expense, currency),
-        );
-        return expenseFrom(created, currency);
-      });
+  Future<Expense> createExpense(Expense expense) => guard(
+    () async => expenseFrom(
+      await _api.expenses.expensesCreate(body: createExpenseOf(expense)),
+    ),
+  );
 
-  Future<Expense> updateExpense(Expense expense, String currency) =>
-      guard(() async {
-        final updated = await _api.expenses.expensesUpdate(
-          id: expense.id!,
-          body: updateExpenseOf(expense, currency),
-        );
-        return expenseFrom(updated, currency);
-      });
+  Future<Expense> updateExpense(Expense expense) => guard(
+    () async => expenseFrom(
+      await _api.expenses.expensesUpdate(
+        id: expense.id!,
+        body: updateExpenseOf(expense),
+      ),
+    ),
+  );
 
   Future<void> deleteExpense(String id) =>
       guard(() => _api.expenses.expensesDelete(id: id));
+
+  // ------------------------------------------------------------------- sharing
+
+  /// The people who share the envelope (its parent's, for a sub-envelope).
+  Future<List<Member>> members(String envelopeId) => guard(() async {
+    final all = await _api.members.membersList(id: envelopeId);
+    return all.map(memberFrom).toList();
+  });
+
+  Future<void> setRole(String envelopeId, String userId, EnvelopeRole role) =>
+      guard(
+        () => _api.members.membersSetRole(
+          id: envelopeId,
+          userId: userId,
+          body: api.SetRole(role: roleOf(role)),
+        ),
+      );
+
+  /// Removes a member; removing yourself is leaving the envelope.
+  Future<void> removeMember(String envelopeId, String userId) =>
+      guard(() => _api.members.membersRemove(id: envelopeId, userId: userId));
+
+  /// Who put how much into the envelope and its sub-envelopes.
+  Future<List<Contribution>> contributions(String envelopeId) =>
+      guard(() async {
+        final all = await _api.members.membersContributions(id: envelopeId);
+        return all.map(contributionFrom).toList();
+      });
+
+  Future<Invitation> invite(
+    String envelopeId, {
+    required String email,
+    required EnvelopeRole role,
+  }) => guard(
+    () async => invitationFrom(
+      await _api.invitations.invitationsInvite(
+        id: envelopeId,
+        body: api.Invite(email: email, role: roleOf(role)),
+      ),
+    ),
+  );
+
+  /// The invitations of the envelope that wait for an answer or for approval.
+  Future<List<Invitation>> envelopeInvitations(String envelopeId) => guard(
+    () async {
+      final all = await _api.invitations.invitationsForEnvelope(id: envelopeId);
+      return all.map(invitationFrom).toList();
+    },
+  );
+
+  Future<void> revokeInvitation(String envelopeId, String invitationId) =>
+      guard(
+        () => _api.invitations.invitationsRevoke(
+          id: envelopeId,
+          invitationId: invitationId,
+        ),
+      );
+
+  /// Lets in somebody who accepted an invitation.
+  Future<void> approveInvitation(String envelopeId, String invitationId) =>
+      guard(
+        () => _api.invitations.invitationsApprove(
+          id: envelopeId,
+          invitationId: invitationId,
+        ),
+      );
+
+  /// The invitations for the address of the user that wait for an answer.
+  Future<List<Invitation>> myInvitations() => guard(() async {
+    final all = await _api.invitations.invitationsMine();
+    return all.map(invitationFrom).toList();
+  });
+
+  Future<void> acceptInvitation(String invitationId) => guard(
+    () => _api.invitations.invitationsAccept(invitationId: invitationId),
+  );
+
+  Future<void> declineInvitation(String invitationId) => guard(
+    () => _api.invitations.invitationsDecline(invitationId: invitationId),
+  );
 
   // ----------------------------------------------------------------- recurring
 
@@ -247,12 +300,69 @@ class PlannerRepository {
   Future<void> deleteRecurringRule(String id) =>
       guard(() => _api.recurring.recurringDelete(id: id));
 
-  /// Adds an expense for every active rule not applied to the period yet.
-  /// Returns how many were added.
-  Future<int> applyRecurringRules(Period period) => guard(() async {
-    final result = await _api.recurring.recurringApply(periodId: period.id!);
-    return result.added;
+  /// Adds what every active rule not applied to the month yet makes: the
+  /// recurring incomes, then the allocations, then the expenses.
+  Future<ApplyOutcome> applyRecurringRules(BudgetMonth month) =>
+      guard(() async {
+        final result = await _api.recurring.recurringApply(
+          body: api.ApplyRecurring(
+            from: formatDay(month.from),
+            to: formatDay(month.to),
+          ),
+        );
+        return outcomeFrom(result);
+      });
+
+  /// What applying the rules to the month would add. Changes nothing.
+  Future<ApplyOutcome> pendingRecurring(BudgetMonth month) => guard(() async {
+    final result = await _api.recurring.recurringPending(
+      from: formatDay(month.from),
+      to: formatDay(month.to),
+    );
+    return outcomeFrom(result);
   });
+
+  Future<List<RecurringIncome>> recurringIncomes() => guard(() async {
+    final all = await _api.recurringIncomes.recurringIncomesList();
+    return all.map(recurringIncomeFrom).toList();
+  });
+
+  Future<void> saveRecurringIncome(RecurringIncome rule) => guard(() async {
+    if (rule.id == null) {
+      await _api.recurringIncomes.recurringIncomesCreate(
+        body: saveRecurringIncomeOf(rule),
+      );
+    } else {
+      await _api.recurringIncomes.recurringIncomesUpdate(
+        id: rule.id!,
+        body: saveRecurringIncomeOf(rule),
+      );
+    }
+  });
+
+  Future<void> deleteRecurringIncome(String id) =>
+      guard(() => _api.recurringIncomes.recurringIncomesDelete(id: id));
+
+  Future<List<AllocationRule>> allocationRules() => guard(() async {
+    final all = await _api.allocationRules.allocationRulesList();
+    return all.map(allocationRuleFrom).toList();
+  });
+
+  Future<void> saveAllocationRule(AllocationRule rule) => guard(() async {
+    if (rule.id == null) {
+      await _api.allocationRules.allocationRulesCreate(
+        body: saveAllocationRuleOf(rule),
+      );
+    } else {
+      await _api.allocationRules.allocationRulesUpdate(
+        id: rule.id!,
+        body: saveAllocationRuleOf(rule),
+      );
+    }
+  });
+
+  Future<void> deleteAllocationRule(String id) =>
+      guard(() => _api.allocationRules.allocationRulesDelete(id: id));
 
   // ------------------------------------------------------------- data exchange
 
@@ -275,9 +385,9 @@ class PlannerRepository {
 
   /// Whether the server holds no data yet, so a migration cannot overwrite any.
   Future<bool> isEmpty() => guard(() async {
-    final categories = await _api.categories.categoriesList();
-    final periods = await _api.periods.periodsList();
-    return categories.isEmpty && periods.isEmpty;
+    final envelopes = await _api.envelopes.envelopesList();
+    final incomes = await _api.incomes.incomesList();
+    return envelopes.isEmpty && incomes.isEmpty;
   });
 
   /// Replaces everything on the server with a backup of the offline app.

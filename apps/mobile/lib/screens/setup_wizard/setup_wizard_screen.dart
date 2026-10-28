@@ -1,32 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/category.dart';
-import '../../state/app_settings.dart';
+import '../../models/models.dart';
 import '../../state/planner_state.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/category_visuals.dart';
+import '../../theme/envelope_visuals.dart';
+import '../../util/amounts.dart';
 import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
+import '../../util/month_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_icon.dart';
 import '../../widgets/labeled_field.dart';
 import '../../widgets/pill_chip.dart';
 import '../../widgets/surface_card.dart';
+import '../../widgets/toggle_switch.dart';
 import '../../widgets/transaction_row.dart';
-import '../categories/category_editor.dart';
+import '../envelopes/envelope_editor.dart';
 import '../recurring/recurring_rules_screen.dart';
 
 const _steps = 5;
 
 double _parseAmount(String raw) =>
-    double.tryParse(raw.replaceAll(RegExp(r'\s'), '').replaceAll(',', '.')) ??
-    0;
+    parseAmount(raw.replaceAll(RegExp(r'\s'), '')) ?? 0;
 
-/// A category the wizard offers to add at the start.
+/// An envelope the wizard offers to add at the start.
 class _Starter {
   const _Starter(this.name, this.color, this.icon);
   final String name;
@@ -34,17 +34,32 @@ class _Starter {
   final String icon;
 }
 
-/// Money expected to come in during the first period, typed in step 3.
+/// Money coming in this month, typed in step 3: once, or every month.
 class _Income {
-  const _Income(this.name, this.amount, {required this.estimated});
+  const _Income(this.name, this.amount, {required this.monthly});
   final String name;
   final double amount;
-  final bool estimated;
+  final bool monthly;
 }
 
-/// First run ("Kreator"): names the household, says who uses it, collects
-/// the income, the recurring bills and the envelopes, and creates the first
-/// period from them.
+/// What the active recurring expenses take from each envelope in a month.
+Map<String, double> _billsByEnvelope(List<RecurringRule> rules) {
+  final sums = <String, double>{};
+  for (final rule in rules) {
+    if (!rule.active) continue;
+    final perMonth = switch (rule.frequency) {
+      RecurrenceFrequency.monthly => rule.amount,
+      RecurrenceFrequency.weekly => rule.amount * 52 / 12,
+    };
+    sums.update(rule.envelopeId, (v) => v + perMonth, ifAbsent: () => perMonth);
+  }
+  return sums;
+}
+
+/// First run ("Kreator"): the envelopes to start with, who shares them, the
+/// income, the recurring bills, and what goes into each envelope. Finishing
+/// records the income and puts the money into the envelopes, once or as
+/// rules that repeat every month.
 class SetupWizardScreen extends StatefulWidget {
   const SetupWizardScreen({super.key});
 
@@ -57,48 +72,28 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   bool _busy = false;
 
   // step 1
-  final _nameController = TextEditingController();
   final Set<int> _skippedStarters = {};
-  String? _nameError;
 
   // step 2
   bool _multi = false;
+  String? _inviteEnvelopeId;
+  final _inviteController = TextEditingController();
+  final Set<String> _invited = {};
 
   // step 3
   final List<_Income> _incomes = [];
   final _incomeNameController = TextEditingController();
   final _incomeAmountController = TextEditingController();
-  bool _incomeEstimated = false;
+  bool _incomeMonthly = true;
 
   // step 5
   final Map<String, TextEditingController> _planned = {};
+  bool _repeatMonthly = true;
   String? _incomeError;
-
-  late final String _periodName;
-  late final DateTime _start;
-  late final DateTime _end;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController.text = context.read<PlannerState>().household?.name ?? '';
-    final now = DateTime.now();
-    final firstDay = context.read<AppSettings>().firstDayOfMonth;
-    _start = DateTime(now.year, now.month, firstDay);
-    // End = the day before the next period's start.
-    _end = DateTime(
-      now.year,
-      now.month + 1,
-      firstDay,
-    ).subtract(const Duration(days: 1));
-    _periodName = toBeginningOfSentenceCase(
-      DateFormat.yMMMM('pl').format(_start),
-    );
-  }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _inviteController.dispose();
     _incomeNameController.dispose();
     _incomeAmountController.dispose();
     for (final c in _planned.values) {
@@ -126,26 +121,19 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
   // ---- step actions ---------------------------------------------------------
 
-  /// Step 1: names the household and adds the starting categories that are
-  /// not there yet.
-  Future<void> _saveHousehold() async {
+  /// Step 1: adds the starting envelopes that are not there yet.
+  Future<void> _saveStarters() async {
     final l10n = AppLocalizations.of(context);
-    final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      setState(() => _nameError = l10n.enterName);
-      return;
-    }
     final state = context.read<PlannerState>();
-    final existing = {for (final c in state.categories) c.name.toLowerCase()};
+    final existing = {for (final e in state.envelopes) e.name.toLowerCase()};
     final starters = _starters(l10n);
     setState(() => _busy = true);
     final saved = await attempt(context, () async {
-      if (name != state.household?.name) await state.renameHousehold(name);
       for (final (i, s) in starters.indexed) {
         if (_skippedStarters.contains(i)) continue;
         if (existing.contains(s.name.toLowerCase())) continue;
-        await state.addCategory(
-          Category(name: s.name, color: s.color, icon: s.icon),
+        await state.addEnvelope(
+          Envelope(name: s.name, color: s.color, icon: s.icon),
         );
       }
     });
@@ -163,7 +151,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         _Income(
           name.isEmpty ? AppLocalizations.of(context).newIncome : name,
           amount,
-          estimated: _incomeEstimated,
+          monthly: _incomeMonthly,
         ),
       );
       _incomeNameController.clear();
@@ -172,12 +160,33 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     });
   }
 
+  /// Step 2: invites somebody to share the chosen envelope.
+  Future<void> _invite(String? envelopeId) async {
+    final l10n = AppLocalizations.of(context);
+    final email = _inviteController.text.trim();
+    if (email.isEmpty || envelopeId == null) return;
+    final state = context.read<PlannerState>();
+    final messenger = ScaffoldMessenger.of(context);
+    final sent = await attempt(
+      context,
+      () => state.invite(envelopeId, email: email, role: EnvelopeRole.member),
+    );
+    if (!sent || !mounted) return;
+    setState(() {
+      _invited.add(email);
+      _inviteController.clear();
+    });
+    messenger.showSnackBar(SnackBar(content: Text(l10n.invitationSent(email))));
+  }
+
   /// Step 5 starts from what the recurring bills already need.
   void _openEnvelopes() {
-    final suggested = context.read<PlannerState>().plannedFromRecurring();
-    suggested.forEach((categoryId, amount) {
+    final suggested = _billsByEnvelope(
+      context.read<PlannerState>().recurringRules,
+    );
+    suggested.forEach((envelopeId, amount) {
       final controller = _planned.putIfAbsent(
-        categoryId,
+        envelopeId,
         TextEditingController.new,
       );
       if (controller.text.isEmpty) controller.text = formatPlain(amount);
@@ -194,29 +203,65 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     }
     final state = context.read<PlannerState>();
     final navigator = Navigator.of(context);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = now.day.clamp(1, 28);
+    final amounts = {
+      for (final e in _planned.entries)
+        if (_parseAmount(e.value.text) > 0) e.key: _parseAmount(e.value.text),
+    };
     setState(() => _busy = true);
-    final created = await attempt(
-      context,
-      () => state.createPeriod(
-        name: _periodName,
-        startDate: _start,
-        endDate: _end,
-        income: _income,
-        plannedByCategory: {
-          for (final e in _planned.entries) e.key: _parseAmount(e.value.text),
-        },
-      ),
-    );
+    // The money comes in first, then goes into the envelopes. What repeats
+    // becomes a rule, and applying the rules adds this month's share of it
+    // (with the recurring bills).
+    final done = await attempt(context, () async {
+      for (final income in _incomes) {
+        if (income.monthly) {
+          await state.saveRecurringIncome(
+            RecurringIncome(
+              amount: income.amount,
+              dayOfMonth: day,
+              note: income.name,
+            ),
+          );
+        } else {
+          await state.saveIncome(
+            Income(amount: income.amount, receivedOn: today, note: income.name),
+          );
+        }
+      }
+      for (final envelope in state.topLevel) {
+        final amount = amounts[envelope.id];
+        if (amount == null) continue;
+        if (_repeatMonthly) {
+          await state.saveAllocationRule(
+            AllocationRule(
+              envelopeId: envelope.id!,
+              amount: amount,
+              dayOfMonth: day,
+            ),
+          );
+        } else {
+          await state.saveAllocation(
+            Allocation(envelopeId: envelope.id!, amount: amount, madeOn: today),
+          );
+        }
+      }
+      final madeRules =
+          _incomes.any((i) => i.monthly) ||
+          (_repeatMonthly && amounts.isNotEmpty);
+      if (madeRules) await state.applyRecurringToMonth();
+    });
     if (!mounted) return;
     setState(() => _busy = false);
-    if (created) navigator.pop();
+    if (done) navigator.pop();
   }
 
-  Future<void> _addCategory() async {
-    final created = await showCategoryEditor(context);
+  Future<void> _addEnvelope() async {
+    final created = await showEnvelopeEditor(context);
     if (created != null && mounted) {
       final state = context.read<PlannerState>();
-      await attempt(context, () => state.addCategory(created));
+      await attempt(context, () => state.addEnvelope(created));
     }
   }
 
@@ -230,7 +275,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       String action,
       VoidCallback onAction,
     ) = switch (_step) {
-      0 => (_householdStep(context), l10n.next, _saveHousehold),
+      0 => (_startersStep(context), l10n.next, _saveStarters),
       1 => (_whoStep(context), l10n.next, () => _go(2)),
       2 => (_incomeStep(context), l10n.next, () => _go(3)),
       3 => (_billsStep(context), l10n.next, _openEnvelopes),
@@ -347,25 +392,15 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     );
   }
 
-  // ---- step 1: the household -----------------------------------------------
+  // ---- step 1: the envelopes to start with --------------------------------
 
-  Widget _householdStep(BuildContext context) {
+  Widget _startersStep(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final starters = _starters(l10n);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _heading(context, l10n.wizardNameTitle, l10n.wizardNameBody),
-        const SizedBox(height: 22),
-        LabeledField(
-          label: l10n.name,
-          controller: _nameController,
-          autofocus: _nameController.text.isEmpty,
-          onChanged: (_) {
-            if (_nameError != null) setState(() => _nameError = null);
-          },
-        ),
-        if (_nameError != null) _ErrorText(_nameError!),
+        _heading(context, l10n.wizardStartersTitle, l10n.wizardStartersBody),
         const SizedBox(height: 22),
         // the only currency there is for now
         FieldLabel(l10n.currency),
@@ -386,7 +421,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              FieldLabel(l10n.starterCategories),
+              FieldLabel(l10n.starterEnvelopes),
               const SizedBox(height: 12),
               ChipWrap(
                 children: [
@@ -416,11 +451,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
 
   Widget _whoStep(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final name = _nameController.text.trim();
+    final top = context.watch<PlannerState>().topLevel;
+    final inviteTo = _inviteEnvelopeId ?? top.firstOrNull?.id;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _heading(context, l10n.wizardWhoTitle(name)),
+        _heading(context, l10n.wizardWhoTitle),
         const SizedBox(height: 22),
         _ChoiceCard(
           title: l10n.soloTitle,
@@ -435,8 +471,21 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           selected: _multi,
           onTap: () => setState(() => _multi = true),
         ),
-        if (_multi) ...[
+        if (_multi && top.isNotEmpty) ...[
           const SizedBox(height: 22),
+          FieldLabel(l10n.shareWhichEnvelope),
+          const SizedBox(height: 10),
+          ChipWrap(
+            children: [
+              for (final e in top)
+                PillChip(
+                  label: e.name,
+                  selected: e.id == inviteTo,
+                  onTap: () => setState(() => _inviteEnvelopeId = e.id),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -444,24 +493,28 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 child: LabeledField(
                   label: l10n.inviteByEmail,
                   hint: l10n.inviteHint,
-                  enabled: false,
+                  controller: _inviteController,
+                  keyboardType: TextInputType.emailAddress,
+                  onSubmitted: (_) => _invite(inviteTo),
                 ),
               ),
               const SizedBox(width: 8),
               AppButton(
                 label: l10n.send,
                 kind: ButtonKind.tonal,
-                onPressed: null,
+                onPressed: () => _invite(inviteTo),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
-            l10n.sharingSoon,
+            _invited.isEmpty
+                ? l10n.sharingPerEnvelope
+                : l10n.invitedPeople(_invited.join(', ')),
             style: TextStyle(
               fontSize: 14,
               height: 1.45,
-              color: AppColors.of(context).estimate,
+              color: AppColors.of(context).textMuted,
             ),
           ),
         ],
@@ -479,7 +532,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         _heading(
           context,
           l10n.wizardIncomeTitle,
-          l10n.wizardIncomeBody(_periodName),
+          l10n.wizardIncomeBody(monthLabel(context.read<PlannerState>().month)),
         ),
         const SizedBox(height: 14),
         for (final (i, income) in _incomes.indexed) ...[
@@ -490,12 +543,11 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             child: TransactionRow(
               color: AppColors.of(context).accent,
               title: income.name,
-              details: income.estimated
-                  ? l10n.estimatedAmount.toLowerCase()
-                  : l10n.fixedAmount.toLowerCase(),
-              amount:
-                  '${income.estimated ? '~' : ''}${formatZloty(income.amount)}',
-              tone: income.estimated ? AmountTone.estimate : AmountTone.income,
+              details: income.monthly
+                  ? l10n.everyMonth.toLowerCase()
+                  : l10n.oneOff.toLowerCase(),
+              amount: formatZloty(income.amount),
+              tone: AmountTone.income,
             ),
           ),
           const SizedBox(height: 10),
@@ -509,12 +561,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               FieldLabel(l10n.newIncome),
               const SizedBox(height: 12),
               SegmentedPills<bool>(
-                options: [
-                  (false, l10n.fixedAmount),
-                  (true, l10n.estimatedAmount),
-                ],
-                selected: _incomeEstimated,
-                onChanged: (v) => setState(() => _incomeEstimated = v),
+                options: [(true, l10n.everyMonth), (false, l10n.oneOff)],
+                selected: _incomeMonthly,
+                onChanged: (v) => setState(() => _incomeMonthly = v),
                 radius: 12,
               ),
               const SizedBox(height: 12),
@@ -557,7 +606,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         ),
         const SizedBox(height: 14),
         ValueRow(
-          label: l10n.periodIncome,
+          label: l10n.monthIncome,
           value: formatZloty(_income),
           strong: true,
         ),
@@ -571,7 +620,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   Widget _billsStep(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<PlannerState>();
-    final categoriesById = {for (final c in state.categories) c.id: c};
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -580,12 +628,18 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         for (final rule in state.recurringRules) ...[
           TransactionRow(
             color:
-                categoriesById[rule.categoryId]?.displayColor ??
+                state.envelopeById(rule.envelopeId)?.displayColor ??
                 AppColors.of(context).textMuted,
             title: rule.note?.isNotEmpty == true
                 ? rule.note!
-                : categoriesById[rule.categoryId]?.name ?? '—',
-            details: ruleDetails(l10n, rule, categoriesById[rule.categoryId]),
+                : state.envelopeById(rule.envelopeId)?.name ?? '—',
+            details: [
+              ?state.envelopeById(rule.envelopeId)?.name,
+              switch (rule.frequency) {
+                RecurrenceFrequency.monthly => l10n.everyMonth,
+                RecurrenceFrequency.weekly => l10n.everyWeek,
+              },
+            ].join(' · '),
             amount: formatZloty(rule.amount),
             onTap: () => editRecurringRule(context, state, existing: rule),
           ),
@@ -607,7 +661,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     final l10n = AppLocalizations.of(context);
     final c = AppColors.of(context);
     final state = context.watch<PlannerState>();
-    final fromRecurring = state.plannedFromRecurring();
+    final fromRecurring = _billsByEnvelope(state.recurringRules);
     final unallocated = _income - _allocated;
 
     return Column(
@@ -620,28 +674,28 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              for (final category in state.categories)
+              for (final envelope in state.topLevel)
                 _EnvelopeInput(
-                  category: category,
-                  note: fromRecurring[category.id] == null
+                  envelope: envelope,
+                  note: fromRecurring[envelope.id] == null
                       ? null
                       : l10n.fromRecurring(
-                          formatZloty(fromRecurring[category.id]!),
+                          formatZloty(fromRecurring[envelope.id]!),
                         ),
                   controller: _planned.putIfAbsent(
-                    category.id!,
+                    envelope.id!,
                     TextEditingController.new,
                   ),
                   onChanged: () => setState(() {}),
                 ),
               InkWell(
-                onTap: _addCategory,
+                onTap: _addEnvelope,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 48),
                   child: Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      l10n.addCategoryPlus,
+                      l10n.addEnvelopePlus,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -653,6 +707,32 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.repeatMonthly,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  Text(
+                    l10n.repeatMonthlyHint,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            ToggleSwitch(
+              value: _repeatMonthly,
+              semanticLabel: l10n.repeatMonthly,
+              onChanged: (v) => setState(() => _repeatMonthly = v),
+            ),
+          ],
         ),
         const SizedBox(height: 18),
         ValueRow(small: true, label: l10n.income, value: formatZloty(_income)),
@@ -738,16 +818,16 @@ class _ChoiceCard extends StatelessWidget {
   }
 }
 
-/// A category with the amount planned for it, one row of step 5.
+/// An envelope with the amount to put into it, one row of step 5.
 class _EnvelopeInput extends StatelessWidget {
   const _EnvelopeInput({
-    required this.category,
+    required this.envelope,
     required this.note,
     required this.controller,
     required this.onChanged,
   });
 
-  final Category category;
+  final Envelope envelope;
 
   /// What recurring bills already need from it, when they need anything.
   final String? note;
@@ -769,7 +849,7 @@ class _EnvelopeInput extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CategoryDot(category.displayColor),
+          CategoryDot(envelope.displayColor),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -777,7 +857,7 @@ class _EnvelopeInput extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  category.name,
+                  envelope.name,
                   style: TextStyle(fontSize: 15, height: 1.5, color: c.text),
                 ),
                 if (note != null)

@@ -4,29 +4,22 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/category_progress.dart';
+import '../../models/envelope_progress.dart';
 import '../../models/expense.dart';
 import '../../state/planner_state.dart';
 import '../../theme/app_theme.dart';
+import '../../util/amounts.dart';
 import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
+import '../../util/month_label.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/labeled_field.dart';
 import '../../widgets/pill_chip.dart';
 import '../../widgets/screen_header.dart';
-import '../categories/category_editor.dart';
+import '../envelopes/envelope_editor.dart';
 
-String _amountText(double v) {
-  final s = v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
-  return s.replaceAll('.', ',');
-}
-
-/// "Household · Period", what the top bar of a new entry says it goes into.
-String entryTarget(PlannerState state, AppLocalizations l10n) {
-  final household = state.household?.name ?? l10n.appTitle;
-  final period = state.currentPeriod?.name;
-  return period == null ? household : '$household · $period';
-}
+/// The month on screen, what the top bar of a new entry says it goes into.
+String entryTarget(PlannerState state) => monthLabel(state.month);
 
 /// Amount-first entry for logging a real expense against an envelope, or
 /// editing an existing one when [existing] is provided.
@@ -57,7 +50,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final e = widget.existing;
     if (e != null) {
       _envelopeId = e.envelopeId;
-      _amountController.text = _amountText(e.amount);
+      _amountController.text = amountText(e.amount);
       _date = e.date;
       _noteController.text = e.note ?? '';
     } else {
@@ -72,8 +65,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.dispose();
   }
 
-  double get _amount =>
-      double.tryParse(_amountController.text.trim().replaceAll(',', '.')) ?? 0;
+  double get _amount => parseAmount(_amountController.text) ?? 0;
 
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
@@ -170,14 +162,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (picked != null) setState(() => _date = picked);
   }
 
-  Future<void> _addNewCategory() async {
-    final created = await showCategoryEditor(context);
+  Future<void> _addNewEnvelope() async {
+    final created = await showEnvelopeEditor(context);
     if (created == null || !mounted) return;
     final state = context.read<PlannerState>();
     String? envelopeId;
     await attempt(
       context,
-      () async => envelopeId = await state.quickAddEnvelope(created),
+      () async => envelopeId = (await state.addEnvelope(created)).id,
     );
     if (mounted && envelopeId != null) {
       setState(() => _envelopeId = envelopeId);
@@ -199,8 +191,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final l10n = AppLocalizations.of(context);
     final c = AppColors.of(context);
     final state = context.watch<PlannerState>();
-    final progress = state.progress;
-    CategoryProgress? selected;
+    // every envelope you can spend from, each followed by its sub-envelopes
+    final progress = [
+      for (final p in state.topLevelProgress) ...[
+        p,
+        ...state.childrenProgressOf(p.envelope.id!),
+      ],
+    ];
+    EnvelopeProgress? selected;
     for (final p in progress) {
       if (p.envelope.id == _envelopeId) {
         selected = p;
@@ -211,7 +209,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Scaffold(
       appBar: FormTopBar(
         title: _isEdit ? l10n.editExpense : l10n.newExpense,
-        where: _isEdit ? null : entryTarget(state, l10n),
+        where: _isEdit ? null : entryTarget(state),
         actions: [
           if (_isEdit)
             IconButton(
@@ -251,8 +249,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ),
           const SizedBox(height: 20),
 
-          // ---- category ----
-          FieldLabel(l10n.category),
+          // ---- envelope ----
+          FieldLabel(l10n.envelope),
           const SizedBox(height: 10),
           if (progress.isEmpty)
             Text(
@@ -264,7 +262,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               children: [
                 for (final p in progress)
                   PillChip(
-                    label: p.category.name,
+                    label: p.envelope.isTopLevel
+                        ? p.envelope.name
+                        : '${state.envelopeById(p.envelope.parentId)?.name ?? ''} · ${p.envelope.name}',
                     selected: p.envelope.id == _envelopeId,
                     onTap: () => setState(() {
                       _envelopeId = p.envelope.id;
@@ -274,7 +274,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 PillChip(
                   label: '+ ${l10n.addNew}',
                   selected: false,
-                  onTap: _addNewCategory,
+                  onTap: _addNewEnvelope,
                 ),
               ],
             ),
@@ -282,9 +282,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             const SizedBox(height: 12),
             ValueRow(
               small: true,
-              label: l10n.remainingInCategory(selected.category.name),
-              value: formatZloty(selected.remaining),
-              valueColor: selected.remaining < 0 ? c.danger : null,
+              label: l10n.balanceOfEnvelope(selected.envelope.name),
+              value: formatZloty(selected.balance),
+              valueColor: selected.balance < 0 ? c.danger : null,
             ),
           ],
           const SizedBox(height: 20),

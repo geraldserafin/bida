@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/transaction.dart';
 import '../../state/planner_state.dart';
-import '../../theme/category_visuals.dart';
+import '../../theme/envelope_visuals.dart';
 import '../../util/money_format.dart';
+import '../../util/month_label.dart';
 import '../../util/pickers.dart';
 import '../../widgets/labeled_field.dart';
 import '../../widgets/pill_chip.dart';
@@ -15,8 +16,8 @@ import '../../widgets/screen_header.dart';
 import '../../widgets/transaction_row.dart';
 import '../add_expense/add_expense_screen.dart';
 
-/// History tab ("Historia"): the current period's expenses, newest first,
-/// filtered by category and by date and time.
+/// History tab ("Historia"): the month's expenses, newest first, filtered by
+/// envelope and by date and time.
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
@@ -25,7 +26,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  String? _categoryId; // null = all
+  String? _envelopeId; // null = all
   DateTimeRange? _dateRange; // null = any date
   TimeOfDay _startTime = const TimeOfDay(hour: 0, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 23, minute: 59);
@@ -87,7 +88,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final state = context.watch<PlannerState>();
-    final period = state.currentPeriod;
 
     return Scaffold(
       body: SafeArea(
@@ -97,18 +97,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
-              child: TabTitle(l10n.history, trailing: period?.name),
+              child: TabTitle(l10n.history, trailing: monthLabel(state.month)),
             ),
             Expanded(
-              child: period == null
-                  ? Center(child: Text(l10n.noTransactions))
-                  : RemoteData<List<Transaction>>(
-                      // fetched again when the period or what was spent
-                      // changes, not on every filter tap
-                      version: (period.id, state.totalSpent),
-                      load: state.currentPeriodTransactions,
-                      builder: (context, all) => _filtered(context, all),
-                    ),
+              child: RemoteData<List<Transaction>>(
+                // fetched again when the month or what was spent changes,
+                // not on every filter tap
+                version: (state.month, state.spent),
+                load: state.monthTransactions,
+                builder: (context, all) => _filtered(context, all),
+              ),
             ),
           ],
         ),
@@ -122,16 +120,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
       return Center(child: Text(l10n.noTransactions));
     }
 
-    // Distinct categories for the filter row (first-seen order).
-    final categories = <String, String>{};
+    // Distinct envelopes for the filter row (first-seen order).
+    final envelopes = <String, String>{};
     for (final t in all) {
-      categories.putIfAbsent(t.category.id!, () => t.category.name);
+      envelopes.putIfAbsent(t.envelope.id!, () => t.envelope.name);
     }
 
     final from = _from;
     final to = _to;
     final visible = all.where((t) {
-      if (_categoryId != null && t.category.id != _categoryId) return false;
+      if (_envelopeId != null && t.envelope.id != _envelopeId) return false;
       if (from != null && t.date.isBefore(from)) return false;
       if (to != null && t.date.isAfter(to)) return false;
       return true;
@@ -142,21 +140,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Overline(l10n.category),
+          child: Overline(l10n.envelope),
         ),
         const SizedBox(height: 14),
         _ChipRow(
           children: [
             PillChip(
               label: l10n.all,
-              selected: _categoryId == null,
-              onTap: () => setState(() => _categoryId = null),
+              selected: _envelopeId == null,
+              onTap: () => setState(() => _envelopeId = null),
             ),
-            for (final entry in categories.entries)
+            for (final entry in envelopes.entries)
               PillChip(
                 label: entry.value,
-                selected: _categoryId == entry.key,
-                onTap: () => setState(() => _categoryId = entry.key),
+                selected: _envelopeId == entry.key,
+                onTap: () => setState(() => _envelopeId = entry.key),
               ),
           ],
         ),
@@ -240,13 +238,13 @@ class _TransactionTile extends StatelessWidget {
     final hasNote = note != null && note.isNotEmpty;
     final details = [
       DateFormat('dd.MM HH:mm').format(transaction.date),
-      if (hasNote) transaction.category.name,
+      if (hasNote) transaction.envelope.name,
       if (transaction.recurringId != null) l10n.recurringMark,
     ].join(' · ');
 
     return TransactionRow(
-      color: transaction.category.displayColor,
-      title: hasNote ? note : transaction.category.name,
+      color: transaction.envelope.displayColor,
+      title: hasNote ? note : transaction.envelope.name,
       details: details,
       amount: '−${formatZloty(transaction.amount)}',
       onTap: () => Navigator.of(context).push(

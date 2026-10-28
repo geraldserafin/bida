@@ -16,6 +16,8 @@ Zasady: jeden pionowy slice naraz, każdy kończy się działającym endpointem 
 
 ## Etap 2 – `categories` (wzorzec)
 
+> Moduł zastąpiły koperty (etap 9): kategoria stała się kopertą. Wzorzec modułu został.
+
 - Kontrakt: model, błędy, grupa endpointów (`US-5.x`)
 - Migracja, repozytorium, serwis, handler, `categories.module.ts`
 - Testy: serwis (fałszywe repo), repozytorium (prawdziwy Postgres), endpointy (`HttpApiTest`)
@@ -36,6 +38,8 @@ Robimy go już na module `categories`, żeby wcześnie wykryć problemy ze specy
 **Plan B**, jeśli `swagger_parser` nie poradzi sobie z 3.1: inny generator albo konwersja specu do 3.0.
 
 ## Etap 4 – `budgets` (okresy i koperty)
+
+> Zastąpione etapem 9: okresy zniknęły na rzecz miesięcy jako widoku i salda toczącego się.
 
 Największa wartość dla użytkownika: po tym etapie działa dashboard.
 
@@ -65,12 +69,35 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 
 ## Etap 8 – Dalej
 
-- Konta i logowanie przez link i kod z e-maila: zrobione (sesje, członkostwo w przestrzeniach)
+- Konta i logowanie przez link i kod z e-maila: zrobione (sesje)
 - Logowanie przez Google: zrobione (token ID weryfikowany po stronie serwera)
-- Zaproszenia i role w przestrzeniach, przeniesienie okresu do wspólnej przestrzeni
+- Zaproszenia i role: wspólne koperty (etap 9, część 2)
 - Zarządzanie sesjami (lista urządzeń, wylogowanie ze wszystkich), usuwanie konta
 - Pilnowanie zmian niekompatybilnych kontraktu (np. sprawdzanie diffa `openapi.json` w CI)
 - Ewentualnie tryb offline i synchronizacja (decyzja po etapie 5)
+
+## Etap 9 – Model kopert i współdzielenie
+
+Przestrzenie i okresy ustępują kopertom z subkopertami, saldem toczącym się i (dalej) współdzielonymi kopertami. Model, reguły i widok użytkownika: [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md). Całość idzie jedną gałęzią (`feat/envelopes`) i jednym PR-em; części są kolejnymi commitami.
+
+**Część 1 – rdzeń (zrobione).**
+- Przychody, koperty z subkopertami, przydziały (z regułami sald), wydatki, reguły cykliczne
+- Przegląd: salda toczące się, pula, historia miesięcy (`GET /overview`, `/overview/months`)
+- Migracja 0009 przenosi dane z przestrzeni i okresów; usunięte przestrzenie, okresy, kategorie
+- Eksport, import i CSV na nowym modelu; import kopii z pierwszej, offline'owej wersji
+- Aplikacja: pulpit miesiąca, szczegóły koperty, przydziały, wpływy, lista miesięcy, zarządzanie kopertami
+
+**Część 2 – współdzielenie (zrobione).**
+- Członkowie koperty top-level, zaproszenia po e-mailu (zaproszony → akceptuje → właściciel zatwierdza), role `owner` i `member`
+- Widok „kto ile włożył" w kopercie i jej podkopertach
+- Wyjście z koperty, zmiana ról (kilku właścicieli zamiast przekazywania własności), usuwanie
+
+**Część 3 – automaty (zrobione).**
+- Cykliczne wpływy (wypłata) i reguły podziału („co miesiąc X zł na Dom"), jedno „zastosuj" dla wszystkich reguł i karta „do dodania" na pulpicie
+- Kopia zapasowa obejmuje nowe reguły
+- Ekran zbiorczy to pulpit, który już sumuje wszystkie koperty, więc osobnego nie ma
+
+**Dalej** (jeszcze nie zrobione): archiwizacja zamkniętych kopert, szybkie dodanie wydatku, automatyczne stosowanie reguł bez przycisku.
 
 ## Zależności między etapami
 
@@ -78,6 +105,7 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 1 Fundament → 2 categories → 3 Klient Dart
                     └──────→ 4 budgets → 5 expenses → 6 recurring
                                               └──────→ 7 transfer
+                                                       └──→ 9 koperty (zastępuje 2, 4, 5, 6, 7 nowym modelem)
 ```
 
 Etap 3 można prowadzić równolegle z etapem 4.

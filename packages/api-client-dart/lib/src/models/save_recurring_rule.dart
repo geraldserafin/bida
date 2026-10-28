@@ -4,7 +4,6 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'currency.dart';
 import 'save_recurring_rule_frequency.dart';
 
 part 'save_recurring_rule.g.dart';
@@ -12,21 +11,18 @@ part 'save_recurring_rule.g.dart';
 @JsonSerializable()
 class SaveRecurringRule {
   const SaveRecurringRule({
-    required this.categoryId,
+    required this.envelopeId,
     required this.amountMinor,
     required this.frequency,
     required this.note,
     required this.active,
-    this.currency,
   });
 
   factory SaveRecurringRule.fromJson(Map<String, Object?> json) =>
       _$SaveRecurringRuleFromJson(json);
 
-  final String categoryId;
+  final String envelopeId;
   final int amountMinor;
-  @JsonKey(includeIfNull: false)
-  final Currency? currency;
   final SaveRecurringRuleFrequency frequency;
   @JsonKey(includeIfNull: true)
   final String? note;

@@ -3,7 +3,7 @@
   "info": {
     "title": "Money Planner API",
     "version": "0.0.0",
-    "description": "Everything except `/health` and `/auth` needs a signed-in user: send the session token as `Authorization: Bearer`, or let the browser send the session cookie. Most endpoints work inside a space: pick it with the `X-Space-Id` header (a space the user belongs to); without the header it is the first space of the user. Amounts are integers in the minor unit of their currency (12.34 PLN is 1234)."
+    "description": "Everything except `/health` and `/auth` needs a signed-in user: send the session token as `Authorization: Bearer`, or let the browser send the session cookie. Amounts are integers in grosze (12.34 PLN is 1234)."
   },
   "paths": {
     "/health": {
@@ -316,12 +316,12 @@
         "summary": "End this session"
       }
     },
-    "/spaces": {
+    "/envelopes": {
       "get": {
         "tags": [
-          "Spaces"
+          "Envelopes"
         ],
-        "operationId": "spaces.list",
+        "operationId": "envelopes.list",
         "parameters": [],
         "security": [
           {
@@ -339,7 +339,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Space"
+                    "$ref": "#/components/schemas/Envelope"
                   }
                 }
               }
@@ -356,1008 +356,15 @@
             }
           }
         },
-        "summary": "List spaces"
+        "description": "Every envelope the user can see, top-level ones and their sub-envelopes, by name.",
+        "summary": "List envelopes"
       },
       "post": {
         "tags": [
-          "Spaces"
+          "Envelopes"
         ],
-        "operationId": "spaces.create",
+        "operationId": "envelopes.create",
         "parameters": [],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Space",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Space"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Create a space",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SaveSpace"
-              }
-            }
-          },
-          "required": true
-        }
-      }
-    },
-    "/spaces/current": {
-      "get": {
-        "tags": [
-          "Spaces"
-        ],
-        "operationId": "spaces.current",
-        "parameters": [],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Space",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Space"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
-          }
-        },
-        "description": "Chosen by the `X-Space-Id` header, the default space when it is missing.",
-        "summary": "Get the space of this request"
-      }
-    },
-    "/spaces/{id}": {
-      "put": {
-        "tags": [
-          "Spaces"
-        ],
-        "operationId": "spaces.update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Space",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Space"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
-          }
-        },
-        "description": "The default currency only applies to what is created afterwards.",
-        "summary": "Edit a space",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SaveSpace"
-              }
-            }
-          },
-          "required": true
-        }
-      }
-    },
-    "/categories": {
-      "get": {
-        "tags": [
-          "Categories"
-        ],
-        "operationId": "categories.list",
-        "parameters": [],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Category"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
-          }
-        },
-        "summary": "List categories"
-      },
-      "post": {
-        "tags": [
-          "Categories"
-        ],
-        "operationId": "categories.create",
-        "parameters": [],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Category",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Category"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Create a category",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCategory"
-              }
-            }
-          },
-          "required": true
-        }
-      }
-    },
-    "/categories/{id}": {
-      "get": {
-        "tags": [
-          "Categories"
-        ],
-        "operationId": "categories.get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Category",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Category"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "CategoryNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/CategoryNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get a category"
-      },
-      "put": {
-        "tags": [
-          "Categories"
-        ],
-        "operationId": "categories.update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Category",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Category"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "CategoryNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/CategoryNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "summary": "Update a category",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCategory"
-              }
-            }
-          },
-          "required": true
-        }
-      },
-      "delete": {
-        "tags": [
-          "Categories"
-        ],
-        "operationId": "categories.delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "<No Content>"
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "CategoryNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/CategoryNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "CategoryInUse",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CategoryInUse"
-                }
-              }
-            }
-          }
-        },
-        "description": "Fails with 409 while any envelope still uses the category.",
-        "summary": "Delete a category"
-      }
-    },
-    "/periods": {
-      "get": {
-        "tags": [
-          "Periods"
-        ],
-        "operationId": "periods.list",
-        "parameters": [],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Period"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
-          }
-        },
-        "description": "Newest first.",
-        "summary": "List periods"
-      },
-      "post": {
-        "tags": [
-          "Periods"
-        ],
-        "operationId": "periods.create",
-        "parameters": [],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "PeriodDetail",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PeriodDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "CategoryNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/CategoryNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "InvalidPeriodRange",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InvalidPeriodRange"
-                }
-              }
-            }
-          }
-        },
-        "description": "Creates the period together with its initial envelopes.",
-        "summary": "Create a period",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreatePeriod"
-              }
-            }
-          },
-          "required": true
-        }
-      }
-    },
-    "/periods/current": {
-      "get": {
-        "tags": [
-          "Periods"
-        ],
-        "operationId": "periods.current",
-        "parameters": [],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "PeriodDetail",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PeriodDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NoPeriods | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/NoPeriods"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "description": "The period with the latest start date.",
-        "summary": "Get the current period"
-      }
-    },
-    "/periods/{id}": {
-      "get": {
-        "tags": [
-          "Periods"
-        ],
-        "operationId": "periods.get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "PeriodDetail",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PeriodDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "PeriodNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/PeriodNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get a period"
-      },
-      "put": {
-        "tags": [
-          "Periods"
-        ],
-        "operationId": "periods.update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "PeriodDetail",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PeriodDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "PeriodNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/PeriodNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "InvalidPeriodRange",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InvalidPeriodRange"
-                }
-              }
-            }
-          }
-        },
-        "description": "Changes the name and dates. Use the plan endpoint for money.",
-        "summary": "Edit a period",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePeriod"
-              }
-            }
-          },
-          "required": true
-        }
-      },
-      "delete": {
-        "tags": [
-          "Periods"
-        ],
-        "operationId": "periods.delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "<No Content>"
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "PeriodNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/PeriodNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "description": "Also deletes its envelopes.",
-        "summary": "Delete a period"
-      }
-    },
-    "/periods/{id}/plan": {
-      "put": {
-        "tags": [
-          "Periods"
-        ],
-        "operationId": "periods.setPlan",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "PeriodDetail",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PeriodDetail"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "PeriodNotFound | CategoryNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/PeriodNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/CategoryNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "description": "A zero amount removes the envelope, or keeps it at zero when it already has expenses.",
-        "summary": "Set income and envelope amounts",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetPlan"
-              }
-            }
-          },
-          "required": true
-        }
-      }
-    },
-    "/periods/{id}/envelopes": {
-      "post": {
-        "tags": [
-          "Periods"
-        ],
-        "operationId": "periods.addEnvelope",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
         "security": [
           {
             "bearer": []
@@ -1387,20 +394,712 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
           "404": {
-            "description": "PeriodNotFound | CategoryNotFound | SpaceNotFound",
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "ParentMustBeTopLevel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentMustBeTopLevel"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create an envelope",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEnvelope"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/envelopes/{id}": {
+      "get": {
+        "tags": [
+          "Envelopes"
+        ],
+        "operationId": "envelopes.get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get an envelope"
+      },
+      "put": {
+        "tags": [
+          "Envelopes"
+        ],
+        "operationId": "envelopes.update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Envelope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Edit an envelope",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEnvelope"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Envelopes"
+        ],
+        "operationId": "envelopes.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Removes its sub-envelopes, expenses and allocations too; the money allocated to it goes back to the pools of the people who put it in.",
+        "summary": "Delete an envelope"
+      }
+    },
+    "/allocations": {
+      "get": {
+        "tags": [
+          "Allocations"
+        ],
+        "operationId": "allocations.list",
+        "parameters": [
+          {
+            "name": "envelopeId",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Allocation"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Of the envelope and, for a top-level one, its sub-envelopes (all envelopes when none is named). Newest first.",
+        "summary": "List allocations"
+      },
+      "post": {
+        "tags": [
+          "Allocations"
+        ],
+        "operationId": "allocations.create",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Allocation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Allocation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "NotEnoughMoney",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotEnoughMoney"
+                }
+              }
+            }
+          }
+        },
+        "description": "A negative amount takes money back. Fails with 409 when an envelope would not have it, or when more would be assigned to sub-envelopes than the user put into the parent. A pool that goes below zero is allowed.",
+        "summary": "Put money into an envelope or take it out",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAllocation"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/allocations/{id}": {
+      "put": {
+        "tags": [
+          "Allocations"
+        ],
+        "operationId": "allocations.update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Allocation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Allocation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AllocationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationNotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "NotEnoughMoney",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotEnoughMoney"
+                }
+              }
+            }
+          }
+        },
+        "description": "Only the user who made it can.",
+        "summary": "Edit an allocation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAllocation"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Allocations"
+        ],
+        "operationId": "allocations.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AllocationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationNotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "NotEnoughMoney",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotEnoughMoney"
+                }
+              }
+            }
+          }
+        },
+        "description": "Only the user who made it can.",
+        "summary": "Delete an allocation"
+      }
+    },
+    "/envelopes/{id}/members": {
+      "get": {
+        "tags": [
+          "Members"
+        ],
+        "operationId": "members.list",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Member"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "For a sub-envelope these are the members of its parent. Any member can ask.",
+        "summary": "List the members of an envelope"
+      }
+    },
+    "/envelopes/{id}/members/{userId}": {
+      "put": {
+        "tags": [
+          "Members"
+        ],
+        "operationId": "members.setRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound | MemberNotFound",
             "content": {
               "application/json": {
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFound"
+                      "$ref": "#/components/schemas/EnvelopeNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/CategoryNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
+                      "$ref": "#/components/schemas/MemberNotFound"
                     }
                   ]
                 }
@@ -1408,27 +1107,979 @@
             }
           },
           "409": {
-            "description": "EnvelopeAlreadyExists",
+            "description": "LastOwner",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EnvelopeAlreadyExists"
+                  "$ref": "#/components/schemas/LastOwner"
                 }
               }
             }
           }
         },
-        "summary": "Add an envelope to a period",
+        "description": "Owners only. An envelope always keeps at least one owner.",
+        "summary": "Change the role of a member",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EnvelopePlan"
+                "$ref": "#/components/schemas/SetRole"
               }
             }
           },
           "required": true
         }
+      },
+      "delete": {
+        "tags": [
+          "Members"
+        ],
+        "operationId": "members.remove",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound | MemberNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MemberNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "LastOwner",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LastOwner"
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners remove anybody; anybody removes themselves. What a member put into the envelope stays in it, and so do their expenses. An envelope always keeps at least one owner.",
+        "summary": "Remove a member, or leave an envelope"
+      }
+    },
+    "/envelopes/{id}/contributions": {
+      "get": {
+        "tags": [
+          "Members"
+        ],
+        "operationId": "members.contributions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Contribution"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Per member and per envelope: the envelope itself and its sub-envelopes, all time, net of what was taken back.",
+        "summary": "Who put how much into an envelope"
+      }
+    },
+    "/envelopes/{id}/invitations": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.invite",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Invitation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invitation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "AlreadyMember",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlreadyMember"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "NotShareable | LimitReached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/NotShareable"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LimitReached"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only, to top-level envelopes. The address gets an e-mail and sees the invitation once signed in with it. Inviting an address again renews its invitation and sets the new role.",
+        "summary": "Invite somebody by e-mail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Invite"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "get": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.forEnvelope",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Invitation"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "NotShareable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotShareable"
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only: those waiting for an answer and those waiting for approval.",
+        "summary": "List the open invitations of an envelope"
+      }
+    },
+    "/envelopes/{id}/invitations/{invitationId}": {
+      "delete": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "name": "invitationId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound | InvitationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvitationNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "NotShareable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotShareable"
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only.",
+        "summary": "Revoke an invitation, or turn down an accepted one"
+      }
+    },
+    "/envelopes/{id}/invitations/{invitationId}/approve": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.approve",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "name": "invitationId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Member"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound | InvitationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/EnvelopeNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvitationNotFound"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "NotShareable | LimitReached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/NotShareable"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LimitReached"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Owners only. The person becomes a member.",
+        "summary": "Let in somebody who accepted an invitation"
+      }
+    },
+    "/invitations": {
+      "get": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.mine",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Invitation"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          }
+        },
+        "description": "Only those still waiting for my answer.",
+        "summary": "Invitations for my address"
+      }
+    },
+    "/invitations/{invitationId}/accept": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.accept",
+        "parameters": [
+          {
+            "name": "invitationId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invitation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invitation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "InvitationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Does not give access yet: an owner of the envelope has to approve it, and is told by e-mail.",
+        "summary": "Accept an invitation"
+      }
+    },
+    "/invitations/{invitationId}/decline": {
+      "post": {
+        "tags": [
+          "Invitations"
+        ],
+        "operationId": "invitations.decline",
+        "parameters": [
+          {
+            "name": "invitationId",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "InvitationNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationNotFound"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Decline an invitation"
+      }
+    },
+    "/incomes": {
+      "get": {
+        "tags": [
+          "Incomes"
+        ],
+        "operationId": "incomes.list",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Income"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          }
+        },
+        "description": "Newest first.",
+        "summary": "List the user's income"
+      },
+      "post": {
+        "tags": [
+          "Incomes"
+        ],
+        "operationId": "incomes.create",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Income",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Income"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add income",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveIncome"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/incomes/{id}": {
+      "put": {
+        "tags": [
+          "Incomes"
+        ],
+        "operationId": "incomes.update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Income",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Income"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "IncomeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncomeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Edit income",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveIncome"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Incomes"
+        ],
+        "operationId": "incomes.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "IncomeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncomeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Delete income"
       }
     },
     "/expenses": {
@@ -1468,18 +2119,11 @@
             }
           },
           "404": {
-            "description": "EnvelopeNotFound | SpaceNotFound",
+            "description": "EnvelopeNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/EnvelopeNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
                 }
               }
             }
@@ -1496,248 +2140,13 @@
           },
           "required": true
         }
-      }
-    },
-    "/expenses/{id}": {
+      },
       "get": {
         "tags": [
           "Expenses"
         ],
-        "operationId": "expenses.get",
+        "operationId": "expenses.list",
         "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Expense",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Expense"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "ExpenseNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ExpenseNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "summary": "Get an expense"
-      },
-      "put": {
-        "tags": [
-          "Expenses"
-        ],
-        "operationId": "expenses.update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Expense",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Expense"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "ExpenseNotFound | EnvelopeNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ExpenseNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/EnvelopeNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "summary": "Edit an expense",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateExpense"
-              }
-            }
-          },
-          "required": true
-        }
-      },
-      "delete": {
-        "tags": [
-          "Expenses"
-        ],
-        "operationId": "expenses.delete",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "<No Content>"
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "ExpenseNotFound | SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/ExpenseNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "summary": "Delete an expense"
-      }
-    },
-    "/periods/{periodId}/expenses": {
-      "get": {
-        "tags": [
-          "Expenses"
-        ],
-        "operationId": "expenses.listForPeriod",
-        "parameters": [
-          {
-            "name": "periodId",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
-            },
-            "required": true
-          },
-          {
-            "name": "categoryId",
-            "in": "query",
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "required": false
-          },
           {
             "name": "envelopeId",
             "in": "query",
@@ -1849,90 +2258,29 @@
             }
           },
           "404": {
-            "description": "PeriodNotFound | SpaceNotFound",
+            "description": "EnvelopeNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/PeriodNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
                 }
               }
             }
           }
         },
-        "description": "Newest first. Defaults to 50 rows, at most 200.",
-        "summary": "List the expenses of a period"
+        "description": "Of the envelopes the user can see, newest first. Defaults to 50 rows, at most 200.",
+        "summary": "List expenses"
       }
     },
-    "/periods/summaries": {
+    "/expenses/{id}": {
       "get": {
         "tags": [
           "Expenses"
         ],
-        "operationId": "expenses.periodSummaries",
-        "parameters": [],
-        "security": [
-          {
-            "bearer": []
-          },
-          {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PeriodSummary"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
-          }
-        },
-        "description": "Newest first. One call instead of one per period.",
-        "summary": "Planned and spent for every period"
-      }
-    },
-    "/periods/{periodId}/progress": {
-      "get": {
-        "tags": [
-          "Expenses"
-        ],
-        "operationId": "expenses.progress",
+        "operationId": "expenses.get",
         "parameters": [
           {
-            "name": "periodId",
+            "name": "id",
             "in": "path",
             "schema": {
               "type": "string",
@@ -1952,11 +2300,11 @@
         ],
         "responses": {
           "200": {
-            "description": "PeriodProgress",
+            "description": "Expense",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PeriodProgress"
+                  "$ref": "#/components/schemas/Expense"
                 }
               }
             }
@@ -1972,16 +2320,85 @@
             }
           },
           "404": {
-            "description": "PeriodNotFound | SpaceNotFound",
+            "description": "ExpenseNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseNotFound"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get an expense"
+      },
+      "put": {
+        "tags": [
+          "Expenses"
+        ],
+        "operationId": "expenses.update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Expense",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Expense"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ExpenseNotFound | EnvelopeNotFound",
             "content": {
               "application/json": {
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFound"
+                      "$ref": "#/components/schemas/ExpenseNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFound"
+                      "$ref": "#/components/schemas/EnvelopeNotFound"
                     }
                   ]
                 }
@@ -1989,8 +2406,81 @@
             }
           }
         },
-        "description": "Totals for the period and for each envelope.",
-        "summary": "Planned versus spent"
+        "description": "Its author and the owner of the envelope can. The new envelope has to be one the user can see.",
+        "summary": "Edit an expense",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExpense"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Expenses"
+        ],
+        "operationId": "expenses.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Forbidden"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ExpenseNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Its author and the owner of the envelope can.",
+        "summary": "Delete an expense"
       }
     },
     "/recurring-rules": {
@@ -2031,19 +2521,9 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
           }
         },
-        "description": "Newest first.",
+        "description": "The user's own, newest first.",
         "summary": "List recurring rules"
       },
       "post": {
@@ -2082,18 +2562,11 @@
             }
           },
           "404": {
-            "description": "CategoryNotFound | SpaceNotFound",
+            "description": "EnvelopeNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/CategoryNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
                 }
               }
             }
@@ -2160,7 +2633,7 @@
             }
           },
           "404": {
-            "description": "RecurringRuleNotFound | CategoryNotFound | SpaceNotFound",
+            "description": "RecurringRuleNotFound | EnvelopeNotFound",
             "content": {
               "application/json": {
                 "schema": {
@@ -2169,10 +2642,7 @@
                       "$ref": "#/components/schemas/RecurringRuleNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/CategoryNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
+                      "$ref": "#/components/schemas/EnvelopeNotFound"
                     }
                   ]
                 }
@@ -2233,18 +2703,11 @@
             }
           },
           "404": {
-            "description": "RecurringRuleNotFound | SpaceNotFound",
+            "description": "RecurringRuleNotFound",
             "content": {
               "application/json": {
                 "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/RecurringRuleNotFound"
-                    },
-                    {
-                      "$ref": "#/components/schemas/SpaceNotFound"
-                    }
-                  ]
+                  "$ref": "#/components/schemas/RecurringRuleNotFound"
                 }
               }
             }
@@ -2254,90 +2717,26 @@
         "summary": "Delete a recurring rule"
       }
     },
-    "/recurring-rules/suggested-plan": {
+    "/recurring-rules/pending": {
       "get": {
         "tags": [
           "Recurring"
         ],
-        "operationId": "recurring.suggestedPlan",
+        "operationId": "recurring.pending",
         "parameters": [
           {
-            "name": "currency",
+            "name": "from",
             "in": "query",
             "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/Currency"
-                },
-                {
-                  "type": "null"
-                }
-              ]
+              "type": "string"
             },
-            "required": false
-          }
-        ],
-        "security": [
-          {
-            "bearer": []
+            "required": true
           },
           {
-            "cookie": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EnvelopePlan"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
-          }
-        },
-        "description": "Sum of the active rules in one currency per category, to prefill a new period's plan.",
-        "summary": "Suggested envelope amounts"
-      }
-    },
-    "/periods/{periodId}/recurring/apply": {
-      "post": {
-        "tags": [
-          "Recurring"
-        ],
-        "operationId": "recurring.apply",
-        "parameters": [
-          {
-            "name": "periodId",
-            "in": "path",
+            "name": "to",
+            "in": "query",
             "schema": {
-              "type": "string",
-              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-              "format": "uuid"
+              "type": "string"
             },
             "required": true
           }
@@ -2370,18 +2769,441 @@
                 }
               }
             }
+          }
+        },
+        "description": "Counts of the recurring incomes, allocation rules and expenses that have not been applied to the stretch yet. Changes nothing.",
+        "summary": "What applying would add"
+      }
+    },
+    "/recurring-rules/apply": {
+      "post": {
+        "tags": [
+          "Recurring"
+        ],
+        "operationId": "recurring.apply",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ApplyResult",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          }
+        },
+        "description": "Adds, for every active rule not applied for this `from` yet: the recurring incomes (dated on their day of the month), then the allocation rules (the same), then the expenses (dated today when today is in the stretch, else `from`). Safe to call repeatedly. An allocation the envelope cannot take is skipped and counted.",
+        "summary": "Apply the recurring rules to a stretch of time",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyRecurring"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/recurring-incomes": {
+      "get": {
+        "tags": [
+          "Recurring incomes"
+        ],
+        "operationId": "recurringIncomes.list",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecurringIncome"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          }
+        },
+        "description": "The user's own, newest first.",
+        "summary": "List recurring incomes"
+      },
+      "post": {
+        "tags": [
+          "Recurring incomes"
+        ],
+        "operationId": "recurringIncomes.create",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "RecurringIncome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringIncome"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a recurring income",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveRecurringIncome"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/recurring-incomes/{id}": {
+      "put": {
+        "tags": [
+          "Recurring incomes"
+        ],
+        "operationId": "recurringIncomes.update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "RecurringIncome",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringIncome"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
           },
           "404": {
-            "description": "PeriodNotFound | SpaceNotFound",
+            "description": "RecurringIncomeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringIncomeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Setting `active` to false pauses it.",
+        "summary": "Edit a recurring income",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveRecurringIncome"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Recurring incomes"
+        ],
+        "operationId": "recurringIncomes.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "RecurringIncomeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecurringIncomeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Income it already added is kept.",
+        "summary": "Delete a recurring income"
+      }
+    },
+    "/allocation-rules": {
+      "get": {
+        "tags": [
+          "Allocation rules"
+        ],
+        "operationId": "allocationRules.list",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AllocationRule"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          }
+        },
+        "description": "The user's own, newest first.",
+        "summary": "List allocation rules"
+      },
+      "post": {
+        "tags": [
+          "Allocation rules"
+        ],
+        "operationId": "allocationRules.create",
+        "parameters": [],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "AllocationRule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationRule"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "EnvelopeNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvelopeNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Puts a sum into an envelope every month. For a sub-envelope the money comes out of what the user put into its parent.",
+        "summary": "Create an allocation rule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAllocationRule"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/allocation-rules/{id}": {
+      "put": {
+        "tags": [
+          "Allocation rules"
+        ],
+        "operationId": "allocationRules.update",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AllocationRule",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationRule"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AllocationRuleNotFound | EnvelopeNotFound",
             "content": {
               "application/json": {
                 "schema": {
                   "anyOf": [
                     {
-                      "$ref": "#/components/schemas/PeriodNotFound"
+                      "$ref": "#/components/schemas/AllocationRuleNotFound"
                     },
                     {
-                      "$ref": "#/components/schemas/SpaceNotFound"
+                      "$ref": "#/components/schemas/EnvelopeNotFound"
                     }
                   ]
                 }
@@ -2389,8 +3211,248 @@
             }
           }
         },
-        "description": "Adds one expense for every active rule not applied in this period yet, creating a missing envelope with the rule's amount as its plan. Safe to call repeatedly.",
-        "summary": "Apply recurring rules to a period"
+        "description": "Setting `active` to false pauses it.",
+        "summary": "Edit an allocation rule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAllocationRule"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": [
+          "Allocation rules"
+        ],
+        "operationId": "allocationRules.delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "AllocationRuleNotFound",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationRuleNotFound"
+                }
+              }
+            }
+          }
+        },
+        "description": "Allocations it already made are kept.",
+        "summary": "Delete an allocation rule"
+      }
+    },
+    "/overview": {
+      "get": {
+        "tags": [
+          "Overview"
+        ],
+        "operationId": "overview.get",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "timeZone",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Overview",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Overview"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "InvalidTimeZone | InvalidRange",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidTimeZone"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRange"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Income, what was put into envelopes and spent between the two days (both included), the pool that is left, and the figures of every envelope. Balances roll over from earlier days.",
+        "summary": "Money over a stretch of time"
+      }
+    },
+    "/overview/months": {
+      "get": {
+        "tags": [
+          "Overview"
+        ],
+        "operationId": "overview.months",
+        "parameters": [
+          {
+            "name": "startDay",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "name": "timeZone",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 64
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MonthSummary"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unauthorized"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "InvalidTimeZone",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidTimeZone"
+                }
+              }
+            }
+          }
+        },
+        "description": "Every month from the first with activity until now, newest first.",
+        "summary": "History by month"
       }
     },
     "/export": {
@@ -2425,16 +3487,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -2476,16 +3528,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -2537,16 +3579,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Unauthorized"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
                 }
               }
             }
@@ -2612,16 +3644,6 @@
               }
             }
           },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
-          },
           "422": {
             "description": "InvalidImport",
             "content": {
@@ -2682,19 +3704,9 @@
                 }
               }
             }
-          },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
           }
         },
-        "description": "Columns: Period, Category, Amount, Date, Note.",
+        "description": "Columns: Envelope, Subenvelope, Amount, Date, Note.",
         "summary": "Export expenses as CSV"
       }
     },
@@ -2734,16 +3746,6 @@
               }
             }
           },
-          "404": {
-            "description": "SpaceNotFound",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SpaceNotFound"
-                }
-              }
-            }
-          },
           "422": {
             "description": "InvalidCsv",
             "content": {
@@ -2755,7 +3757,7 @@
             }
           }
         },
-        "description": "Creates missing periods and categories by name and skips rows that already exist.",
+        "description": "Creates missing envelopes by name and skips rows that already exist.",
         "summary": "Import expenses from CSV",
         "requestBody": {
           "content": {
@@ -2784,25 +3786,6 @@
         },
         "required": [
           "_tag"
-        ],
-        "additionalProperties": false
-      },
-      "SpaceNotFound": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "SpaceNotFound"
-            ]
-          },
-          "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "_tag",
-          "id"
         ],
         "additionalProperties": false
       },
@@ -2873,17 +3856,17 @@
       "Counts": {
         "type": "object",
         "properties": {
-          "categories": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "periods": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
           "envelopes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "allocations": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "incomes": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -2897,14 +3880,26 @@
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
+          },
+          "recurringIncomes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "allocationRules": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           }
         },
         "required": [
-          "categories",
-          "periods",
           "envelopes",
+          "allocations",
+          "incomes",
           "expenses",
-          "recurringRules"
+          "recurringRules",
+          "recurringIncomes",
+          "allocationRules"
         ],
         "additionalProperties": false
       },
@@ -3197,30 +4192,30 @@
           "version": {
             "type": "number",
             "enum": [
-              1
+              2
             ]
           },
           "exportedAt": {
             "type": "string"
           },
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Category"
-            },
-            "maxItems": 1000
-          },
-          "periods": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Period"
-            },
-            "maxItems": 10000
-          },
           "envelopes": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Envelope"
+            },
+            "maxItems": 2000
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Allocation"
+            },
+            "maxItems": 200000
+          },
+          "incomes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Income"
             },
             "maxItems": 100000
           },
@@ -3237,20 +4232,36 @@
               "$ref": "#/components/schemas/RecurringRule"
             },
             "maxItems": 1000
+          },
+          "recurringIncomes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecurringIncome"
+            },
+            "maxItems": 1000
+          },
+          "allocationRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AllocationRule"
+            },
+            "maxItems": 1000
           }
         },
         "required": [
           "version",
           "exportedAt",
-          "categories",
-          "periods",
           "envelopes",
+          "allocations",
+          "incomes",
           "expenses",
-          "recurringRules"
+          "recurringRules",
+          "recurringIncomes",
+          "allocationRules"
         ],
         "additionalProperties": false
       },
-      "RecurringRule": {
+      "AllocationRule": {
         "type": "object",
         "properties": {
           "id": {
@@ -3258,7 +4269,12 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
             "format": "uuid"
           },
-          "categoryId": {
+          "userId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "envelopeId": {
             "type": "string",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
             "format": "uuid"
@@ -3268,8 +4284,125 @@
             "maximum": 1000000000000,
             "exclusiveMinimum": 0
           },
-          "currency": {
-            "$ref": "#/components/schemas/Currency"
+          "dayOfMonth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 28
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "envelopeId",
+          "amountMinor",
+          "dayOfMonth",
+          "note",
+          "active",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "title": "AllocationRule.json"
+      },
+      "RecurringIncome": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 1000000000000,
+            "exclusiveMinimum": 0
+          },
+          "dayOfMonth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 28
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "amountMinor",
+          "dayOfMonth",
+          "note",
+          "active",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "title": "RecurringIncome.json"
+      },
+      "RecurringRule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "envelopeId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 1000000000000,
+            "exclusiveMinimum": 0
           },
           "frequency": {
             "type": "string",
@@ -3301,9 +4434,9 @@
         },
         "required": [
           "id",
-          "categoryId",
+          "userId",
+          "envelopeId",
           "amountMinor",
-          "currency",
           "frequency",
           "note",
           "active",
@@ -3312,22 +4445,6 @@
         ],
         "additionalProperties": false,
         "title": "RecurringRule.json"
-      },
-      "Currency": {
-        "type": "string",
-        "enum": [
-          "PLN",
-          "EUR",
-          "USD",
-          "GBP",
-          "CHF",
-          "CZK",
-          "SEK",
-          "NOK",
-          "DKK",
-          "HUF",
-          "JPY"
-        ]
       },
       "Expense": {
         "type": "object",
@@ -3342,7 +4459,7 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
             "format": "uuid"
           },
-          "periodId": {
+          "createdBy": {
             "type": "string",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
             "format": "uuid"
@@ -3351,28 +4468,6 @@
             "type": "integer",
             "maximum": 1000000000000,
             "exclusiveMinimum": 0
-          },
-          "originalAmountMinor": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "maximum": 1000000000000,
-                "exclusiveMinimum": 0
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "originalCurrency": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Currency"
-              },
-              {
-                "type": "null"
-              }
-            ]
           },
           "spentAt": {
             "type": "string"
@@ -3410,10 +4505,8 @@
         "required": [
           "id",
           "envelopeId",
-          "periodId",
+          "createdBy",
           "amountMinor",
-          "originalAmountMinor",
-          "originalCurrency",
           "spentAt",
           "note",
           "recurringId",
@@ -3423,6 +4516,114 @@
         "additionalProperties": false,
         "title": "Expense.json"
       },
+      "Income": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 1000000000000,
+            "exclusiveMinimum": 0
+          },
+          "receivedOn": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "amountMinor",
+          "receivedOn",
+          "note",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "title": "Income.json"
+      },
+      "Allocation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "envelopeId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": -1000000000000,
+            "maximum": 1000000000000
+          },
+          "madeOn": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "envelopeId",
+          "userId",
+          "amountMinor",
+          "madeOn",
+          "note",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false,
+        "title": "Allocation.json"
+      },
       "Envelope": {
         "type": "object",
         "properties": {
@@ -3431,93 +4632,22 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
             "format": "uuid"
           },
-          "periodId": {
+          "ownerId": {
             "type": "string",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
             "format": "uuid"
           },
-          "categoryId": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
-          },
-          "plannedMinor": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 1000000000000
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "periodId",
-          "categoryId",
-          "plannedMinor",
-          "createdAt",
-          "updatedAt"
-        ],
-        "additionalProperties": false,
-        "title": "Envelope.json"
-      },
-      "Period": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200
-          },
-          "startDate": {
-            "type": "string"
-          },
-          "endDate": {
-            "type": "string"
-          },
-          "incomeMinor": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 1000000000000
-          },
-          "currency": {
-            "$ref": "#/components/schemas/Currency"
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "startDate",
-          "endDate",
-          "incomeMinor",
-          "currency",
-          "createdAt",
-          "updatedAt"
-        ],
-        "additionalProperties": false,
-        "title": "Period.json"
-      },
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "name": {
             "type": "string",
@@ -3547,6 +4677,8 @@
         },
         "required": [
           "id",
+          "ownerId",
+          "parentId",
           "name",
           "color",
           "icon",
@@ -3554,7 +4686,7 @@
           "updatedAt"
         ],
         "additionalProperties": false,
-        "title": "Category.json"
+        "title": "Envelope.json"
       },
       "ImportPreview": {
         "type": "object",
@@ -3572,186 +4704,107 @@
         ],
         "additionalProperties": false
       },
-      "PeriodNotFound": {
+      "InvalidTimeZone": {
         "type": "object",
         "properties": {
           "_tag": {
             "type": "string",
             "enum": [
-              "PeriodNotFound"
+              "InvalidTimeZone"
             ]
           },
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
+          "timeZone": {
+            "type": "string"
           }
         },
         "required": [
           "_tag",
-          "id"
+          "timeZone"
         ],
         "additionalProperties": false
       },
-      "ApplyResult": {
+      "MonthSummary": {
         "type": "object",
         "properties": {
-          "added": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "added"
-        ],
-        "additionalProperties": false
-      },
-      "EnvelopePlan": {
-        "type": "object",
-        "properties": {
-          "categoryId": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
+          "from": {
+            "type": "string"
           },
-          "plannedMinor": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 1000000000000
-          }
-        },
-        "required": [
-          "categoryId",
-          "plannedMinor"
-        ],
-        "additionalProperties": false
-      },
-      "RecurringRuleNotFound": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "RecurringRuleNotFound"
-            ]
-          },
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "_tag",
-          "id"
-        ],
-        "additionalProperties": false
-      },
-      "CategoryNotFound": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "CategoryNotFound"
-            ]
-          },
-          "id": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "_tag",
-          "id"
-        ],
-        "additionalProperties": false
-      },
-      "SaveRecurringRule": {
-        "type": "object",
-        "properties": {
-          "categoryId": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
-          },
-          "amountMinor": {
-            "type": "integer",
-            "maximum": 1000000000000,
-            "exclusiveMinimum": 0
-          },
-          "currency": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Currency"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "frequency": {
-            "type": "string",
-            "enum": [
-              "weekly",
-              "monthly"
-            ]
-          },
-          "note": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 1000
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "active": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "categoryId",
-          "amountMinor",
-          "frequency",
-          "note",
-          "active"
-        ],
-        "additionalProperties": false
-      },
-      "PeriodProgress": {
-        "type": "object",
-        "properties": {
-          "periodId": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
+          "to": {
+            "type": "string"
           },
           "incomeMinor": {
             "type": "integer",
             "minimum": 0,
             "maximum": 1000000000000
           },
-          "plannedMinor": {
+          "allocatedMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "spentMinor": {
             "type": "integer",
             "minimum": 0,
             "maximum": 1000000000000
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "incomeMinor",
+          "allocatedMinor",
+          "spentMinor"
+        ],
+        "additionalProperties": false
+      },
+      "InvalidRange": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "InvalidRange"
+            ]
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "from",
+          "to"
+        ],
+        "additionalProperties": false
+      },
+      "Overview": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "incomeMinor": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000000000
+          },
+          "allocatedMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "spentMinor": {
             "type": "integer",
             "minimum": 0,
             "maximum": 1000000000000
           },
-          "remainingMinor": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          },
-          "unallocatedMinor": {
+          "poolMinor": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -3759,22 +4812,22 @@
           "envelopes": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/EnvelopeProgress"
+              "$ref": "#/components/schemas/EnvelopeFigures"
             }
           }
         },
         "required": [
-          "periodId",
+          "from",
+          "to",
           "incomeMinor",
-          "plannedMinor",
+          "allocatedMinor",
           "spentMinor",
-          "remainingMinor",
-          "unallocatedMinor",
+          "poolMinor",
           "envelopes"
         ],
         "additionalProperties": false
       },
-      "EnvelopeProgress": {
+      "EnvelopeFigures": {
         "type": "object",
         "properties": {
           "envelopeId": {
@@ -3782,22 +4835,47 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
             "format": "uuid"
           },
-          "categoryId": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
-          "plannedMinor": {
+          "openingMinor": {
             "type": "integer",
-            "minimum": 0,
-            "maximum": 1000000000000
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "allocatedMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
           },
           "spentMinor": {
             "type": "integer",
             "minimum": 0,
             "maximum": 1000000000000
           },
-          "remainingMinor": {
+          "balanceMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "freeMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "memberCount": {
             "type": "integer",
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
@@ -3805,44 +4883,32 @@
         },
         "required": [
           "envelopeId",
-          "categoryId",
-          "plannedMinor",
+          "parentId",
+          "openingMinor",
+          "allocatedMinor",
           "spentMinor",
-          "remainingMinor"
+          "balanceMinor",
+          "freeMinor",
+          "role",
+          "memberCount"
         ],
         "additionalProperties": false
       },
-      "PeriodSummary": {
-        "type": "object",
-        "properties": {
-          "period": {
-            "$ref": "#/components/schemas/Period"
-          },
-          "plannedMinor": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 1000000000000
-          },
-          "spentMinor": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 1000000000000
-          }
-        },
-        "required": [
-          "period",
-          "plannedMinor",
-          "spentMinor"
+      "Role": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "member"
         ],
-        "additionalProperties": false
+        "description": "`owner` manages the envelope and its members; `member` works with the money in it."
       },
-      "ExpenseNotFound": {
+      "AllocationRuleNotFound": {
         "type": "object",
         "properties": {
           "_tag": {
             "type": "string",
             "enum": [
-              "ExpenseNotFound"
+              "AllocationRuleNotFound"
             ]
           },
           "id": {
@@ -3868,6 +4934,254 @@
           },
           "id": {
             "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "SaveAllocationRule": {
+        "type": "object",
+        "properties": {
+          "envelopeId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 1000000000000,
+            "exclusiveMinimum": 0
+          },
+          "dayOfMonth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 28
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "envelopeId",
+          "amountMinor",
+          "dayOfMonth",
+          "note",
+          "active"
+        ],
+        "additionalProperties": false
+      },
+      "RecurringIncomeNotFound": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "RecurringIncomeNotFound"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "SaveRecurringIncome": {
+        "type": "object",
+        "properties": {
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 1000000000000,
+            "exclusiveMinimum": 0
+          },
+          "dayOfMonth": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 28
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "amountMinor",
+          "dayOfMonth",
+          "note",
+          "active"
+        ],
+        "additionalProperties": false
+      },
+      "ApplyResult": {
+        "type": "object",
+        "properties": {
+          "incomes": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "allocations": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "expenses": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "skipped": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "incomes",
+          "allocations",
+          "expenses",
+          "skipped"
+        ],
+        "additionalProperties": false
+      },
+      "ApplyRecurring": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ],
+        "additionalProperties": false
+      },
+      "RecurringRuleNotFound": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "RecurringRuleNotFound"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "SaveRecurringRule": {
+        "type": "object",
+        "properties": {
+          "envelopeId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 1000000000000,
+            "exclusiveMinimum": 0
+          },
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "weekly",
+              "monthly"
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "envelopeId",
+          "amountMinor",
+          "frequency",
+          "note",
+          "active"
+        ],
+        "additionalProperties": false
+      },
+      "Forbidden": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "Forbidden"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "ExpenseNotFound": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "ExpenseNotFound"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
           }
         },
         "required": [
@@ -3902,16 +5216,6 @@
                 "type": "null"
               }
             ]
-          },
-          "original": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/OriginalAmount"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "required": [
@@ -3919,24 +5223,6 @@
           "amountMinor",
           "spentAt",
           "note"
-        ],
-        "additionalProperties": false
-      },
-      "OriginalAmount": {
-        "type": "object",
-        "properties": {
-          "amountMinor": {
-            "type": "integer",
-            "maximum": 1000000000000,
-            "exclusiveMinimum": 0
-          },
-          "currency": {
-            "$ref": "#/components/schemas/Currency"
-          }
-        },
-        "required": [
-          "amountMinor",
-          "currency"
         ],
         "additionalProperties": false
       },
@@ -3966,16 +5252,6 @@
                 "type": "null"
               }
             ]
-          },
-          "original": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/OriginalAmount"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "required": [
@@ -3986,199 +5262,13 @@
         ],
         "additionalProperties": false
       },
-      "EnvelopeAlreadyExists": {
+      "IncomeNotFound": {
         "type": "object",
         "properties": {
           "_tag": {
             "type": "string",
             "enum": [
-              "EnvelopeAlreadyExists"
-            ]
-          },
-          "periodId": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
-          },
-          "categoryId": {
-            "type": "string",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "_tag",
-          "periodId",
-          "categoryId"
-        ],
-        "additionalProperties": false
-      },
-      "PeriodDetail": {
-        "type": "object",
-        "properties": {
-          "period": {
-            "$ref": "#/components/schemas/Period"
-          },
-          "envelopes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Envelope"
-            }
-          },
-          "plannedMinor": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 1000000000000
-          },
-          "unallocatedMinor": {
-            "type": "integer",
-            "minimum": -9007199254740991,
-            "maximum": 9007199254740991
-          }
-        },
-        "required": [
-          "period",
-          "envelopes",
-          "plannedMinor",
-          "unallocatedMinor"
-        ],
-        "additionalProperties": false
-      },
-      "SetPlan": {
-        "type": "object",
-        "properties": {
-          "incomeMinor": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 1000000000000
-          },
-          "envelopes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EnvelopePlan"
-            },
-            "maxItems": 500
-          }
-        },
-        "required": [
-          "incomeMinor",
-          "envelopes"
-        ],
-        "additionalProperties": false
-      },
-      "InvalidPeriodRange": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "InvalidPeriodRange"
-            ]
-          },
-          "startDate": {
-            "type": "string"
-          },
-          "endDate": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "_tag",
-          "startDate",
-          "endDate"
-        ],
-        "additionalProperties": false
-      },
-      "UpdatePeriod": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200
-          },
-          "startDate": {
-            "type": "string"
-          },
-          "endDate": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "startDate",
-          "endDate"
-        ],
-        "additionalProperties": false
-      },
-      "CreatePeriod": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200
-          },
-          "startDate": {
-            "type": "string"
-          },
-          "endDate": {
-            "type": "string"
-          },
-          "incomeMinor": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 1000000000000
-          },
-          "currency": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Currency"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "envelopes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EnvelopePlan"
-            },
-            "maxItems": 500
-          }
-        },
-        "required": [
-          "name",
-          "startDate",
-          "endDate",
-          "incomeMinor",
-          "envelopes"
-        ],
-        "additionalProperties": false
-      },
-      "NoPeriods": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "NoPeriods"
-            ]
-          }
-        },
-        "required": [
-          "_tag"
-        ],
-        "additionalProperties": false
-      },
-      "CategoryInUse": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": [
-              "CategoryInUse"
+              "IncomeNotFound"
             ]
           },
           "id": {
@@ -4193,22 +5283,22 @@
         ],
         "additionalProperties": false
       },
-      "UpdateCategory": {
+      "SaveIncome": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200
+          "amountMinor": {
+            "type": "integer",
+            "maximum": 1000000000000,
+            "exclusiveMinimum": 0
           },
-          "color": {
+          "receivedOn": {
             "type": "string"
           },
-          "icon": {
+          "note": {
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 50
+                "maxLength": 1000
               },
               {
                 "type": "null"
@@ -4217,45 +5307,32 @@
           }
         },
         "required": [
-          "name",
-          "color",
-          "icon"
+          "amountMinor",
+          "receivedOn",
+          "note"
         ],
-        "additionalProperties": false,
-        "title": "Category.jsonUpdate"
+        "additionalProperties": false
       },
-      "CreateCategory": {
+      "InvitationNotFound": {
         "type": "object",
         "properties": {
-          "name": {
+          "_tag": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 200
-          },
-          "color": {
-            "type": "string"
-          },
-          "icon": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 50
-              },
-              {
-                "type": "null"
-              }
+            "enum": [
+              "InvitationNotFound"
             ]
+          },
+          "id": {
+            "type": "string"
           }
         },
         "required": [
-          "name",
-          "color",
-          "icon"
+          "_tag",
+          "id"
         ],
-        "additionalProperties": false,
-        "title": "Category.jsonCreate"
+        "additionalProperties": false
       },
-      "Space": {
+      "Invitation": {
         "type": "object",
         "properties": {
           "id": {
@@ -4263,32 +5340,394 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
             "format": "uuid"
           },
-          "name": {
+          "envelopeId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "envelopeName": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200
           },
-          "defaultCurrency": {
-            "$ref": "#/components/schemas/Currency"
+          "email": {
+            "$ref": "#/components/schemas/Email"
           },
-          "createdAt": {
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InvitationStatus"
+          },
+          "invitedBy": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "$ref": "#/components/schemas/Email"
+                  },
+                  "name": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "email",
+                  "name"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "acceptedBy": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
             "type": "string"
           },
-          "updatedAt": {
+          "createdAt": {
             "type": "string"
           }
         },
         "required": [
           "id",
-          "name",
-          "defaultCurrency",
-          "createdAt",
-          "updatedAt"
+          "envelopeId",
+          "envelopeName",
+          "email",
+          "role",
+          "status",
+          "invitedBy",
+          "acceptedBy",
+          "expiresAt",
+          "createdAt"
         ],
-        "additionalProperties": false,
-        "title": "Space.json"
+        "additionalProperties": false
       },
-      "SaveSpace": {
+      "Email": {
+        "type": "string",
+        "maxLength": 254
+      },
+      "InvitationStatus": {
+        "type": "string",
+        "enum": [
+          "invited",
+          "accepted"
+        ]
+      },
+      "LimitReached": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "LimitReached"
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "_tag",
+          "limit"
+        ],
+        "additionalProperties": false
+      },
+      "NotShareable": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "NotShareable"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "Member": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          },
+          "joinedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "email",
+          "name",
+          "role",
+          "joinedAt"
+        ],
+        "additionalProperties": false
+      },
+      "AlreadyMember": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "AlreadyMember"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "Invite": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "$ref": "#/components/schemas/Email"
+          },
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "email",
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "Contribution": {
+        "type": "object",
+        "properties": {
+          "envelopeId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "envelopeId",
+          "userId",
+          "amountMinor"
+        ],
+        "additionalProperties": false
+      },
+      "LastOwner": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "LastOwner"
+            ]
+          }
+        },
+        "required": [
+          "_tag"
+        ],
+        "additionalProperties": false
+      },
+      "MemberNotFound": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "MemberNotFound"
+            ]
+          },
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "_tag",
+          "userId"
+        ],
+        "additionalProperties": false
+      },
+      "SetRole": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/Role"
+          }
+        },
+        "required": [
+          "role"
+        ],
+        "additionalProperties": false
+      },
+      "NotEnoughMoney": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "NotEnoughMoney"
+            ]
+          },
+          "envelopeId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "availableMinor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "_tag",
+          "envelopeId",
+          "availableMinor"
+        ],
+        "additionalProperties": false
+      },
+      "AllocationNotFound": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "AllocationNotFound"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "_tag",
+          "id"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateAllocation": {
+        "type": "object",
+        "properties": {
+          "amountMinor": {
+            "type": "integer",
+            "minimum": -1000000000000,
+            "maximum": 1000000000000
+          },
+          "madeOn": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "amountMinor",
+          "madeOn",
+          "note"
+        ],
+        "additionalProperties": false
+      },
+      "CreateAllocation": {
+        "type": "object",
+        "properties": {
+          "envelopeId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          },
+          "amountMinor": {
+            "type": "integer",
+            "minimum": -1000000000000,
+            "maximum": 1000000000000
+          },
+          "madeOn": {
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "envelopeId",
+          "amountMinor",
+          "madeOn",
+          "note"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateEnvelope": {
         "type": "object",
         "properties": {
           "name": {
@@ -4296,13 +5735,89 @@
             "minLength": 1,
             "maxLength": 200
           },
-          "defaultCurrency": {
-            "$ref": "#/components/schemas/Currency"
+          "color": {
+            "type": "string"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "name",
-          "defaultCurrency"
+          "color",
+          "icon"
+        ],
+        "additionalProperties": false
+      },
+      "ParentMustBeTopLevel": {
+        "type": "object",
+        "properties": {
+          "_tag": {
+            "type": "string",
+            "enum": [
+              "ParentMustBeTopLevel"
+            ]
+          },
+          "parentId": {
+            "type": "string",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "_tag",
+          "parentId"
+        ],
+        "additionalProperties": false
+      },
+      "CreateEnvelope": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "color": {
+            "type": "string"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "parentId",
+          "name",
+          "color",
+          "icon"
         ],
         "additionalProperties": false
       },
@@ -4341,10 +5856,6 @@
         ],
         "additionalProperties": false,
         "title": "User.json"
-      },
-      "Email": {
-        "type": "string",
-        "maxLength": 254
       },
       "InvalidLogin": {
         "type": "object",
@@ -4535,19 +6046,34 @@
       "name": "Auth"
     },
     {
-      "name": "Spaces"
+      "name": "Envelopes"
     },
     {
-      "name": "Categories"
+      "name": "Allocations"
     },
     {
-      "name": "Periods"
+      "name": "Members"
+    },
+    {
+      "name": "Invitations"
+    },
+    {
+      "name": "Incomes"
     },
     {
       "name": "Expenses"
     },
     {
       "name": "Recurring"
+    },
+    {
+      "name": "Recurring incomes"
+    },
+    {
+      "name": "Allocation rules"
+    },
+    {
+      "name": "Overview"
     },
     {
       "name": "Transfer"

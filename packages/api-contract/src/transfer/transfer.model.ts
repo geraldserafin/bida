@@ -1,18 +1,32 @@
 import { Schema } from "effect";
-import { EnvelopeJson, PeriodJson } from "../budgets/index.ts";
-import { CategoryJson } from "../categories/index.ts";
+import { AllocationJson, EnvelopeJson } from "../envelopes/index.ts";
 import { ExpenseJson } from "../expenses/index.ts";
-import { RecurringRuleJson } from "../recurring/index.ts";
+import { IncomeJson } from "../incomes/index.ts";
+import {
+  AllocationRuleJson,
+  RecurringIncomeJson,
+  RecurringRuleJson,
+} from "../recurring/index.ts";
 
-/** A full snapshot of the data. Exported and imported as one JSON document. */
+/**
+ * A full snapshot of the user's data. Exported and imported as one JSON
+ * document. Importing gives everything new ids and makes the importing user
+ * the owner, so a document can be loaded by anybody, also more than once.
+ */
 export const ExportDocument = Schema.Struct({
-  version: Schema.Literal(1),
+  version: Schema.Literal(2),
   exportedAt: Schema.DateTimeUtcFromString,
-  categories: Schema.Array(CategoryJson).check(Schema.isMaxLength(1_000)),
-  periods: Schema.Array(PeriodJson).check(Schema.isMaxLength(10_000)),
-  envelopes: Schema.Array(EnvelopeJson).check(Schema.isMaxLength(100_000)),
+  envelopes: Schema.Array(EnvelopeJson).check(Schema.isMaxLength(2_000)),
+  allocations: Schema.Array(AllocationJson).check(Schema.isMaxLength(200_000)),
+  incomes: Schema.Array(IncomeJson).check(Schema.isMaxLength(100_000)),
   expenses: Schema.Array(ExpenseJson).check(Schema.isMaxLength(200_000)),
   recurringRules: Schema.Array(RecurringRuleJson).check(
+    Schema.isMaxLength(1_000),
+  ),
+  recurringIncomes: Schema.Array(RecurringIncomeJson).check(
+    Schema.isMaxLength(1_000),
+  ),
+  allocationRules: Schema.Array(AllocationRuleJson).check(
     Schema.isMaxLength(1_000),
   ),
 }).annotate({ identifier: "ExportDocument" });
@@ -20,11 +34,13 @@ export type ExportDocument = typeof ExportDocument.Type;
 
 /** Row counts per kind of data. */
 export const Counts = Schema.Struct({
-  categories: Schema.Int,
-  periods: Schema.Int,
   envelopes: Schema.Int,
+  allocations: Schema.Int,
+  incomes: Schema.Int,
   expenses: Schema.Int,
   recurringRules: Schema.Int,
+  recurringIncomes: Schema.Int,
+  allocationRules: Schema.Int,
 }).annotate({ identifier: "Counts" });
 export type Counts = typeof Counts.Type;
 

@@ -1,7 +1,9 @@
-import { Api } from "@bida/api-contract";
+import { Api, CurrentUser } from "@bida/api-contract";
 import { Effect } from "effect";
 import { HttpApiBuilder } from "effect/http-api";
 import { ExpensesService } from "./expenses.service.ts";
+
+const userId = Effect.map(CurrentUser, ({ user }) => user.id);
 
 /** Thin adapter: decoded request in, service call, domain errors out. */
 export const ExpensesHttp = HttpApiBuilder.group(
@@ -10,16 +12,20 @@ export const ExpensesHttp = HttpApiBuilder.group(
   Effect.fn(function* (handlers) {
     const expenses = yield* ExpensesService;
     return handlers
-      .handle("create", ({ payload }) => expenses.create(payload))
-      .handle("get", ({ params }) => expenses.get(params.id))
+      .handle("create", ({ payload }) =>
+        Effect.flatMap(userId, (id) => expenses.create(id, payload)),
+      )
+      .handle("get", ({ params }) =>
+        Effect.flatMap(userId, (id) => expenses.get(id, params.id)),
+      )
       .handle("update", ({ params, payload }) =>
-        expenses.update(params.id, payload),
+        Effect.flatMap(userId, (id) => expenses.update(id, params.id, payload)),
       )
-      .handle("delete", ({ params }) => expenses.remove(params.id))
-      .handle("listForPeriod", ({ params, query }) =>
-        expenses.listForPeriod(params.periodId, query),
+      .handle("delete", ({ params }) =>
+        Effect.flatMap(userId, (id) => expenses.remove(id, params.id)),
       )
-      .handle("progress", ({ params }) => expenses.progress(params.periodId))
-      .handle("periodSummaries", () => expenses.periodSummaries);
+      .handle("list", ({ query }) =>
+        Effect.flatMap(userId, (id) => expenses.list(id, query)),
+      );
   }),
 );

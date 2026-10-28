@@ -1,61 +1,14 @@
 {
   "@@locale": "en",
   "appTitle": "PLNing",
-  "dashboardEmptyTitle": "Your envelope budget lives here.",
-  "dashboardEmptyBody": "Create a period and split your income to get started.",
-  "newPeriod": "New period",
   "addExpense": "Add expense",
   "envelopes": "Envelopes",
-  "noEnvelopes": "No categories allocated yet.",
+  "noEnvelopes": "No envelopes yet.",
   "income": "Income",
-  "planned": "Planned",
   "spent": "Spent",
-  "unallocated": "Unallocated",
   "overAllocated": "Over-allocated",
-  "remaining": "Remaining",
-  "remainingIn": "Remaining · {period}",
-  "@remainingIn": {
-    "placeholders": {
-      "period": {
-        "type": "String"
-      }
-    }
-  },
-  "amountLeft": "{amount} left",
-  "@amountLeft": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "overBy": "Over by {amount}",
-  "@overBy": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "periodName": "Period name",
-  "enterName": "Enter a name",
-  "start": "Start",
-  "end": "End",
-  "incomeForPeriod": "Income for this period",
-  "enterIncome": "Enter your income",
-  "splitAcrossCategories": "Split across categories",
-  "overAllocationWarning": "You've allocated {amount} more than your income. You can still continue.",
-  "@overAllocationWarning": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "createPeriod": "Create period",
-  "editPlan": "Edit plan",
   "saveChanges": "Save changes",
-  "noEnvelopesForExpense": "This period has no envelopes yet. Add categories to the period before logging expenses.",
+  "noEnvelopesForExpense": "You have no envelopes yet. Add one before saving an expense.",
   "envelope": "Envelope",
   "pickEnvelope": "Pick an envelope",
   "amount": "Amount",
@@ -64,19 +17,11 @@
   "noteOptional": "Note (optional)",
   "saveExpense": "Save expense",
   "editExpense": "Edit expense",
-  "categories": "Categories",
-  "manageCategories": "Manage categories",
-  "newCategory": "New category",
-  "editCategory": "Edit category",
   "name": "Name",
   "icon": "Icon",
   "color": "Color",
   "save": "Save",
   "delete": "Delete",
-  "addCategory": "Add category",
-  "noCategories": "No categories yet. Add your first one.",
-  "categoryInUse": "Can't delete a category that's used in a period.",
-  "period": "Period",
   "expenses": "Expenses",
   "noExpenses": "No expenses in this envelope yet.",
   "deleteExpense": "Delete expense",
@@ -90,32 +35,15 @@
   },
   "cancel": "Cancel",
   "expenseDeleted": "Expense deleted",
-  "plannedSplit": "Planned split",
-  "plannedVsSpent": "Planned vs. spent",
   "spendingOverTime": "Spending over time",
   "notEnoughData": "Not enough data yet.",
-  "recurringRules": "Recurring rules",
   "newRule": "New rule",
   "editRule": "Edit rule",
-  "addRule": "Add rule",
-  "category": "Category",
-  "note": "Note",
   "frequency": "Frequency",
   "weekly": "Weekly",
   "monthly": "Monthly",
   "active": "Active",
   "noRecurringRules": "No recurring rules yet. Add templates for regular income or expenses.",
-  "prefillFromRecurring": "Pre-fill from recurring",
-  "applyRecurring": "Add recurring to this period",
-  "recurringApplied": "{count, plural, =0{Everything is already up to date} =1{Added 1 recurring expense} other{Added {count} recurring expenses}}",
-  "@recurringApplied": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "needCategoryFirst": "Add a category first.",
   "settings": "Settings",
   "security": "Security",
   "appLock": "App lock (PIN)",
@@ -173,47 +101,12 @@
   "today": "Today",
   "noteHint": "e.g. Weekly groceries",
   "addNew": "New",
-  "remainingInCategory": "Remaining in {category}",
-  "@remainingInCategory": {
-    "placeholders": {
-      "category": {
-        "type": "String"
-      }
-    }
-  },
   "history": "History",
-  "periods": "Periods",
   "all": "All",
   "dateRange": "Date range",
   "noMatchingExpenses": "No expenses match the filters.",
-  "yesterday": "Yesterday",
-  "noPeriodsYet": "No periods yet.",
-  "upcoming": "Upcoming",
-  "currentSet": "Current",
-  "earlier": "Earlier",
   "newExpense": "New expense",
-  "deletePeriod": "Delete period",
-  "deletePeriodConfirm": "Delete \"{name}\" and all its data?",
-  "@deletePeriodConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "periodDeleted": "Period deleted",
   "dashboard": "Dashboard",
-  "periodRange": "{start} – {end}",
-  "@periodRange": {
-    "placeholders": {
-      "start": {
-        "type": "String"
-      },
-      "end": {
-        "type": "String"
-      }
-    }
-  },
   "errorUnreachable": "Can't reach the server. Check your connection and try again.",
   "errorNotFound": "That data no longer exists. It may have been changed on another device.",
   "errorConflict": "This conflicts with the data that is already there.",
@@ -223,8 +116,6 @@
   "loadFailed": "Couldn't load your data",
   "errorUnauthorized": "You are signed out. Sign in again.",
   "errorRateLimited": "Too many tries. Wait a while and try again.",
-  "signInTitle": "Sign in",
-  "signInSubtitle": "Enter your e-mail address. We will send you a code and a link to sign in; there is no password.",
   "emailAddress": "E-mail address",
   "enterValidEmail": "Enter a valid e-mail address",
   "sendCode": "Send code",
@@ -236,11 +127,9 @@
       }
     }
   },
-  "signInCode": "Code",
   "enterCode": "Enter the 6-digit code",
   "signInAction": "Sign in",
   "useOtherEmail": "Use another address",
-  "resendCode": "Send the code again",
   "invalidCode": "The code is wrong or has expired.",
   "account": "Account",
   "signedInAs": "Signed in as {email}",
@@ -256,6 +145,273 @@
   "signInWithGoogle": "Continue with Google",
   "googleSignInFailed": "Google sign-in did not work. Try again or use the e-mail code.",
   "orSeparator": "or",
+  "addEnvelope": "Add envelope",
+  "addIncome": "Add income",
+  "addSubEnvelope": "Add sub-envelope",
+  "allocate": "Allocate",
+  "allocated": "Allocated",
+  "allocationDeleted": "Allocation deleted",
+  "allocations": "Allocations",
+  "available": "Available",
+  "balance": "Balance",
+  "balanceOfEnvelope": "Balance of {envelope}",
+  "@balanceOfEnvelope": {
+    "placeholders": {
+      "envelope": {
+        "type": "String"
+      }
+    }
+  },
+  "canTakeBack": "Can take back: {amount}",
+  "@canTakeBack": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteAllocation": "Delete allocation",
+  "deleteAllocationConfirm": "Delete the allocation of {amount}?",
+  "@deleteAllocationConfirm": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteEnvelope": "Delete envelope",
+  "deleteEnvelopeConfirm": "Delete “{name}” with its sub-envelopes, expenses and allocations? The money put into it goes back to the pool.",
+  "@deleteEnvelopeConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteIncome": "Delete income",
+  "deleteIncomeConfirm": "Delete the income of {amount}?",
+  "@deleteIncomeConfirm": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "editEnvelope": "Edit envelope",
+  "editIncome": "Edit income",
+  "envelopeDeleted": "Envelope deleted",
+  "firstDayOfMonthHint": "Budget months start on this day",
+  "freeInEnvelope": "Free in envelope",
+  "fromEarlierMonths": "From earlier months",
+  "incomeDeleted": "Income deleted",
+  "incomeNoteHint": "e.g. Salary",
+  "incomes": "Income",
+  "manageEnvelopes": "Manage envelopes",
+  "monthLine": "Income {income} · allocated {allocated}",
+  "@monthLine": {
+    "placeholders": {
+      "income": {
+        "type": "String"
+      },
+      "allocated": {
+        "type": "String"
+      }
+    }
+  },
+  "months": "Months",
+  "needEnvelopeFirst": "Add an envelope first.",
+  "newEnvelope": "New envelope",
+  "nextMonth": "Next month",
+  "noAllocations": "Nothing allocated yet.",
+  "noIncomes": "No income yet. Add your first payday, then split it between envelopes.",
+  "noMonthsYet": "No months yet.",
+  "noParent": "None (top-level envelope)",
+  "notEnoughMoney": "Not enough money. Available: {amount}.",
+  "@notEnoughMoney": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "parentEnvelope": "Parent envelope",
+  "parentFreeCaption": "Free in “{parent}”: {amount}",
+  "@parentFreeCaption": {
+    "placeholders": {
+      "parent": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "poolCaption": "Unallocated: {amount}",
+  "@poolCaption": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "previousMonth": "Previous month",
+  "subEnvelopes": "Sub-envelopes",
+  "takeBack": "Take back",
+  "accept": "Accept",
+  "alreadyMember": "This address already belongs to a member of the envelope.",
+  "approve": "Approve",
+  "awaitingAnswer": "Waiting for an answer",
+  "awaitingApproval": "Accepted, waiting for approval",
+  "decline": "Decline",
+  "formerMember": "Former member",
+  "invitationAccepted": "Invitation accepted. An owner of the envelope still has to approve you.",
+  "invitationBanner": "{inviter} invites you to the envelope “{envelope}”",
+  "@invitationBanner": {
+    "placeholders": {
+      "inviter": {
+        "type": "String"
+      },
+      "envelope": {
+        "type": "String"
+      }
+    }
+  },
+  "invitations": "Invitations",
+  "invitationSent": "Invitation sent to {email}",
+  "@invitationSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "invite": "Invite",
+  "inviteByEmail": "Invite by e-mail",
+  "lastOwner": "An envelope needs at least one owner. Make somebody else an owner first.",
+  "leave": "Leave",
+  "leaveEnvelope": "Leave the envelope",
+  "leaveEnvelopeConfirm": "Leave “{name}”? The money you put into it and your expenses in it stay.",
+  "@leaveEnvelopeConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "leftEnvelope": "You left the envelope",
+  "limitReached": "Limit reached: an envelope has up to 10 people, and you can send 10 invitations an hour.",
+  "makeMember": "Make member",
+  "makeOwner": "Make owner",
+  "members": "Members",
+  "membersOf": "Members · {name}",
+  "@membersOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notShareable": "Only a top-level envelope can be shared; sub-envelopes go with it.",
+  "reject": "Turn down",
+  "remove": "Remove",
+  "removeMember": "Remove from the envelope",
+  "removeMemberConfirm": "Remove {name} from the envelope? The money they put in and their expenses stay in it.",
+  "@removeMemberConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "revokeInvitation": "Revoke the invitation",
+  "role": "Role",
+  "roleExplained": "An owner manages the envelope and its members. A member adds expenses and puts in their own money.",
+  "roleMember": "Member",
+  "roleOwner": "Owner",
+  "sharedWith": "{count, plural, one{only you} other{{count} people}}",
+  "@sharedWith": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "someone": "Somebody",
+  "whoPutHowMuch": "Who put how much",
+  "you": "You",
+  "youWith": "{name} (you)",
+  "@youWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addPending": "Add",
+  "appliedNothing": "Everything is up to date",
+  "appliedSummary": "Added: {parts}.",
+  "@appliedSummary": {
+    "placeholders": {
+      "parts": {
+        "type": "String"
+      }
+    }
+  },
+  "countAllocations": "{count, plural, one{{count} allocation} other{{count} allocations}}",
+  "@countAllocations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "countExpenses": "{count, plural, one{{count} expense} other{{count} expenses}}",
+  "@countExpenses": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "countIncomes": "{count, plural, one{{count} income} other{{count} incomes}}",
+  "@countIncomes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dayOfMonth": "Day of the month",
+  "editAllocationRule": "Edit allocation rule",
+  "editIncomeRule": "Edit recurring income",
+  "everyMonthOn": "Every month on the {day}.",
+  "@everyMonthOn": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "newAllocationRule": "New allocation rule",
+  "newIncomeRule": "New recurring income",
+  "noAllocationRules": "No allocation rules. Add how much goes into an envelope every month, e.g. 1000 zł into Home.",
+  "noRecurringIncomes": "No recurring income. Add a salary that comes in on the same day every month.",
+  "pendingTitle": "To add this month: {parts}",
+  "@pendingTitle": {
+    "placeholders": {
+      "parts": {
+        "type": "String"
+      }
+    }
+  },
+  "skippedAllocations": "Allocations skipped for lack of money in the envelope: {count}.",
+  "@skippedAllocations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "loginHeadline": "Household budget,\ntogether or solo",
   "loginSubtitle": "Sign in with your e-mail – we'll send you a code. No password.",
   "codeFieldLabel": "Code from the e-mail (6 digits)",
@@ -264,17 +420,12 @@
   "consent": "I accept the information on processing my data (e-mail, name, budget data).",
   "consentRequired": "Tick the consent to sign in.",
   "recurringTab": "Recurring",
-  "householdTab": "Household",
-  "incomes": "Income",
-  "periodBalance": "Period balance",
   "unallocatedToEnvelopes": "Not in any envelope",
   "addIncomeShort": "+ Income",
   "addExpenseShort": "+ Expense",
   "soloSubtitle": "Solo · just you",
-  "previousPeriod": "Previous period",
-  "nextPeriod": "Next period",
   "wizardStartTitle": "Let's set up your budget",
-  "wizardStartBody": "Five short steps: name, people, income, bills and envelopes.",
+  "wizardStartBody": "Five short steps: envelopes, sharing, income, bills and putting the money into envelopes.",
   "wizardStart": "Let's start",
   "stepOf": "Step {step} of {total}",
   "@stepOf": {
@@ -290,10 +441,7 @@
   "later": "Later",
   "next": "Next",
   "back": "Back",
-  "wizardNameTitle": "What will you call your household?",
-  "wizardNameBody": "It can be “Home”, “The flat” or “Mine”. You can add more later.",
   "currencyPln": "PLN – złoty",
-  "starterCategories": "We'll add these categories to start with – change them any time",
   "starterFood": "Food",
   "starterHousing": "Home and bills",
   "starterTransport": "Transport",
@@ -301,24 +449,16 @@
   "starterFun": "Fun",
   "starterClothes": "Clothes",
   "starterOther": "Other",
-  "wizardWhoTitle": "Who will use “{name}”?",
-  "@wizardWhoTitle": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
+  "wizardWhoTitle": "Who will use the envelopes?",
+  "@wizardWhoTitle": {},
   "soloTitle": "Just me · Solo",
   "soloBody": "A private budget. You can share it later.",
-  "multiTitle": "With others · Multi",
+  "multiTitle": "With others · shared envelopes",
   "multiBody": "Everyone sees the same data. You'll say who each entry is for.",
-  "inviteByEmail": "Invite by e-mail",
-  "inviteHint": "name@example.com",
+  "inviteHint": "their@address.com",
   "send": "Send",
-  "sharingSoon": "Shared households and invitations are coming soon. For now the budget is just yours.",
   "wizardIncomeTitle": "Where does the money come from?",
-  "wizardIncomeBody": "First period: {period}. Enter an amount you don't know yet as an estimate – correct it once it arrives.",
+  "wizardIncomeBody": "This month: {period}. Mark a salary as recurring – it is added every month when you apply the rules.",
   "@wizardIncomeBody": {
     "placeholders": {
       "period": {
@@ -327,16 +467,13 @@
     }
   },
   "newIncome": "New income",
-  "fixedAmount": "Fixed",
-  "estimatedAmount": "Estimated",
   "incomeNameHint": "e.g. Salary",
   "addIncomeAction": "Add income",
-  "periodIncome": "Period income",
   "wizardBillsTitle": "Bills that come back every month",
-  "wizardBillsBody": "Fixed ones like rent and variable ones like electricity. “Apply” adds them to every period.",
+  "wizardBillsBody": "Fixed ones like rent and variable ones like electricity. “Apply” adds them to every month.",
   "addRecurringExpense": "+ Add a recurring expense",
   "wizardEnvelopesTitle": "Split the income into envelopes",
-  "wizardEnvelopesBody": "How much you plan to spend in each category this period. Amounts of recurring bills are filled in.",
+  "wizardEnvelopesBody": "How much money to put into each envelope. Amounts of recurring bills are filled in.",
   "fromRecurring": "recurring: {amount}",
   "@fromRecurring": {
     "placeholders": {
@@ -345,8 +482,6 @@
       }
     }
   },
-  "addCategoryPlus": "+ Add a category",
-  "allocated": "Allocated",
   "unallocatedShort": "Unallocated",
   "wizardDone": "Done – go to the dashboard",
   "everyMonth": "every month",
@@ -355,19 +490,10 @@
   "descriptionHint": "e.g. groceries",
   "oneOff": "One-off",
   "recurringIncome": "Recurring",
-  "recurringIncomeSoon": "Recurring income is coming soon.",
-  "incomeGoesTo": "The income is added to {period}.",
-  "@incomeGoesTo": {
-    "placeholders": {
-      "period": {
-        "type": "String"
-      }
-    }
-  },
   "saveIncome": "Save income",
   "incomeAdded": "Income added",
   "recurringMark": "recurring",
-  "noTransactions": "No expenses in this period.",
+  "noTransactions": "No expenses this month.",
   "newRulePlus": "+ New rule",
   "applyTo": "Apply to {period}",
   "@applyTo": {
@@ -378,29 +504,38 @@
     }
   },
   "applyHint": "Adds entries of the active rules. Ones already added aren't doubled.",
-  "ruleFixed": "fixed",
   "ruleOff": "off",
-  "households": "Households",
-  "newHouseholdPlus": "+ New household",
-  "membersOf": "Members · {name}",
-  "@membersOf": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "youMark": "{name} (you)",
-  "@youMark": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "owner": "owner",
-  "invitePerson": "Invite someone",
   "more": "More",
-  "renameHousehold": "Rename",
-  "householdName": "Household name"
+  "enterIncome": "Enter your income",
+  "envelopesTab": "Envelopes",
+  "newEnvelopePlus": "+ New envelope",
+  "addEnvelopePlus": "+ Add envelope",
+  "sharingPerEnvelope": "An envelope can be shared with other people: open it and go to “Members”.",
+  "sharedEnvelopes": "{count, plural, one{1 shared envelope} other{{count} shared envelopes}}",
+  "allocatedThisMonth": "Put into envelopes this month",
+  "incomeGoesToPool": "The money goes to the pool, from which you put it into envelopes.",
+  "recurringIncomeHint": "The income shows up every month on this day when you apply the recurring rules.",
+  "recurringIncomeAdded": "Recurring income added",
+  "wizardStartersTitle": "What do you spend money on?",
+  "wizardStartersBody": "Every kind of spending is an envelope. Untick the ones you don't need – you can add more at any time.",
+  "starterEnvelopes": "Envelopes to start with",
+  "shareWhichEnvelope": "Which envelope to share?",
+  "invitedPeople": "Invited: {emails}. They get access once they accept and you approve.",
+  "monthIncome": "Income this month",
+  "repeatMonthly": "Repeat every month",
+  "repeatMonthlyHint": "These amounts go into the envelopes every month (allocation rules).",
+  "@sharedEnvelopes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@invitedPeople": {
+    "placeholders": {
+      "emails": {
+        "type": "String"
+      }
+    }
+  }
 }

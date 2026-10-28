@@ -1,27 +1,37 @@
 import { HttpApi, OpenApi } from "effect/http-api";
 import { AuthApi } from "./auth/index.ts";
-import { PeriodsApi } from "./budgets/index.ts";
-import { CategoriesApi } from "./categories/index.ts";
+import { AllocationsApi, EnvelopesApi } from "./envelopes/index.ts";
 import { ExpensesApi } from "./expenses/index.ts";
-import { RecurringApi } from "./recurring/index.ts";
-import { SpacesApi } from "./spaces/index.ts";
+import { IncomesApi } from "./incomes/index.ts";
+import { OverviewApi } from "./overview/index.ts";
+import {
+  AllocationRulesApi,
+  RecurringApi,
+  RecurringIncomesApi,
+} from "./recurring/index.ts";
+import { InvitationsApi, MembersApi } from "./sharing/index.ts";
 import { SystemApi } from "./system/index.ts";
 import { TransferApi } from "./transfer/index.ts";
 
 export class Api extends HttpApi.make("bida")
   .add(SystemApi)
   .add(AuthApi)
-  .add(SpacesApi)
-  .add(CategoriesApi)
-  .add(PeriodsApi)
+  .add(EnvelopesApi)
+  .add(AllocationsApi)
+  .add(MembersApi)
+  .add(InvitationsApi)
+  .add(IncomesApi)
   .add(ExpensesApi)
   .add(RecurringApi)
+  .add(RecurringIncomesApi)
+  .add(AllocationRulesApi)
+  .add(OverviewApi)
   .add(TransferApi)
   .annotateMerge(
     OpenApi.annotations({
       title: "Money Planner API",
       description:
-        "Everything except `/health` and `/auth` needs a signed-in user: send the session token as `Authorization: Bearer`, or let the browser send the session cookie. Most endpoints work inside a space: pick it with the `X-Space-Id` header (a space the user belongs to); without the header it is the first space of the user. Amounts are integers in the minor unit of their currency (12.34 PLN is 1234).",
+        "Everything except `/health` and `/auth` needs a signed-in user: send the session token as `Authorization: Bearer`, or let the browser send the session cookie. Amounts are integers in grosze (12.34 PLN is 1234).",
       version: "0.0.0",
     }),
   ) {}

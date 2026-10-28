@@ -9,7 +9,6 @@ import { Context, Effect, Layer, Option } from "effect";
 import { SqlClient } from "effect/sql";
 import { AppConfig } from "../../platform/config.ts";
 import { Mailer } from "../../platform/mailer.ts";
-import { SpacesService } from "../spaces/spaces.module.ts";
 import { AuthRepository } from "./auth.repository.ts";
 import { type GoogleProfile, GoogleVerifier } from "./google.ts";
 import { newCode, newSecret, sameHash, sha256 } from "./tokens.ts";
@@ -65,12 +64,10 @@ export class AuthService extends Context.Service<
     AuthService,
     Effect.gen(function* () {
       const repo = yield* AuthRepository;
-      const spaces = yield* SpacesService;
       const mailer = yield* Mailer;
       const google = yield* GoogleVerifier;
       const sql = yield* SqlClient.SqlClient;
-      const { appUrl, claimEmail } = yield* AppConfig;
-      const claim = normalize(claimEmail);
+      const { appUrl } = yield* AppConfig;
 
       const requestLink = Effect.fn("AuthService.requestLink")(function* (
         rawEmail: string,
@@ -96,7 +93,7 @@ export class AuthService extends Context.Service<
         });
       });
 
-      /** The account of the address, created with its first space on first use. */
+      /** The account of the address, created on first use. */
       const userFor = Effect.fn("AuthService.userFor")(function* (
         email: string,
         name: string | null = null,
@@ -118,16 +115,7 @@ export class AuthService extends Context.Service<
             ),
           );
         }
-        const user = inserted.value;
-        const claimed =
-          email === claim ? yield* spaces.claimDefault(user.id) : Option.none();
-        if (Option.isNone(claimed)) {
-          yield* spaces.createFor(user.id, {
-            name: "Mój budżet",
-            defaultCurrency: "PLN",
-          });
-        }
-        return user;
+        return inserted.value;
       });
 
       /** Starts a session for the user, found or created by [findUser]. */

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// The shared "double" date selector: one calendar that picks a start and end
-/// day together. Used for the new-period range and the History date filter.
+/// day together. Used for the History date filter.
 Future<DateTimeRange?> pickDateRange(
   BuildContext context, {
   DateTimeRange? initial,
