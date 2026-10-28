@@ -35,8 +35,11 @@ Future<void> initGoogleSignIn() async {
   }
 }
 
-/// Lets the user pick a Google account. Null when they cancel. Call it from a
-/// tap: a browser only opens the popup for one.
+/// Lets the user pick a Google account. Null when Google comes back without
+/// one. That is not always the user cancelling: on Android, Credential Manager
+/// reports a client Google does not know (a missing SHA-1) the same way, so
+/// the caller should say that nothing happened rather than stay silent. Call
+/// it from a tap: a browser only opens the popup for one.
 ///
 /// A browser cannot get an ID token without Google's own button, so there the
 /// popup asks for access to the profile and an access token comes back; the
@@ -50,8 +53,13 @@ Future<GoogleCredential?> signInToGoogle() async {
     }
     final account = await GoogleSignIn.instance.authenticate();
     final idToken = account.authentication.idToken;
-    return idToken == null ? null : GoogleIdToken(idToken);
+    if (idToken == null) {
+      throw const GoogleSignInFailed('Google returned no ID token');
+    }
+    return GoogleIdToken(idToken);
   } on GoogleSignInException catch (error) {
+    // the description is what tells a cancel from a misconfigured client
+    debugPrint('Google sign-in ended: $error');
     if (error.code == GoogleSignInExceptionCode.canceled ||
         error.code == GoogleSignInExceptionCode.interrupted) {
       return null;

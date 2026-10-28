@@ -692,6 +692,18 @@ abstract class AppLocalizations {
   /// **'Google sign-in did not work. Try again or use the e-mail code.'**
   String get googleSignInFailed;
 
+  /// No description provided for @googleSignInNoAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Google came back without an account, so you are not signed in. Try again or use the code from the e-mail.'**
+  String get googleSignInNoAccount;
+
+  /// No description provided for @googleSignInGaveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in with Google does not work right now. Sign in with the code from the e-mail.'**
+  String get googleSignInGaveUp;
+
   /// No description provided for @orSeparator.
   ///
   /// In en, this message translates to:

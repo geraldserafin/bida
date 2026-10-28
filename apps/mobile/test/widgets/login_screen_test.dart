@@ -118,4 +118,45 @@ void main() {
     expect(find.text('Kod jest zły albo wygasł.'), findsOneWidget);
     expect(auth.isSignedIn, isFalse);
   });
+
+  testWidgets('is back on the code step after the app was closed', (
+    tester,
+  ) async {
+    FlutterSecureStorage.setMockInitialValues({
+      'login_code_email': 'ann@example.com',
+      'login_code_sent_at': DateTime.now()
+          .subtract(const Duration(minutes: 5))
+          .toUtc()
+          .toIso8601String(),
+    });
+    await tester.runAsync(() async {
+      await open(tester);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await tester.pump();
+
+    expect(
+      find.textContaining('Wysłaliśmy kod na ann@example.com'),
+      findsOneWidget,
+    );
+    expect(find.byKey(LoginScreen.codeFieldKey), findsOneWidget);
+  });
+
+  testWidgets('forgets a code that no longer works', (tester) async {
+    FlutterSecureStorage.setMockInitialValues({
+      'login_code_email': 'ann@example.com',
+      'login_code_sent_at': DateTime.now()
+          .subtract(const Duration(minutes: 20))
+          .toUtc()
+          .toIso8601String(),
+    });
+    await tester.runAsync(() async {
+      await open(tester);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await tester.pump();
+
+    expect(find.text('Wyślij kod'), findsOneWidget);
+    expect(find.byKey(LoginScreen.codeFieldKey), findsNothing);
+  });
 }

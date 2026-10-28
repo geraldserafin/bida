@@ -344,6 +344,14 @@ class AppLocalizationsPl extends AppLocalizations {
       'Logowanie przez Google nie udało się. Spróbuj ponownie albo użyj kodu z e-maila.';
 
   @override
+  String get googleSignInNoAccount =>
+      'Google nie zwrócił konta, więc nie zalogowano. Spróbuj jeszcze raz albo użyj kodu z e-maila.';
+
+  @override
+  String get googleSignInGaveUp =>
+      'Logowanie przez Google teraz nie działa. Zaloguj się kodem z e-maila.';
+
+  @override
   String get orSeparator => 'albo';
 
   @override

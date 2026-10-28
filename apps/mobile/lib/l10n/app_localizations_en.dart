@@ -339,6 +339,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Google sign-in did not work. Try again or use the e-mail code.';
 
   @override
+  String get googleSignInNoAccount =>
+      'Google came back without an account, so you are not signed in. Try again or use the code from the e-mail.';
+
+  @override
+  String get googleSignInGaveUp =>
+      'Signing in with Google does not work right now. Sign in with the code from the e-mail.';
+
+  @override
   String get orSeparator => 'or';
 
   @override
