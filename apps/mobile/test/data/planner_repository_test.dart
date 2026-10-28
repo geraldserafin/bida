@@ -388,10 +388,7 @@ void main() {
         )
         ..on(
           'POST /recurring-rules',
-          (_) => Reply(
-            ruleJson('r2', 'e1', 5000),
-            status: 201,
-          ),
+          (_) => Reply(ruleJson('r2', 'e1', 5000), status: 201),
         );
       final repository = backend.repository();
 
