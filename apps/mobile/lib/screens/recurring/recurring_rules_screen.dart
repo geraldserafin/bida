@@ -320,12 +320,7 @@ class _ExpenseRuleCard extends StatelessWidget {
       title: rule.note?.isNotEmpty == true ? rule.note! : envelope?.name ?? '—',
       details: [
         ?envelope?.name,
-        rule.active
-            ? switch (rule.frequency) {
-                RecurrenceFrequency.monthly => l10n.everyMonth,
-                RecurrenceFrequency.weekly => l10n.everyWeek,
-              }
-            : l10n.ruleOff,
+        rule.active ? l10n.everyMonth : l10n.ruleOff,
       ].join(' · '),
       amount: rule.amount,
       active: rule.active,

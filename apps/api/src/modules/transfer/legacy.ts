@@ -97,6 +97,7 @@ export const convertLegacy = (
 
     const recurringRules: Array<RecurringRule> = [];
     for (const row of data.recurring_rules) {
+      // a weekly rule becomes a monthly one: a rule adds one expense a month
       if (row.frequency !== "weekly" && row.frequency !== "monthly") {
         return yield* invalid(
           `recurring rule ${row.id} has frequency "${row.frequency}"`,
@@ -108,7 +109,7 @@ export const convertLegacy = (
           userId: owner,
           envelopeId: yield* lookup(envelopeIds, row.category_id, "category"),
           amountMinor: toMinor(row.amount),
-          frequency: row.frequency,
+          frequency: "monthly",
           note: row.note,
           active: row.active === 1,
           createdAt: now,

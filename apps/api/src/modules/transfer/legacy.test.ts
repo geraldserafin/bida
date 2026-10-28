@@ -88,6 +88,29 @@ it("honours the time zone", () =>
     );
   }).pipe(Effect.runPromise));
 
+it("makes a weekly rule monthly", () =>
+  Effect.gen(function* () {
+    const doc = yield* convertLegacy(
+      {
+        backup: backup({
+          recurring_rules: [
+            {
+              id: 9,
+              category_id: 1,
+              amount: 20,
+              frequency: "weekly",
+              note: null,
+              active: 1,
+            },
+          ],
+        }),
+      },
+      userId,
+      now,
+    );
+    assert.strictEqual(doc.recurringRules[0]?.frequency, "monthly");
+  }).pipe(Effect.runPromise));
+
 it("fails on dangling references and bad values", () =>
   Effect.gen(function* () {
     const dangling = yield* convertLegacy(

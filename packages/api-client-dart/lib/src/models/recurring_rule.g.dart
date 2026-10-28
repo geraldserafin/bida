@@ -33,7 +33,6 @@ Map<String, dynamic> _$RecurringRuleToJson(RecurringRule instance) =>
     };
 
 const _$RecurringRuleFrequencyEnumMap = {
-  RecurringRuleFrequency.weekly: 'weekly',
   RecurringRuleFrequency.monthly: 'monthly',
   RecurringRuleFrequency.$unknown: r'$unknown',
 };

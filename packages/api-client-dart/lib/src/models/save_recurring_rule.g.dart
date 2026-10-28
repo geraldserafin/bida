@@ -27,7 +27,6 @@ Map<String, dynamic> _$SaveRecurringRuleToJson(SaveRecurringRule instance) =>
     };
 
 const _$SaveRecurringRuleFrequencyEnumMap = {
-  SaveRecurringRuleFrequency.weekly: 'weekly',
   SaveRecurringRuleFrequency.monthly: 'monthly',
   SaveRecurringRuleFrequency.$unknown: r'$unknown',
 };

@@ -49,7 +49,6 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
   late final TextEditingController _amountController;
   late final TextEditingController _noteController;
   late String _envelopeId;
-  late RecurrenceFrequency _frequency;
   late bool _active;
   String? _amountError;
 
@@ -62,7 +61,6 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
     );
     _noteController = TextEditingController(text: e?.note ?? '');
     _envelopeId = e?.envelopeId ?? widget.envelopes.first.id!;
-    _frequency = e?.frequency ?? RecurrenceFrequency.monthly;
     _active = e?.active ?? true;
   }
 
@@ -84,7 +82,6 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
         id: widget.existing?.id,
         envelopeId: _envelopeId,
         amount: amount,
-        frequency: _frequency,
         note: _noteController.text.trim().isEmpty
             ? null
             : _noteController.text.trim(),
@@ -150,18 +147,6 @@ class _RecurringEditorSheetState extends State<_RecurringEditorSheet> {
                     onTap: () => setState(() => _envelopeId = e.id!),
                   ),
               ],
-            ),
-            const SizedBox(height: 18),
-            FieldLabel(l10n.frequency),
-            const SizedBox(height: 10),
-            SegmentedPills<RecurrenceFrequency>(
-              options: [
-                (RecurrenceFrequency.monthly, l10n.monthly),
-                (RecurrenceFrequency.weekly, l10n.weekly),
-              ],
-              selected: _frequency,
-              onChanged: (f) => setState(() => _frequency = f),
-              trayColor: Theme.of(context).scaffoldBackgroundColor,
             ),
             const SizedBox(height: 14),
             Row(

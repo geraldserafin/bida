@@ -80,7 +80,7 @@ layer(TestLayer)("RecurringService", (it) => {
       yield* recurring.create(ann.id, {
         envelopeId: home.id,
         amountMinor: 5_000,
-        frequency: "weekly",
+        frequency: "monthly",
         note: null,
         active: false,
       });
