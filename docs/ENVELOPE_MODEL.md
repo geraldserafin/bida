@@ -63,7 +63,7 @@ Wejście we wspólną kopertę pokazuje dodatkowo kartę „Kto ile włożył": 
 
 Trzy rodzaje reguł, wszystkie własne (widzi je tylko ich autor):
 
-- **Wydatek cykliczny**: kwota na kopercie (np. czynsz), co tydzień albo co miesiąc.
+- **Wydatek cykliczny**: kwota na kopercie (np. czynsz), co miesiąc. Reguł tygodniowych nie ma: reguła daje jeden wpis na miesiąc, więc tygodniowa działała jak miesięczna (migracja `0012` zamieniła je na miesięczne, tak samo import z wersji offline).
 - **Wpływ cykliczny**: kwota, która wpada co miesiąc w tym samym dniu (wypłata).
 - **Reguła podziału**: kwota, która co miesiąc w tym samym dniu trafia z puli do koperty, np. 1 000 zł do Domu. Dla podkoperty to podział tego, co użytkownik włożył do rodzica.
 

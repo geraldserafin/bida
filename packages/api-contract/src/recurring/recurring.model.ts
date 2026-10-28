@@ -9,7 +9,11 @@ import { Uuid } from "../uuid.ts";
 export const RecurringRuleId = Uuid.pipe(Schema.brand("RecurringRuleId"));
 export type RecurringRuleId = typeof RecurringRuleId.Type;
 
-export const Frequency = Schema.Literals(["weekly", "monthly"]);
+/**
+ * Applying the rules adds one expense per rule and month, so every rule is
+ * monthly. Weekly rules were dropped: they were applied once a month too.
+ */
+export const Frequency = Schema.Literal("monthly");
 export type Frequency = typeof Frequency.Type;
 
 /** An expense that repeats, e.g. rent. Applying it adds one expense. */

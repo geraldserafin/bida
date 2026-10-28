@@ -388,20 +388,13 @@ void main() {
         )
         ..on(
           'POST /recurring-rules',
-          (_) => Reply(
-            ruleJson('r2', 'e1', 5000, frequency: 'weekly'),
-            status: 201,
-          ),
+          (_) => Reply(ruleJson('r2', 'e1', 5000), status: 201),
         );
       final repository = backend.repository();
 
       final rules = await repository.recurringRules();
       await repository.saveRecurringRule(
-        const RecurringRule(
-          envelopeId: 'e1',
-          amount: 50,
-          frequency: RecurrenceFrequency.weekly,
-        ),
+        const RecurringRule(envelopeId: 'e1', amount: 50),
       );
 
       expect(rules.single.amount, 999.99);
@@ -409,7 +402,7 @@ void main() {
       expect(backend.sent('POST /recurring-rules').single.body, {
         'envelopeId': 'e1',
         'amountMinor': 5000,
-        'frequency': 'weekly',
+        'frequency': 'monthly',
         'note': null,
         'active': true,
       });

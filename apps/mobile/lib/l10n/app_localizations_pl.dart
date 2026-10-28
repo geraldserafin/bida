@@ -108,15 +108,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get editRule => 'Edytuj regułę';
 
   @override
-  String get frequency => 'Częstotliwość';
-
-  @override
-  String get weekly => 'Tygodniowo';
-
-  @override
-  String get monthly => 'Miesięcznie';
-
-  @override
   String get active => 'Aktywna';
 
   @override
@@ -888,9 +879,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get everyMonth => 'co miesiąc';
-
-  @override
-  String get everyWeek => 'co tydzień';
 
   @override
   String get descriptionOptional => 'Opis (opcjonalnie)';

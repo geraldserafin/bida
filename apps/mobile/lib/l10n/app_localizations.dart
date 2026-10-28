@@ -290,24 +290,6 @@ abstract class AppLocalizations {
   /// **'Edit rule'**
   String get editRule;
 
-  /// No description provided for @frequency.
-  ///
-  /// In en, this message translates to:
-  /// **'Frequency'**
-  String get frequency;
-
-  /// No description provided for @weekly.
-  ///
-  /// In en, this message translates to:
-  /// **'Weekly'**
-  String get weekly;
-
-  /// No description provided for @monthly.
-  ///
-  /// In en, this message translates to:
-  /// **'Monthly'**
-  String get monthly;
-
   /// No description provided for @active.
   ///
   /// In en, this message translates to:
@@ -1585,12 +1567,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'every month'**
   String get everyMonth;
-
-  /// No description provided for @everyWeek.
-  ///
-  /// In en, this message translates to:
-  /// **'every week'**
-  String get everyWeek;
 
   /// No description provided for @descriptionOptional.
   ///

@@ -118,10 +118,6 @@ RecurringRule ruleFrom(api.RecurringRule r) => RecurringRule(
   id: r.id,
   envelopeId: r.envelopeId,
   amount: fromMinor(r.amountMinor),
-  frequency: switch (r.frequency) {
-    api.RecurringRuleFrequency.weekly => RecurrenceFrequency.weekly,
-    _ => RecurrenceFrequency.monthly,
-  },
   note: r.note,
   active: r.active,
 );
@@ -129,10 +125,7 @@ RecurringRule ruleFrom(api.RecurringRule r) => RecurringRule(
 api.SaveRecurringRule saveRuleOf(RecurringRule r) => api.SaveRecurringRule(
   envelopeId: r.envelopeId,
   amountMinor: toMinor(r.amount),
-  frequency: switch (r.frequency) {
-    RecurrenceFrequency.weekly => api.SaveRecurringRuleFrequency.weekly,
-    RecurrenceFrequency.monthly => api.SaveRecurringRuleFrequency.monthly,
-  },
+  frequency: api.SaveRecurringRuleFrequency.monthly,
   note: r.note,
   active: r.active,
 );

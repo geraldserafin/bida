@@ -58,7 +58,7 @@ Pojęcia: **wpływ** (pieniądze, które weszły, np. wypłata), **pula** (wpły
 
 ## 7. Wydatki cykliczne
 
-- **US-7.1** Widzę reguły (koperta, kwota, tygodniowo albo miesięcznie, notatka, aktywna). 🌐
+- **US-7.1** Widzę reguły (koperta, kwota, notatka, aktywna). Każda reguła jest miesięczna. 🌐
 - **US-7.2** Dodaję, edytuję, wyłączam i usuwam regułę. Usunięcie nie kasuje wydatków, które już dodała. 🌐
 - **US-7.3** Jednym przyciskiem „zastosuj" dodaję do miesiąca na ekranie wydatki z aktywnych reguł. Reguła, którą już zastosowałem dla tego miesiąca, nie dubluje się. Widzę, ile dodano. 🌐
 

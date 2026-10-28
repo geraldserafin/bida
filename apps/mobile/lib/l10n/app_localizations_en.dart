@@ -108,15 +108,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editRule => 'Edit rule';
 
   @override
-  String get frequency => 'Frequency';
-
-  @override
-  String get weekly => 'Weekly';
-
-  @override
-  String get monthly => 'Monthly';
-
-  @override
   String get active => 'Active';
 
   @override
@@ -876,9 +867,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get everyMonth => 'every month';
-
-  @override
-  String get everyWeek => 'every week';
 
   @override
   String get descriptionOptional => 'Description (optional)';

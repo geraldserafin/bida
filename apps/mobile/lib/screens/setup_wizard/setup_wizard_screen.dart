@@ -47,11 +47,11 @@ Map<String, double> _billsByEnvelope(List<RecurringRule> rules) {
   final sums = <String, double>{};
   for (final rule in rules) {
     if (!rule.active) continue;
-    final perMonth = switch (rule.frequency) {
-      RecurrenceFrequency.monthly => rule.amount,
-      RecurrenceFrequency.weekly => rule.amount * 52 / 12,
-    };
-    sums.update(rule.envelopeId, (v) => v + perMonth, ifAbsent: () => perMonth);
+    sums.update(
+      rule.envelopeId,
+      (v) => v + rule.amount,
+      ifAbsent: () => rule.amount,
+    );
   }
   return sums;
 }
@@ -635,10 +635,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 : state.envelopeById(rule.envelopeId)?.name ?? '—',
             details: [
               ?state.envelopeById(rule.envelopeId)?.name,
-              switch (rule.frequency) {
-                RecurrenceFrequency.monthly => l10n.everyMonth,
-                RecurrenceFrequency.weekly => l10n.everyWeek,
-              },
+              l10n.everyMonth,
             ].join(' · '),
             amount: formatZloty(rule.amount),
             onTap: () => editRecurringRule(context, state, existing: rule),

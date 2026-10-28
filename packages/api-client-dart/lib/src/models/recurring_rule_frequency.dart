@@ -6,8 +6,6 @@ import 'package:json_annotation/json_annotation.dart';
 
 @JsonEnum()
 enum RecurringRuleFrequency {
-  @JsonValue('weekly')
-  weekly('weekly'),
   @JsonValue('monthly')
   monthly('monthly'),
 
