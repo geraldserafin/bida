@@ -124,3 +124,21 @@ jobs:
       - name: Restart the API
         run: |
           ssh vps "cd ${{ vars.VPS_DIR }} && TAG=${{ env.SHA }} docker compose pull backend && TAG=${{ env.SHA }} docker compose up -d backend"
+      - name: Remove the old API images
+        # keeps the one that runs and the one before it, for a quick rollback
+        run: |
+          ssh vps "docker images -q $IMAGE | awk '!seen[\$0]++' | tail -n +3 | xargs -r docker rmi -f; docker image prune -f"
+
+  registry:
+    name: Clean up the registry
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      # every deploy pushes a version tagged with its commit; keep the latest few
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: bida-api
+          package-type: container
+          min-versions-to-keep: 5

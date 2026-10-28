@@ -534,7 +534,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String invitationSent(String email) {
-    return 'Invitation sent to $email';
+    return 'Invited $email. They will see the invitation in the app once signed in with that address.';
   }
 
   @override

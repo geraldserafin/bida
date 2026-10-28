@@ -18,7 +18,7 @@ import {
 import { Context, DateTime, Effect, Layer, Option } from "effect";
 import { SqlClient } from "effect/sql";
 import { AppConfig } from "../../platform/config.ts";
-import { Mailer } from "../../platform/mailer.ts";
+import { Mailer, notify } from "../../platform/mailer.ts";
 import { EnvelopesService } from "../envelopes/envelopes.module.ts";
 import { MembersService } from "../members/members.module.ts";
 import {
@@ -183,7 +183,7 @@ export class InvitationsService extends Context.Service<
           onSome: Effect.succeed,
         });
         const inviter = current.find((m) => m.userId === userId);
-        yield* mailer.send({
+        yield* notify(mailer, {
           to: email,
           subject: `Zaproszenie do wspólnej koperty „${envelope.name}"`,
           text: `${who(inviter?.name ?? null, inviter?.email ?? "Ktoś")} zaprasza Cię do wspólnej koperty „${envelope.name}" w PLNing.\n\nZaloguj się tym adresem e-mail (${email}) pod adresem ${app}, a zaproszenie zobaczysz po zalogowaniu. Zaproszenie jest ważne ${INVITATION_DAYS} dni. Jeśli go nie oczekujesz, zignoruj tę wiadomość.`,
@@ -233,7 +233,7 @@ export class InvitationsService extends Context.Service<
             }),
           )
           .pipe(Effect.catchTag("SqlError", (error) => Effect.die(error)));
-        yield* mailer.send({
+        yield* notify(mailer, {
           to: row.email,
           subject: `Dołączyłeś do wspólnej koperty „${row.envelopeName}"`,
           text: `Właściciel zatwierdził Twoje dołączenie do wspólnej koperty „${row.envelopeName}". Otwórz PLNing (${app}) i znajdziesz ją na liście kopert.`,
@@ -271,7 +271,7 @@ export class InvitationsService extends Context.Service<
           return yield* new InvitationNotFound({ id });
         const owners = yield* members.ownersOf(row.envelopeId);
         yield* Effect.forEach(owners, (owner) =>
-          mailer.send({
+          notify(mailer, {
             to: owner.email,
             subject: `${row.email} chce dołączyć do „${row.envelopeName}"`,
             text: `${row.email} przyjął zaproszenie do wspólnej koperty „${row.envelopeName}". Otwórz PLNing (${app}) i zatwierdź to w członkach koperty, żeby osoba dostała dostęp. Jeśli nie znasz tego adresu, odrzuć zaproszenie.`,

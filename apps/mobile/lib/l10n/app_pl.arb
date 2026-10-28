@@ -156,7 +156,7 @@
   "invitationAccepted": "Przyjęto zaproszenie. Właściciel koperty musi jeszcze zatwierdzić Twoje dołączenie.",
   "invitationBanner": "{inviter} zaprasza Cię do koperty „{envelope}”",
   "invitations": "Zaproszenia",
-  "invitationSent": "Wysłano zaproszenie na {email}",
+  "invitationSent": "Zaproszono {email}. Osoba zobaczy zaproszenie w aplikacji po zalogowaniu tym adresem.",
   "invite": "Zaproś",
   "inviteByEmail": "Zaproś przez e-mail",
   "lastOwner": "Koperta musi mieć co najmniej jednego właściciela. Najpierw zrób właścicielem kogoś innego.",

@@ -43,3 +43,20 @@ export class Mailer extends Context.Service<
     ),
   );
 }
+
+/**
+ * Sends an e-mail that is only a courtesy, because what it is about has
+ * happened and shows in the app anyway. When the mail cannot go, that is
+ * logged and nothing more: it must not undo or fail what was done.
+ */
+export const notify = (mailer: Mailer["Service"], mail: Mail) =>
+  mailer
+    .send(mail)
+    .pipe(
+      Effect.catchCause((cause) =>
+        Effect.logWarning(
+          `mail to ${mail.to} was not sent: ${mail.subject}`,
+          cause,
+        ),
+      ),
+    );

@@ -277,7 +277,7 @@
     }
   },
   "invitations": "Invitations",
-  "invitationSent": "Invitation sent to {email}",
+  "invitationSent": "Invited {email}. They will see the invitation in the app once signed in with that address.",
   "@invitationSent": {
     "placeholders": {
       "email": {
