@@ -50,9 +50,7 @@ class _RecurringClient implements RecurringClient {
   }
 
   @override
-  Future<RecurringRule> recurringCreate({
-    required SaveRecurringRule body,
-  }) async {
+  Future<RecurringRule> recurringCreate({required SaveRule body}) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -82,7 +80,7 @@ class _RecurringClient implements RecurringClient {
   @override
   Future<RecurringRule> recurringUpdate({
     required String id,
-    required SaveRecurringRule body,
+    required SaveRule body,
   }) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -130,19 +128,20 @@ class _RecurringClient implements RecurringClient {
   }
 
   @override
-  Future<ApplyResult> recurringPending({
-    required String from,
-    required String to,
+  Future<ApplyResult> recurringApply({
+    required String id,
+    required ApplyRule body,
   }) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'from': from, r'to': to};
+    final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
+    final _data = <String, dynamic>{};
+    _data.addAll(body.toJson());
     final _options = _setStreamType<ApplyResult>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
+      Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/recurring-rules/pending',
+            '/recurring-rules/${id}/apply',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -160,17 +159,16 @@ class _RecurringClient implements RecurringClient {
   }
 
   @override
-  Future<ApplyResult> recurringApply({required ApplyRecurring body}) async {
+  Future<ApplyResult> recurringApplyAll({required String id}) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body.toJson());
+    const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<ApplyResult>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/recurring-rules/apply',
+            '/households/${id}/recurring-rules/apply',
             queryParameters: queryParameters,
             data: _data,
           )

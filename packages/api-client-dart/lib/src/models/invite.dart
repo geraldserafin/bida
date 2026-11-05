@@ -11,12 +11,13 @@ part 'invite.g.dart';
 
 @JsonSerializable()
 class Invite {
-  const Invite({required this.email, required this.role});
+  const Invite({required this.email, this.role});
 
   factory Invite.fromJson(Map<String, Object?> json) => _$InviteFromJson(json);
 
   final Email email;
-  final Role role;
+  @JsonKey(includeIfNull: false)
+  final Role? role;
 
   Map<String, Object?> toJson() => _$InviteToJson(this);
 }

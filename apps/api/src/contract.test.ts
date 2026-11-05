@@ -10,6 +10,7 @@ import {
   PlanTooSmall,
   PositiveMoney,
   SaveEnvelope,
+  SaveExpense,
   Uuid,
   wire,
 } from "@bida/api-contract";
@@ -87,5 +88,36 @@ it("wire() names the response schema after the error class", () => {
   assert.strictEqual(
     Schema.toEncoded(annotated).ast.annotations?.identifier,
     "PlanTooSmall",
+  );
+});
+
+it("optional fields also take null (the Dart client sends them)", () => {
+  const decodes = (schema: Schema.Top, value: unknown) => {
+    try {
+      Schema.decodeUnknownSync(schema as never)(value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  assert.isTrue(
+    decodes(CreateHousehold, {
+      name: "Dom",
+      cycle: null,
+      firstEndsOn: null,
+      timeZone: null,
+      envelopes: null,
+    }),
+  );
+  assert.isTrue(
+    decodes(SaveExpense, {
+      envelopeId: "019845e1-682f-4b02-a706-3b2422d13aec",
+      amountMinor: 100,
+      spentAt: "2026-11-05T10:00:00Z",
+      title: null,
+      forWhom: null,
+      forWhomUserId: null,
+      decision: null,
+    }),
   );
 });

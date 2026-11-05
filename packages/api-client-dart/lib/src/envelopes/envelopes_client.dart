@@ -5,9 +5,10 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
-import '../models/create_envelope.dart';
 import '../models/envelope.dart';
-import '../models/update_envelope.dart';
+import '../models/period_summary.dart';
+import '../models/save_envelope.dart';
+import '../models/set_plan.dart';
 
 part 'envelopes_client.g.dart';
 
@@ -15,30 +16,49 @@ part 'envelopes_client.g.dart';
 abstract class EnvelopesClient {
   factory EnvelopesClient(Dio dio, {String? baseUrl}) = _EnvelopesClient;
 
-  /// List envelopes.
+  /// Envelopes of a household, archived ones too
+  @GET('/households/{id}/envelopes')
+  Future<List<Envelope>> envelopesList({@Path('id') required String id});
+
+  /// Add an envelope (F12).
   ///
-  /// Every envelope the user can see, top-level ones and their sub-envelopes, by name.
-  @GET('/envelopes')
-  Future<List<Envelope>> envelopesList();
+  /// Any member.
+  @POST('/households/{id}/envelopes')
+  Future<Envelope> envelopesCreate({
+    @Path('id') required String id,
+    @Body() required SaveEnvelope body,
+  });
 
-  /// Create an envelope
-  @POST('/envelopes')
-  Future<Envelope> envelopesCreate({@Body() required CreateEnvelope body});
-
-  /// Get an envelope
-  @GET('/envelopes/{id}')
-  Future<Envelope> envelopesGet({@Path('id') required String id});
-
-  /// Edit an envelope
+  /// Rename or recolour an envelope
   @PUT('/envelopes/{id}')
   Future<Envelope> envelopesUpdate({
     @Path('id') required String id,
-    @Body() required UpdateEnvelope body,
+    @Body() required SaveEnvelope body,
   });
 
   /// Delete an envelope.
   ///
-  /// Removes its sub-envelopes, expenses and allocations too; the money allocated to it goes back to the pools of the people who put it in.
+  /// Only one without expenses; archive the others.
   @DELETE('/envelopes/{id}')
   Future<void> envelopesDelete({@Path('id') required String id});
+
+  /// Archive an envelope.
+  ///
+  /// Its expenses stay; its plans in the open periods drop to what was spent.
+  @POST('/envelopes/{id}/archive')
+  Future<Envelope> envelopesArchive({@Path('id') required String id});
+
+  /// Bring an envelope back
+  @POST('/envelopes/{id}/unarchive')
+  Future<Envelope> envelopesUnarchive({@Path('id') required String id});
+
+  /// Set the plan of an envelope in an open period (F19).
+  ///
+  /// Any member. Not below what was spent. The sum of plans may exceed the balance; the summary says so.
+  @PUT('/periods/{id}/plans/{envelopeId}')
+  Future<PeriodSummary> envelopesSetPlan({
+    @Path('id') required String id,
+    @Path('envelopeId') required String envelopeId,
+    @Body() required SetPlan body,
+  });
 }

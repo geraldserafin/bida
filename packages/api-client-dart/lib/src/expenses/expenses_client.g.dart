@@ -21,68 +21,29 @@ class _ExpensesClient implements ExpensesClient {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<Expense> expensesCreate({required CreateExpense body}) async {
+  Future<ExpenseResult> expensesCreate({
+    required String id,
+    required SaveExpense body,
+  }) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(body.toJson());
-    final _options = _setStreamType<Expense>(
+    final _options = _setStreamType<ExpenseResult>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/expenses',
+            '/households/${id}/expenses',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, Object?>>(_options);
-    late Expense _value;
+    late ExpenseResult _value;
     try {
-      _value = Expense.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, response: _result);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<List<Expense>> expensesList({
-    String? envelopeId,
-    String? from,
-    String? to,
-    String? limit,
-    String? offset,
-  }) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'envelopeId': envelopeId,
-      r'from': from,
-      r'to': to,
-      r'limit': limit,
-      r'offset': offset,
-    };
-    queryParameters.removeWhere((k, v) => v == null);
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<Expense>>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/expenses',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<Expense> _value;
-    try {
-      _value = _result.data!
-          .map((dynamic i) => Expense.fromJson(i as Map<String, dynamic>))
-          .toList();
+      _value = ExpenseResult.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
@@ -118,16 +79,16 @@ class _ExpensesClient implements ExpensesClient {
   }
 
   @override
-  Future<Expense> expensesUpdate({
+  Future<ExpenseResult> expensesUpdate({
     required String id,
-    required UpdateExpense body,
+    required SaveExpense body,
   }) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(body.toJson());
-    final _options = _setStreamType<Expense>(
+    final _options = _setStreamType<ExpenseResult>(
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -138,9 +99,9 @@ class _ExpensesClient implements ExpensesClient {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, Object?>>(_options);
-    late Expense _value;
+    late ExpenseResult _value;
     try {
-      _value = Expense.fromJson(_result.data!);
+      _value = ExpenseResult.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
@@ -165,6 +126,56 @@ class _ExpensesClient implements ExpensesClient {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     await _dio.fetch<void>(_options);
+  }
+
+  @override
+  Future<List<Expense>> expensesList({
+    String? householdId,
+    String? periodId,
+    String? envelopeId,
+    String? authorId,
+    String? forWhom,
+    String? from,
+    String? to,
+    String? limit,
+    String? offset,
+  }) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'householdId': householdId,
+      r'periodId': periodId,
+      r'envelopeId': envelopeId,
+      r'authorId': authorId,
+      r'forWhom': forWhom,
+      r'from': from,
+      r'to': to,
+      r'limit': limit,
+      r'offset': offset,
+    };
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<List<Expense>>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/expenses',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<List<dynamic>>(_options);
+    late List<Expense> _value;
+    try {
+      _value = _result.data!
+          .map((dynamic i) => Expense.fromJson(i as Map<String, dynamic>))
+          .toList();
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
   }
 
   RequestOptions _setStreamType<T>(RequestOptions requestOptions) {

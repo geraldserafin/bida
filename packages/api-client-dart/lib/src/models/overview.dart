@@ -4,32 +4,25 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'envelope_figures.dart';
+import 'household_overview.dart';
+import 'wallet.dart';
 
 part 'overview.g.dart';
 
 @JsonSerializable()
 class Overview {
   const Overview({
-    required this.from,
-    required this.to,
-    required this.incomeMinor,
-    required this.allocatedMinor,
-    required this.spentMinor,
-    required this.poolMinor,
-    required this.envelopes,
+    required this.wallet,
+    required this.households,
+    required this.todo,
   });
 
   factory Overview.fromJson(Map<String, Object?> json) =>
       _$OverviewFromJson(json);
 
-  final String from;
-  final String to;
-  final int incomeMinor;
-  final int allocatedMinor;
-  final int spentMinor;
-  final int poolMinor;
-  final List<EnvelopeFigures> envelopes;
+  final Wallet wallet;
+  final List<HouseholdOverview> households;
+  final int todo;
 
   Map<String, Object?> toJson() => _$OverviewToJson(this);
 }

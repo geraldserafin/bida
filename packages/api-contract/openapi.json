@@ -5336,6 +5336,9 @@
               },
               {
                 "type": "null"
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -5862,6 +5865,9 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Decision"
+              },
+              {
+                "type": "null"
               },
               {
                 "type": "null"
@@ -6726,6 +6732,9 @@
               },
               {
                 "type": "null"
+              },
+              {
+                "type": "null"
               }
             ]
           }
@@ -7219,6 +7228,9 @@
               },
               {
                 "type": "null"
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -7229,6 +7241,9 @@
               },
               {
                 "type": "null"
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -7236,6 +7251,9 @@
             "anyOf": [
               {
                 "type": "string"
+              },
+              {
+                "type": "null"
               },
               {
                 "type": "null"
@@ -7251,6 +7269,9 @@
                   "minLength": 1,
                   "maxLength": 30
                 }
+              },
+              {
+                "type": "null"
               },
               {
                 "type": "null"
@@ -7289,6 +7310,9 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Correction"
+              },
+              {
+                "type": "null"
               },
               {
                 "type": "null"
@@ -7428,6 +7452,9 @@
               },
               {
                 "type": "null"
+              },
+              {
+                "type": "null"
               }
             ]
           }
@@ -7466,6 +7493,9 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Correction"
+              },
+              {
+                "type": "null"
               },
               {
                 "type": "null"
@@ -7634,6 +7664,9 @@
               },
               {
                 "type": "null"
+              },
+              {
+                "type": "null"
               }
             ]
           },
@@ -7641,6 +7674,9 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/Correction"
+              },
+              {
+                "type": "null"
               },
               {
                 "type": "null"

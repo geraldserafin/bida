@@ -4,7 +4,6 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-/// `owner` manages the envelope and its members; `member` works with the money in it.
 @JsonEnum()
 enum Role {
   @JsonValue('owner')

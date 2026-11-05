@@ -9,14 +9,12 @@ part of 'not_enough_money.dart';
 NotEnoughMoney _$NotEnoughMoneyFromJson(Map<String, dynamic> json) =>
     NotEnoughMoney(
       privateTag: NotEnoughMoneyTag.fromJson(json['_tag'] as String),
-      envelopeId: json['envelopeId'] as String,
       availableMinor: (json['availableMinor'] as num).toInt(),
     );
 
 Map<String, dynamic> _$NotEnoughMoneyToJson(NotEnoughMoney instance) =>
     <String, dynamic>{
       '_tag': _$NotEnoughMoneyTagEnumMap[instance.privateTag]!,
-      'envelopeId': instance.envelopeId,
       'availableMinor': instance.availableMinor,
     };
 

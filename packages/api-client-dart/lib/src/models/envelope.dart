@@ -10,28 +10,25 @@ part 'envelope.g.dart';
 class Envelope {
   const Envelope({
     required this.id,
-    required this.ownerId,
-    required this.parentId,
+    required this.householdId,
     required this.name,
     required this.color,
     required this.icon,
-    required this.createdAt,
-    required this.updatedAt,
+    required this.position,
+    required this.archived,
   });
 
   factory Envelope.fromJson(Map<String, Object?> json) =>
       _$EnvelopeFromJson(json);
 
   final String id;
-  final String ownerId;
-  @JsonKey(includeIfNull: true)
-  final String? parentId;
+  final String householdId;
   final String name;
   final String color;
   @JsonKey(includeIfNull: true)
   final String? icon;
-  final String createdAt;
-  final String updatedAt;
+  final int position;
+  final bool archived;
 
   Map<String, Object?> toJson() => _$EnvelopeToJson(this);
 }

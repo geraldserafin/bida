@@ -12,7 +12,6 @@ part 'not_enough_money.g.dart';
 class NotEnoughMoney {
   const NotEnoughMoney({
     required this.privateTag,
-    required this.envelopeId,
     required this.availableMinor,
   });
 
@@ -21,7 +20,6 @@ class NotEnoughMoney {
 
   @JsonKey(name: '_tag')
   final NotEnoughMoneyTag privateTag;
-  final String envelopeId;
   final int availableMinor;
 
   Map<String, Object?> toJson() => _$NotEnoughMoneyToJson(this);

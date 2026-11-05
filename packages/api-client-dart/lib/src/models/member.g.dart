@@ -11,7 +11,9 @@ Member _$MemberFromJson(Map<String, dynamic> json) => Member(
   email: json['email'] as Email,
   name: json['name'] as String?,
   role: Role.fromJson(json['role'] as String),
+  frozen: json['frozen'] as bool,
   joinedAt: json['joinedAt'] as String,
+  shareMinor: (json['shareMinor'] as num).toInt(),
 );
 
 Map<String, dynamic> _$MemberToJson(Member instance) => <String, dynamic>{
@@ -19,7 +21,9 @@ Map<String, dynamic> _$MemberToJson(Member instance) => <String, dynamic>{
   'email': instance.email,
   'name': instance.name,
   'role': _$RoleEnumMap[instance.role]!,
+  'frozen': instance.frozen,
   'joinedAt': instance.joinedAt,
+  'shareMinor': instance.shareMinor,
 };
 
 const _$RoleEnumMap = {

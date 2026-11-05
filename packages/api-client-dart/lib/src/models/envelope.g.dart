@@ -8,22 +8,20 @@ part of 'envelope.dart';
 
 Envelope _$EnvelopeFromJson(Map<String, dynamic> json) => Envelope(
   id: json['id'] as String,
-  ownerId: json['ownerId'] as String,
-  parentId: json['parentId'] as String?,
+  householdId: json['householdId'] as String,
   name: json['name'] as String,
   color: json['color'] as String,
   icon: json['icon'] as String?,
-  createdAt: json['createdAt'] as String,
-  updatedAt: json['updatedAt'] as String,
+  position: (json['position'] as num).toInt(),
+  archived: json['archived'] as bool,
 );
 
 Map<String, dynamic> _$EnvelopeToJson(Envelope instance) => <String, dynamic>{
   'id': instance.id,
-  'ownerId': instance.ownerId,
-  'parentId': instance.parentId,
+  'householdId': instance.householdId,
   'name': instance.name,
   'color': instance.color,
   'icon': instance.icon,
-  'createdAt': instance.createdAt,
-  'updatedAt': instance.updatedAt,
+  'position': instance.position,
+  'archived': instance.archived,
 };

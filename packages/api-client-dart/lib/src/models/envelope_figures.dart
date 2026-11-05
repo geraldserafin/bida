@@ -4,37 +4,42 @@
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'role.dart';
-
 part 'envelope_figures.g.dart';
 
 @JsonSerializable()
 class EnvelopeFigures {
   const EnvelopeFigures({
     required this.envelopeId,
-    required this.parentId,
-    required this.openingMinor,
-    required this.allocatedMinor,
+    required this.name,
+    required this.color,
+    required this.icon,
+    required this.archived,
+    required this.planMinor,
+    required this.manualMinor,
+    required this.recurringMinor,
     required this.spentMinor,
-    required this.balanceMinor,
-    required this.freeMinor,
-    required this.role,
-    required this.memberCount,
+    required this.leftMinor,
+    required this.sharePercent,
+    required this.previousSpentMinor,
   });
 
   factory EnvelopeFigures.fromJson(Map<String, Object?> json) =>
       _$EnvelopeFiguresFromJson(json);
 
   final String envelopeId;
+  final String name;
+  final String color;
   @JsonKey(includeIfNull: true)
-  final String? parentId;
-  final int openingMinor;
-  final int allocatedMinor;
+  final String? icon;
+  final bool archived;
+  final int planMinor;
+  final int manualMinor;
+  final int recurringMinor;
   final int spentMinor;
-  final int balanceMinor;
-  final int freeMinor;
-  final Role role;
-  final int memberCount;
+  final int leftMinor;
+  final dynamic sharePercent;
+  @JsonKey(includeIfNull: true)
+  final int? previousSpentMinor;
 
   Map<String, Object?> toJson() => _$EnvelopeFiguresToJson(this);
 }

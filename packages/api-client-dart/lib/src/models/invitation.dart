@@ -5,7 +5,6 @@
 import 'package:json_annotation/json_annotation.dart';
 
 import 'email.dart';
-import 'invitation_status.dart';
 import 'invited_by.dart';
 import 'role.dart';
 
@@ -15,13 +14,11 @@ part 'invitation.g.dart';
 class Invitation {
   const Invitation({
     required this.id,
-    required this.envelopeId,
-    required this.envelopeName,
+    required this.householdId,
+    required this.householdName,
     required this.email,
     required this.role,
-    required this.status,
     required this.invitedBy,
-    required this.acceptedBy,
     required this.expiresAt,
     required this.createdAt,
   });
@@ -30,15 +27,12 @@ class Invitation {
       _$InvitationFromJson(json);
 
   final String id;
-  final String envelopeId;
-  final String envelopeName;
+  final String householdId;
+  final String householdName;
   final Email email;
   final Role role;
-  final InvitationStatus status;
   @JsonKey(includeIfNull: true)
   final InvitedBy? invitedBy;
-  @JsonKey(includeIfNull: true)
-  final String? acceptedBy;
   final String expiresAt;
   final String createdAt;
 

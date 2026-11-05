@@ -5,10 +5,10 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
-import '../models/apply_recurring.dart';
 import '../models/apply_result.dart';
+import '../models/apply_rule.dart';
 import '../models/recurring_rule.dart';
-import '../models/save_recurring_rule.dart';
+import '../models/save_rule.dart';
 
 part 'recurring_client.g.dart';
 
@@ -16,45 +16,43 @@ part 'recurring_client.g.dart';
 abstract class RecurringClient {
   factory RecurringClient(Dio dio, {String? baseUrl}) = _RecurringClient;
 
-  /// List recurring rules.
+  /// Recurring rules.
   ///
-  /// The user's own, newest first.
+  /// The user's incomes and transfers, and the expense rules of their households.
   @GET('/recurring-rules')
   Future<List<RecurringRule>> recurringList();
 
-  /// Create a recurring rule
+  /// Add a recurring rule (F25, F26, F27)
   @POST('/recurring-rules')
-  Future<RecurringRule> recurringCreate({
-    @Body() required SaveRecurringRule body,
-  });
+  Future<RecurringRule> recurringCreate({@Body() required SaveRule body});
 
-  /// Edit a recurring rule.
+  /// Edit a rule.
   ///
-  /// Setting `active` to false pauses the rule.
+  /// Expense rules: their author or an owner.
   @PUT('/recurring-rules/{id}')
   Future<RecurringRule> recurringUpdate({
     @Path('id') required String id,
-    @Body() required SaveRecurringRule body,
+    @Body() required SaveRule body,
   });
 
-  /// Delete a recurring rule.
+  /// Delete a rule.
   ///
-  /// Expenses it already generated are kept.
+  /// What it made stays.
   @DELETE('/recurring-rules/{id}')
   Future<void> recurringDelete({@Path('id') required String id});
 
-  /// What applying would add.
+  /// Apply a rule early.
   ///
-  /// Counts of the recurring incomes, allocation rules and expenses that have not been applied to the stretch yet. Changes nothing.
-  @GET('/recurring-rules/pending')
-  Future<ApplyResult> recurringPending({
-    @Query('from') required String from,
-    @Query('to') required String to,
+  /// Its next occurrence: an income (an estimated one with the real amount), or an expense in the current period.
+  @POST('/recurring-rules/{id}/apply')
+  Future<ApplyResult> recurringApply({
+    @Path('id') required String id,
+    @Body() required ApplyRule body,
   });
 
-  /// Apply the recurring rules to a stretch of time.
+  /// Apply every expense rule of a household early.
   ///
-  /// Adds, for every active rule not applied for this `from` yet: the recurring incomes (dated on their day of the month), then the allocation rules (the same), then the expenses (dated today when today is in the stretch, else `from`). Safe to call repeatedly. An allocation the envelope cannot take is skipped and counted.
-  @POST('/recurring-rules/apply')
-  Future<ApplyResult> recurringApply({@Body() required ApplyRecurring body});
+  /// Their occurrences left in the current period.
+  @POST('/households/{id}/recurring-rules/apply')
+  Future<ApplyResult> recurringApplyAll({@Path('id') required String id});
 }

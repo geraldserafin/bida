@@ -9,31 +9,31 @@ part of 'envelope_figures.dart';
 EnvelopeFigures _$EnvelopeFiguresFromJson(Map<String, dynamic> json) =>
     EnvelopeFigures(
       envelopeId: json['envelopeId'] as String,
-      parentId: json['parentId'] as String?,
-      openingMinor: (json['openingMinor'] as num).toInt(),
-      allocatedMinor: (json['allocatedMinor'] as num).toInt(),
+      name: json['name'] as String,
+      color: json['color'] as String,
+      icon: json['icon'] as String?,
+      archived: json['archived'] as bool,
+      planMinor: (json['planMinor'] as num).toInt(),
+      manualMinor: (json['manualMinor'] as num).toInt(),
+      recurringMinor: (json['recurringMinor'] as num).toInt(),
       spentMinor: (json['spentMinor'] as num).toInt(),
-      balanceMinor: (json['balanceMinor'] as num).toInt(),
-      freeMinor: (json['freeMinor'] as num).toInt(),
-      role: Role.fromJson(json['role'] as String),
-      memberCount: (json['memberCount'] as num).toInt(),
+      leftMinor: (json['leftMinor'] as num).toInt(),
+      sharePercent: json['sharePercent'],
+      previousSpentMinor: (json['previousSpentMinor'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$EnvelopeFiguresToJson(EnvelopeFigures instance) =>
     <String, dynamic>{
       'envelopeId': instance.envelopeId,
-      'parentId': instance.parentId,
-      'openingMinor': instance.openingMinor,
-      'allocatedMinor': instance.allocatedMinor,
+      'name': instance.name,
+      'color': instance.color,
+      'icon': instance.icon,
+      'archived': instance.archived,
+      'planMinor': instance.planMinor,
+      'manualMinor': instance.manualMinor,
+      'recurringMinor': instance.recurringMinor,
       'spentMinor': instance.spentMinor,
-      'balanceMinor': instance.balanceMinor,
-      'freeMinor': instance.freeMinor,
-      'role': _$RoleEnumMap[instance.role]!,
-      'memberCount': instance.memberCount,
+      'leftMinor': instance.leftMinor,
+      'sharePercent': instance.sharePercent,
+      'previousSpentMinor': instance.previousSpentMinor,
     };
-
-const _$RoleEnumMap = {
-  Role.owner: 'owner',
-  Role.member: 'member',
-  Role.$unknown: r'$unknown',
-};

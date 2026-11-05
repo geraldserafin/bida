@@ -8,15 +8,13 @@ part of 'invitation.dart';
 
 Invitation _$InvitationFromJson(Map<String, dynamic> json) => Invitation(
   id: json['id'] as String,
-  envelopeId: json['envelopeId'] as String,
-  envelopeName: json['envelopeName'] as String,
+  householdId: json['householdId'] as String,
+  householdName: json['householdName'] as String,
   email: json['email'] as Email,
   role: Role.fromJson(json['role'] as String),
-  status: InvitationStatus.fromJson(json['status'] as String),
   invitedBy: json['invitedBy'] == null
       ? null
       : InvitedBy.fromJson(json['invitedBy'] as Map<String, dynamic>),
-  acceptedBy: json['acceptedBy'] as String?,
   expiresAt: json['expiresAt'] as String,
   createdAt: json['createdAt'] as String,
 );
@@ -24,13 +22,11 @@ Invitation _$InvitationFromJson(Map<String, dynamic> json) => Invitation(
 Map<String, dynamic> _$InvitationToJson(Invitation instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'envelopeId': instance.envelopeId,
-      'envelopeName': instance.envelopeName,
+      'householdId': instance.householdId,
+      'householdName': instance.householdName,
       'email': instance.email,
       'role': _$RoleEnumMap[instance.role]!,
-      'status': _$InvitationStatusEnumMap[instance.status]!,
       'invitedBy': instance.invitedBy,
-      'acceptedBy': instance.acceptedBy,
       'expiresAt': instance.expiresAt,
       'createdAt': instance.createdAt,
     };
@@ -39,10 +35,4 @@ const _$RoleEnumMap = {
   Role.owner: 'owner',
   Role.member: 'member',
   Role.$unknown: r'$unknown',
-};
-
-const _$InvitationStatusEnumMap = {
-  InvitationStatus.invited: 'invited',
-  InvitationStatus.accepted: 'accepted',
-  InvitationStatus.$unknown: r'$unknown',
 };

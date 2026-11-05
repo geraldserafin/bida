@@ -8,20 +8,13 @@ part 'apply_result.g.dart';
 
 @JsonSerializable()
 class ApplyResult {
-  const ApplyResult({
-    required this.incomes,
-    required this.allocations,
-    required this.expenses,
-    required this.skipped,
-  });
+  const ApplyResult({required this.applied, required this.todo});
 
   factory ApplyResult.fromJson(Map<String, Object?> json) =>
       _$ApplyResultFromJson(json);
 
-  final int incomes;
-  final int allocations;
-  final int expenses;
-  final int skipped;
+  final int applied;
+  final int todo;
 
   Map<String, Object?> toJson() => _$ApplyResultToJson(this);
 }

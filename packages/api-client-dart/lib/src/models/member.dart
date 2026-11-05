@@ -16,7 +16,9 @@ class Member {
     required this.email,
     required this.name,
     required this.role,
+    required this.frozen,
     required this.joinedAt,
+    required this.shareMinor,
   });
 
   factory Member.fromJson(Map<String, Object?> json) => _$MemberFromJson(json);
@@ -26,7 +28,9 @@ class Member {
   @JsonKey(includeIfNull: true)
   final String? name;
   final Role role;
+  final bool frozen;
   final String joinedAt;
+  final int shareMinor;
 
   Map<String, Object?> toJson() => _$MemberToJson(this);
 }

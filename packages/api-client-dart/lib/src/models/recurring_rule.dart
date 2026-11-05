@@ -5,6 +5,8 @@
 import 'package:json_annotation/json_annotation.dart';
 
 import 'recurring_rule_frequency.dart';
+import 'recurring_rule_target.dart';
+import 'rule_kind.dart';
 
 part 'recurring_rule.g.dart';
 
@@ -12,29 +14,46 @@ part 'recurring_rule.g.dart';
 class RecurringRule {
   const RecurringRule({
     required this.id,
+    required this.kind,
     required this.userId,
+    required this.householdId,
     required this.envelopeId,
+    required this.name,
     required this.amountMinor,
+    required this.estimated,
     required this.frequency,
-    required this.note,
+    required this.dayOfMonth,
+    required this.everyWeeks,
+    required this.anchorOn,
+    required this.startsOn,
+    required this.target,
     required this.active,
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   factory RecurringRule.fromJson(Map<String, Object?> json) =>
       _$RecurringRuleFromJson(json);
 
   final String id;
+  final RuleKind kind;
   final String userId;
-  final String envelopeId;
+  @JsonKey(includeIfNull: true)
+  final String? householdId;
+  @JsonKey(includeIfNull: true)
+  final String? envelopeId;
+  final String name;
   final int amountMinor;
+  final bool estimated;
   final RecurringRuleFrequency frequency;
   @JsonKey(includeIfNull: true)
-  final String? note;
+  final int? dayOfMonth;
+  @JsonKey(includeIfNull: true)
+  final int? everyWeeks;
+  @JsonKey(includeIfNull: true)
+  final String? anchorOn;
+  final String startsOn;
+  @JsonKey(includeIfNull: true)
+  final RecurringRuleTarget? target;
   final bool active;
-  final String createdAt;
-  final String updatedAt;
 
   Map<String, Object?> toJson() => _$RecurringRuleToJson(this);
 }

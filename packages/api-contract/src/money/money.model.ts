@@ -77,14 +77,16 @@ export type Household = typeof Household.Type;
 export const CreateHousehold = Schema.Struct({
   name: Schema.NonEmptyString.check(Schema.isMaxLength(50)),
   /** Monthly from the 1st when left out. */
-  cycle: Schema.optional(Cycle),
+  cycle: Schema.optional(Schema.NullOr(Cycle)),
   /** The end of the first period of a manual cycle. */
-  firstEndsOn: Schema.optional(IsoDate),
+  firstEndsOn: Schema.optional(Schema.NullOr(IsoDate)),
   /** Europe/Warsaw when left out. */
-  timeZone: Schema.optional(Schema.String),
+  timeZone: Schema.optional(Schema.NullOr(Schema.String)),
   /** Names of the first envelopes; the default ones (F11) when left out. */
   envelopes: Schema.optional(
-    Schema.Array(Schema.NonEmptyString.check(Schema.isMaxLength(30))),
+    Schema.NullOr(
+      Schema.Array(Schema.NonEmptyString.check(Schema.isMaxLength(30))),
+    ),
   ),
 }).annotate({ identifier: "CreateHousehold" });
 export type CreateHousehold = typeof CreateHousehold.Type;
@@ -140,7 +142,7 @@ export type Invitation = typeof Invitation.Type;
 
 export const Invite = Schema.Struct({
   email: Email,
-  role: Schema.optional(Role),
+  role: Schema.optional(Schema.NullOr(Role)),
 }).annotate({ identifier: "Invite" });
 
 /** How long an invitation stays valid (F13). */
@@ -332,7 +334,7 @@ export const SaveExpense = Schema.Struct({
   title: Schema.NullOr(ExpenseTitle),
   forWhom: Schema.NullOr(ForWhom),
   forWhomUserId: Schema.NullOr(UserId),
-  decision: Schema.optional(Decision),
+  decision: Schema.optional(Schema.NullOr(Decision)),
 }).annotate({ identifier: "SaveExpense" });
 export type SaveExpense = typeof SaveExpense.Type;
 
@@ -394,17 +396,17 @@ export const UpdateIncome = Schema.Struct({
   onDate: IsoDate,
   note: Schema.NullOr(IncomeNote),
   estimated: Schema.Boolean,
-  correction: Schema.optional(Correction),
+  correction: Schema.optional(Schema.NullOr(Correction)),
 }).annotate({ identifier: "UpdateIncome" });
 export type UpdateIncome = typeof UpdateIncome.Type;
 
 export const ConfirmIncome = Schema.Struct({
   amountMinor: PositiveMoney,
-  correction: Schema.optional(Correction),
+  correction: Schema.optional(Schema.NullOr(Correction)),
 }).annotate({ identifier: "ConfirmIncome" });
 
 export const RemoveIncome = Schema.Struct({
-  correction: Schema.optional(Correction),
+  correction: Schema.optional(Schema.NullOr(Correction)),
 }).annotate({ identifier: "RemoveIncome" });
 
 // ---- recurring rules ----------------------------------------------------------------------------
@@ -454,7 +456,7 @@ export const SaveRule = Schema.Struct({
   ),
   anchorOn: Schema.NullOr(IsoDate),
   /** Today when left out. */
-  startsOn: Schema.optional(IsoDate),
+  startsOn: Schema.optional(Schema.NullOr(IsoDate)),
   target: Schema.NullOr(Schema.Literals(["current", "next"])),
   active: Schema.Boolean,
 }).annotate({ identifier: "SaveRule" });
@@ -510,9 +512,9 @@ export type TodoItem = typeof TodoItem.Type;
 export const ResolveTodo = Schema.Struct({
   amountMinor: PositiveMoney,
   /** For an expense (as in F08). */
-  decision: Schema.optional(Decision),
+  decision: Schema.optional(Schema.NullOr(Decision)),
   /** For an income corrected down. */
-  correction: Schema.optional(Correction),
+  correction: Schema.optional(Schema.NullOr(Correction)),
 }).annotate({ identifier: "ResolveTodo" });
 export type ResolveTodo = typeof ResolveTodo.Type;
 

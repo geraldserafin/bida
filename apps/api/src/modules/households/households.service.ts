@@ -61,9 +61,11 @@ export const DEFAULT_ENVELOPES = [
 const PALETTE = DEFAULT_ENVELOPES.map((e) => e.color);
 
 /** The cycle of the contract, checked; monthly from the 1st by default. */
-export const cycleFrom = (json: CycleJson | undefined, today: string) => {
-  if (json === undefined)
-    return Effect.succeed<Cycle>({ kind: "monthly", day: 1 });
+export const cycleFrom = (
+  json: CycleJson | null | undefined,
+  today: string,
+) => {
+  if (json == null) return Effect.succeed<Cycle>({ kind: "monthly", day: 1 });
   if (json.kind === "monthly")
     return json.day === null
       ? Effect.fail(new InvalidSchedule())
@@ -111,7 +113,7 @@ export const create = Effect.fn("households.create")(function* (
   if (!isTimeZone(timeZone)) return yield* new InvalidTimeZone({ timeZone });
   const today = todayIn(timeZone);
   const cycle = yield* cycleFrom(input.cycle, today);
-  if (cycle.kind === "manual" && input.firstEndsOn === undefined)
+  if (cycle.kind === "manual" && input.firstEndsOn == null)
     return yield* new InvalidSchedule();
   const id = crypto.randomUUID();
   yield* inTx(
@@ -144,7 +146,7 @@ export const create = Effect.fn("households.create")(function* (
       }
       yield* createPeriod(
         id,
-        firstPeriod(cycle, today, input.firstEndsOn),
+        firstPeriod(cycle, today, input.firstEndsOn ?? undefined),
         null,
       );
     }),

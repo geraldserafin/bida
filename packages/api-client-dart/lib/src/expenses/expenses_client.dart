@@ -5,9 +5,9 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
-import '../models/create_expense.dart';
 import '../models/expense.dart';
-import '../models/update_expense.dart';
+import '../models/expense_result.dart';
+import '../models/save_expense.dart';
 
 part 'expenses_client.g.dart';
 
@@ -15,38 +15,47 @@ part 'expenses_client.g.dart';
 abstract class ExpensesClient {
   factory ExpensesClient(Dio dio, {String? baseUrl}) = _ExpensesClient;
 
-  /// Add an expense
-  @POST('/expenses')
-  Future<Expense> expensesCreate({@Body() required CreateExpense body});
-
-  /// List expenses.
+  /// Add an expense (F08).
   ///
-  /// Of the envelopes the user can see, newest first. Defaults to 50 rows, at most 200.
-  @GET('/expenses')
-  Future<List<Expense>> expensesList({
-    @Query('envelopeId') String? envelopeId,
-    @Query('from') String? from,
-    @Query('to') String? to,
-    @Query('limit') String? limit,
-    @Query('offset') String? offset,
+  /// It has to fit the plan of the envelope and the balance of the current period. A plan that is too small grows by itself out of free money; otherwise 409 PlanTooSmall or NotEnoughInPeriod say what to bring from the wallet, and WalletWouldGoNegative asks to confirm a minus. Send the `decision` to go ahead.
+  @POST('/households/{id}/expenses')
+  Future<ExpenseResult> expensesCreate({
+    @Path('id') required String id,
+    @Body() required SaveExpense body,
   });
 
   /// Get an expense
   @GET('/expenses/{id}')
   Future<Expense> expensesGet({@Path('id') required String id});
 
-  /// Edit an expense.
+  /// Edit an expense (F09).
   ///
-  /// Its author and the owner of the envelope can. The new envelope has to be one the user can see.
+  /// Its author, or an owner. In an open period through the steps of F08; in a closed one only the title.
   @PUT('/expenses/{id}')
-  Future<Expense> expensesUpdate({
+  Future<ExpenseResult> expensesUpdate({
     @Path('id') required String id,
-    @Body() required UpdateExpense body,
+    @Body() required SaveExpense body,
   });
 
   /// Delete an expense.
   ///
-  /// Its author and the owner of the envelope can.
+  /// The money goes back to the piggy bank.
   @DELETE('/expenses/{id}')
   Future<void> expensesDelete({@Path('id') required String id});
+
+  /// Expense history (F10).
+  ///
+  /// Of the user's households, newest first. 50 rows unless `limit` says otherwise (at most 200).
+  @GET('/expenses')
+  Future<List<Expense>> expensesList({
+    @Query('householdId') String? householdId,
+    @Query('periodId') String? periodId,
+    @Query('envelopeId') String? envelopeId,
+    @Query('authorId') String? authorId,
+    @Query('forWhom') String? forWhom,
+    @Query('from') String? from,
+    @Query('to') String? to,
+    @Query('limit') String? limit,
+    @Query('offset') String? offset,
+  });
 }

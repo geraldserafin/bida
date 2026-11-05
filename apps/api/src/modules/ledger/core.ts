@@ -706,7 +706,7 @@ const decide = Effect.fn("ledger.decide")(function* (
   bank: Bank,
   actor: UserRow,
   request: ExpenseRequest,
-  decision: Decision | undefined,
+  decision: Decision | null | undefined,
 ) {
   const fit = fitOf(bank.ledger, request);
   if (fit.kind === "fits") return { transferMinor: 0, raiseMinor: 0 };
@@ -726,7 +726,7 @@ const decide = Effect.fn("ledger.decide")(function* (
           balanceMinor: fit.balanceMinor,
           transferMinor: fit.transferMinor,
         });
-  if (decision === undefined) return yield* refuse();
+  if (decision == null) return yield* refuse();
   const resolution: Resolution = {
     raisePlan: decision.raisePlan,
     transferMinor: decision.transferMinor,
@@ -766,7 +766,7 @@ export const addExpense = Effect.fn("ledger.addExpense")(function* (
   h: HouseholdRow,
   actor: UserRow,
   input: ExpenseInput,
-  decision: Decision | undefined,
+  decision: Decision | null | undefined,
   options: AddOptions = {},
 ) {
   const author = options.author ?? actor;
@@ -860,7 +860,7 @@ export const updateExpense = Effect.fn("ledger.updateExpense")(function* (
   actor: UserRow,
   expense: ExpenseRow,
   input: ExpenseInput,
-  decision: Decision | undefined,
+  decision: Decision | null | undefined,
   options: {
     readonly confirmEstimate?: boolean;
     readonly quiet?: boolean;

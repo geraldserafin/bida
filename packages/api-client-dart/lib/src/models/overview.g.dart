@@ -7,23 +7,15 @@ part of 'overview.dart';
 // **************************************************************************
 
 Overview _$OverviewFromJson(Map<String, dynamic> json) => Overview(
-  from: json['from'] as String,
-  to: json['to'] as String,
-  incomeMinor: (json['incomeMinor'] as num).toInt(),
-  allocatedMinor: (json['allocatedMinor'] as num).toInt(),
-  spentMinor: (json['spentMinor'] as num).toInt(),
-  poolMinor: (json['poolMinor'] as num).toInt(),
-  envelopes: (json['envelopes'] as List<dynamic>)
-      .map((e) => EnvelopeFigures.fromJson(e as Map<String, dynamic>))
+  wallet: Wallet.fromJson(json['wallet'] as Map<String, dynamic>),
+  households: (json['households'] as List<dynamic>)
+      .map((e) => HouseholdOverview.fromJson(e as Map<String, dynamic>))
       .toList(),
+  todo: (json['todo'] as num).toInt(),
 );
 
 Map<String, dynamic> _$OverviewToJson(Overview instance) => <String, dynamic>{
-  'from': instance.from,
-  'to': instance.to,
-  'incomeMinor': instance.incomeMinor,
-  'allocatedMinor': instance.allocatedMinor,
-  'spentMinor': instance.spentMinor,
-  'poolMinor': instance.poolMinor,
-  'envelopes': instance.envelopes,
+  'wallet': instance.wallet,
+  'households': instance.households,
+  'todo': instance.todo,
 };

@@ -71,7 +71,7 @@ const incomeFor = Effect.fn("wallet.incomeFor")(function* (
 /** The locks a correction takes: the wallet, and the household it may withdraw from. */
 const correctionKeys = Effect.fn("wallet.correctionKeys")(function* (
   userId: UserId,
-  correction: Correction | undefined,
+  correction: Correction | null | undefined,
 ) {
   const keys = [walletKey(userId)];
   if (correction?.withdrawFromPeriodId != null) {
@@ -92,7 +92,7 @@ const correctionKeys = Effect.fn("wallet.correctionKeys")(function* (
 const correctDown = Effect.fn("wallet.correctDown")(function* (
   userId: UserId,
   byMinor: number,
-  correction: Correction | undefined,
+  correction: Correction | null | undefined,
 ) {
   if (byMinor <= 0) return;
   const wallet = yield* store.walletOf(userId);
@@ -134,7 +134,7 @@ export const updateIncome = Effect.fn("wallet.updateIncome")(function* (
     readonly onDate: string;
     readonly note: string | null;
     readonly estimated: boolean;
-    readonly correction?: Correction | undefined;
+    readonly correction?: Correction | null | undefined;
   },
 ) {
   yield* incomeFor(userId, id);
@@ -165,7 +165,7 @@ export const confirmIncome = Effect.fn("wallet.confirmIncome")(function* (
   userId: UserId,
   id: string,
   amountMinor: number,
-  correction?: Correction,
+  correction?: Correction | null,
 ) {
   const entry = yield* incomeFor(userId, id);
   return yield* updateIncome(userId, id, {
@@ -180,7 +180,7 @@ export const confirmIncome = Effect.fn("wallet.confirmIncome")(function* (
 export const removeIncome = Effect.fn("wallet.removeIncome")(function* (
   userId: UserId,
   id: string,
-  correction?: Correction,
+  correction?: Correction | null,
 ) {
   yield* incomeFor(userId, id);
   const keys = yield* correctionKeys(userId, correction);
