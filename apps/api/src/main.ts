@@ -10,78 +10,21 @@ import {
   AuthModule,
   GoogleVerifier,
 } from "./modules/auth/auth.module.ts";
-import {
-  AllocationsHttp,
-  EnvelopesHttp,
-  EnvelopesModule,
-} from "./modules/envelopes/envelopes.module.ts";
-import {
-  ExpensesHttp,
-  ExpensesModule,
-} from "./modules/expenses/expenses.module.ts";
-import {
-  IncomesHttp,
-  IncomesModule,
-} from "./modules/incomes/incomes.module.ts";
-import {
-  InvitationsHttp,
-  InvitationsModule,
-} from "./modules/invitations/invitations.module.ts";
-import {
-  MembersHttp,
-  MembersModule,
-} from "./modules/members/members.module.ts";
-import {
-  OverviewHttp,
-  OverviewModule,
-} from "./modules/overview/overview.module.ts";
-import {
-  AllocationRulesHttp,
-  RecurringHttp,
-  RecurringIncomesHttp,
-  RecurringModule,
-} from "./modules/recurring/recurring.module.ts";
 import { SystemHttp } from "./modules/system/system.module.ts";
-import {
-  TransferHttp,
-  TransferModule,
-} from "./modules/transfer/transfer.module.ts";
 import { AppConfig } from "./platform/config.ts";
 import { DbLive } from "./platform/db.ts";
 import { bodyLimit, corsFor } from "./platform/http.ts";
 import { Mailer } from "./platform/mailer.ts";
 
 // Domain modules: each exposes its services, they may depend on each other.
-const Modules = Layer.mergeAll(
-  EnvelopesModule,
-  MembersModule,
-  InvitationsModule,
-  IncomesModule,
-  ExpensesModule,
-  RecurringModule,
-  OverviewModule,
-  TransferModule,
-  AuthModule,
-);
+const Modules = Layer.mergeAll(AuthModule);
 
 // The handlers of every group behind a sign-in are wrapped in the
 // Authenticated middleware, so it has to be available to them and to the
 // router.
-const Handlers = Layer.mergeAll(
-  SystemHttp,
-  AuthHttp,
-  EnvelopesHttp,
-  AllocationsHttp,
-  MembersHttp,
-  InvitationsHttp,
-  IncomesHttp,
-  ExpensesHttp,
-  RecurringHttp,
-  RecurringIncomesHttp,
-  AllocationRulesHttp,
-  OverviewHttp,
-  TransferHttp,
-).pipe(Layer.provideMerge(AuthenticatedModule));
+const Handlers = Layer.mergeAll(SystemHttp, AuthHttp).pipe(
+  Layer.provideMerge(AuthenticatedModule),
+);
 
 const ApiRoutes = HttpApiBuilder.layer(Api, {
   openapiPath: "/openapi.json",
