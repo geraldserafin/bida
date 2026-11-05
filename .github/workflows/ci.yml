@@ -61,8 +61,6 @@ jobs:
         with:
           flutter-version: 3.47.4
           cache: true
-      # the migration tests open a real SQLite database
-      - run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
       - run: pnpm install --frozen-lockfile
       # the generated client must match the contract: regenerate and compare
       - name: Dart client is up to date

@@ -1,0 +1,54 @@
+name: Wipe the production database
+
+# IRREVERSIBLE. Empties the database of the API on the VPS before the v0.5
+# money model (SWS v0.5, chapter 14: test data, no migration), then restarts
+# the API so its migrator creates the schema from 0001_base. A dump is written
+# on the VPS first. Run it by hand, after the deploy of v0.5, typing WIPE.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type WIPE to empty the production database
+        required: true
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  wipe:
+    name: Dump, wipe, restart
+    if: github.event.inputs.confirm == 'WIPE'
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH setup
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          printf 'Host vps\n  HostName %s\n  User %s\n  Port %s\n  IdentityFile ~/.ssh/id_deploy\n' \
+            "${{ secrets.VPS_HOST }}" "${{ secrets.VPS_USER }}" "${{ vars.VPS_PORT || 22 }}" > ~/.ssh/config
+      - name: Dump, wipe and restart the API
+        run: |
+          ssh vps 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd "${{ vars.VPS_DIR }}"
+          # the database service of the compose project (an image named postgres)
+          db=$(docker compose ps --format '{{.Service}} {{.Image}}' | awk '$2 ~ /postgres/ {print $1; exit}')
+          if [ -z "$db" ]; then echo "no postgres service in the compose project, nothing done"; exit 1; fi
+          echo "database service: $db"
+          dump="bida-before-v05-$(date +%Y%m%d-%H%M%S).sql"
+          docker compose exec -T "$db" sh -c 'pg_dump -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}"' > "$dump"
+          if [ ! -s "$dump" ]; then echo "the dump is empty, nothing wiped"; exit 1; fi
+          echo "dump: $(pwd)/$dump ($(wc -c < "$dump") bytes)"
+          docker compose exec -T "$db" sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"'
+          docker compose restart backend
+          for i in $(seq 1 30); do
+            if docker compose exec -T backend node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"; then
+              echo "API is up on the new schema"; exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not come back"; docker compose logs --tail 50 backend; exit 1
+          REMOTE

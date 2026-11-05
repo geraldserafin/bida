@@ -1,0 +1,59 @@
+name: Android APK
+
+# Builds the phone app against the production API after CI is green on main,
+# and puts it on the "apk-latest" release so it can be downloaded from GitHub.
+# Without the release keystore in the repository the APK is signed with the
+# debug key of the runner: it installs and signs in by e-mail code, but
+# Google sign-in needs the release key's fingerprint.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: apk
+  cancel-in-progress: true
+
+env:
+  API_URL: https://api.bida.maknet.com.pl
+  SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+jobs:
+  apk:
+    name: Build and publish
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.SHA }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.4
+          cache: true
+      - run: flutter pub get
+        working-directory: apps/mobile
+      - run: >-
+          flutter build apk --release
+          --dart-define=API_URL=${{ env.API_URL }}
+          --dart-define=GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
+        working-directory: apps/mobile
+      - name: Publish to the apk-latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp apps/mobile/build/app/outputs/flutter-apk/app-release.apk plning.apk
+          gh release delete apk-latest --yes --cleanup-tag || true
+          gh release create apk-latest plning.apk \
+            --target "$SHA" \
+            --prerelease \
+            --title "PLNing – najnowszy APK" \
+            --notes "Zbudowany z ${SHA::7} na main, API: $API_URL."
