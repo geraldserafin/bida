@@ -2,10 +2,11 @@
 
 # 💰 Money Planner
 
-**An envelope-budgeting app that helps you _plan_ your money — not just track it.**
+**A household budgeting app that helps you _plan_ your money — not just track it.**
 
-Put your income into envelopes, then watch what is left in each of them as you
-log real spending. What is left carries over to the next month.
+Put your income into a private wallet, hand money out to your households, and
+plan every period of a household envelope by envelope. Whatever is left when a
+period ends goes on to the next one.
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart&logoColor=white)](https://dart.dev)
@@ -19,17 +20,26 @@ log real spending. What is left carries over to the next month.
 ## ✨ The idea
 
 Most finance apps are *trackers* — they tell you where your money went after it's
-gone. Money Planner is a **planner**. It's built around **envelope budgeting**:
+gone. Money Planner is a **planner** (model: `docs/MONEY_MODEL.md`, SWS v0.5):
 
-1. **Add your income** when it comes in — it lands in a pool of unallocated money.
-2. **Put money into envelopes** — Rent, Food, Savings, Fun… An envelope can have
-   sub-envelopes (Rent → Utilities, say).
-3. **Log spending** against an envelope. Its balance drops.
-4. See, per envelope and overall: **what was available, what was spent, what is
-   left** — with charts. Whatever is left rolls over into the next month.
+1. **Add your income** to your **wallet**. It is private: only you see it.
+   An income can be certain or estimated ("salary, different every month").
+2. **Transfer money** from the wallet into a **household**: just you, or you
+   and the people you live with. A household cuts time into **periods**
+   (monthly from a day, every N weeks, or by hand) and every period is a
+   **piggy bank** of its own.
+3. **Plan the envelopes** of the period: Food, Rent, Fun… Recurring expenses
+   add themselves to the plan.
+4. **Log spending.** An expense has to fit its plan and the piggy bank; when
+   it does not, the app walks you through it: the plan grows out of free money,
+   or you bring money from the wallet, or (confirmed) the wallet goes below zero.
+5. Everybody sees **who has how much** in the piggy bank (their share). When the
+   period ends, what is left goes on to the next one as nobody's money, and the
+   app shows you how much you saved.
 
-Took too much out of the pool? It goes negative and the app tells you, but it
-never blocks you: an expense is a fact and has to be recordable.
+Nothing happens on the server in the background: when the app opens it closes
+the periods that ended, opens new ones and runs the recurring incomes,
+transfers and expenses. What needs a decision lands on one **to-do** list.
 
 ## 📱 Screenshots
 
@@ -62,16 +72,16 @@ History
 
 | | |
 |---|---|
-| 🧧 **Envelope budgeting** | Put income into envelopes and sub-envelopes; spend from them; balances roll over |
-| 📊 **Visual insight** | Donut chart of where the money is, available-vs-spent bars, spending-over-time line charts |
-| 🔁 **Recurring rules** | Rent and subscriptions, a salary that comes in every month, and sums that go into envelopes on a fixed day: one tap adds them all to the month, and the dashboard says what is due |
-| 🧮 **Unallocated tracking** | Always know how much income is still free to put into envelopes |
-| 👥 **Shared envelopes** | Invite people by e-mail to an envelope; each puts money in from their own pool, everybody sees who put how much, owners approve who gets in |
-| 📅 **Months** | Step through months with the arrows; a list shows every month so far. The month can start on any day from 1 to 28 |
-| 🧭 **Bottom navigation** | Pulpit (dashboard) · Historia · Miesiące · Ustawienia, one tap away |
-| 🕓 **History** | Expenses of the month grouped by day, filtered by envelope, dates and time |
+| 👛 **Wallet** | Certain and estimated incomes, transfers and withdrawals; "of it unconfirmed"; a correction down asks what to do |
+| 🏠 **Households** | One or more members, owners and members, invitations by e-mail, leaving, freezing a member who owes |
+| 📅 **Periods** | Monthly from any day, every N weeks, or by hand; current and next period open; move the end of the current one |
+| 🧧 **Envelopes with plans** | A plan per envelope and period, recurring part counted from the rules, a warning when the plans exceed the balance |
+| 🧾 **Expenses step by step** | Plan too small? Free money raises it, or bring money from the wallet; "for whom" to filter |
+| 🔁 **Recurring rules** | Incomes, transfers and expenses that run on their own when the app opens; estimated ones wait for the real amount |
+| ✅ **To-do list** | One list instead of a row of dialogs |
+| 🎉 **Period summary** | What came in, what was spent and what went on |
+| ↩️ **Change log** | Who changed what in the open periods, with undo |
 | 🔐 **Local security** | PIN + biometric unlock (`local_auth`) |
-| ☁️ **Server-backed** | Your data lives on the Money Planner API, so it survives a lost phone and is the base for sharing a budget |
 
 ## 🏗️ Architecture
 
@@ -83,52 +93,42 @@ shows why and offers to try again.
 lib/
 ├── main.dart                 # Entry point
 ├── app.dart                  # MaterialApp: providers, theming, routing
-├── models/                   # What the UI works with (pure Dart)
-│   ├── envelope.dart         # a pot of money; top-level or a sub-envelope
-│   ├── allocation.dart, income.dart, expense.dart, recurring_rule.dart
-│   ├── budget_month.dart     # the days a month covers (any first day)
-│   ├── envelope_progress.dart, overview.dart, month_summary.dart
-│   └── transaction.dart      # an expense with its envelope
-├── data/                     # Everything that talks to the backend
-│   ├── planner_repository.dart  # the one entry point, in the app's terms
-│   ├── mappers.dart          # API types <-> models
-│   ├── money.dart            # grosze <-> złoty
+├── models/models.dart        # What the UI works with (pure Dart, amounts in grosze)
+├── data/
+│   ├── budget_repository.dart # the one entry point to the backend, in the app's terms
 │   ├── api_client.dart       # Dio setup, API_URL
-│   ├── api_exception.dart    # failures the UI can react to
-│   └── legacy_migrator.dart  # one-off: old local database -> server
+│   └── api_exception.dart    # failures the UI can react to, with the fields of a 409
 ├── state/
-│   ├── planner_state.dart    # envelopes, the month on screen, totals (Provider)
-│   └── app_settings.dart     # theme, first day of month (on the device)
+│   ├── budget_state.dart     # the app start, wallet, households, to-do (Provider)
+│   └── app_settings.dart     # theme, the last household, what the dashboard shows
+├── util/money_steps.dart     # the steps of F08 and the correction of an income
 ├── widgets/                  # shared widgets (error view, remote data, …)
-└── screens/                  # dashboard, envelope detail, funding, incomes, months, history, settings, …
+└── screens/                  # dashboard, household, envelopes, add expense, wallet,
+                              # recurring, members, period summary, log, wizard, settings
 ```
 
-**Layers.** Screens only talk to `PlannerState`; the state talks to
-`PlannerRepository`, the only place that knows about HTTP. The repository uses
+**Layers.** Screens talk to `BudgetState`; the state talks to
+`BudgetRepository`, the only place that knows about HTTP. The repository uses
 the generated client in `packages/api-client-dart`, so requests and responses
-are typed and cannot drift from the API. Models use whole units (zł) and
-`DateTime`; the API uses minor units and ISO strings, and `data/mappers.dart`
-is where they meet.
+are typed and cannot drift from the API.
 
-**Money.** Amounts are integers in grosze on the wire (12.34 zł is 1234) and
-doubles in złoty in the app. There is one currency, the złoty.
+**The rules live on the server.** Balances, shares, plans and the steps of an
+expense are computed by the API. When an expense does not fit, the server
+answers 409 with what to do (`PlanTooSmall` with `transferMinor`, …); the app
+asks the user (`sendWithSteps`) and sends the decision back.
 
-**Months.** A month is just a range of days (`BudgetMonth`), starting on the
-day set in Settings. The server computes what is in each envelope over that
-range (`GET /overview`); balances roll over, so a month shows what was left
-from before, what came in, what was spent and what is left now.
+**Money.** Amounts are integers in grosze everywhere (12.34 zł is 1234) and
+`formatMinor` shows them. There is one currency, the złoty.
+
+**The app start.** `BudgetState.load` first calls `POST /sync`, then reads the
+households, the wallet and the to-do list. Closed periods the user has not seen
+yet are shown once.
 
 **Failures.** Repository methods throw `ApiException` (unreachable, not found,
-conflict, invalid, server). Screens run changes through `attempt(...)`, which
-shows a message and lets the user retry, and show fetched data through
+conflict, invalid, server). Screens run changes through `attemptMoney(...)`,
+which explains the money rules in words, and show fetched data through
 `RemoteData`, which has a spinner, an error view with a retry button, and the
 data.
-
-**Moving old data.** The first version kept everything in a local SQLite
-database. On launch, `LegacyMigrator` uploads that database once (to
-`POST /import/legacy`) when the server is still empty, then renames the file
-to `money_planner.db.migrated`. It never overwrites data the server already
-has, and keeps the file if anything goes wrong so the next launch can retry.
 
 ## 🔒 Security model
 
@@ -148,7 +148,6 @@ has, and keeps the file if anything goes wrong so the next launch can retry.
 | Secure storage | `flutter_secure_storage` |
 | Biometric / PIN | `local_auth`, `crypto` |
 | Date & currency formatting | `intl` |
-| Reading the old local database | `sqflite` (+ `sqflite_common_ffi` for desktop) |
 
 ## 🚀 Getting started
 
@@ -188,10 +187,11 @@ flutter test
 - [x] **Phase 5** — Encrypted GitHub sync (replaced by the API: data now lives on the server)
 - [x] **Phase 6** — Read-only History view (past periods + charts), bottom navigation bar, edge-case polish
 - [x] **Phase 7** — Accounts and sign-in (e-mail code, Google), data on the server
-- [x] **Phase 8** — Envelope model: income and a pool, envelopes with sub-envelopes, allocations, balances that roll over, months instead of periods (see `docs/ENVELOPE_MODEL.md`)
+- [x] **Phase 8** — Envelope model: income and a pool, envelopes with sub-envelopes, allocations, balances that roll over, months instead of periods (replaced by phase 10)
 - [x] **Phase 9** — Shared envelopes: members with roles, invitations the owner approves, who put how much
+- [x] **Phase 10** — SWS v0.5: a private wallet, households with periods, envelopes with plans, shares, recurring rules that run at start, a to-do list, a change log (see `docs/MONEY_MODEL.md`)
 
-**Extras already in:** custom envelopes with icon/color picker · full Polish localization (`pl`) with zł currency · month switcher · bottom navigation bar.
+**Extras already in:** custom envelopes with a colour picker · full Polish localization (`pl`) with zł currency · bottom navigation bar.
 
 ## 🤝 Contributing
 

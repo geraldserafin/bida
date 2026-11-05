@@ -6,7 +6,7 @@ Dotyczy `apps/api` i `packages/api-contract`. Cel: jasny podział warstw, jedna 
 
 - **Effect 4 wszędzie.** Serwisy to `Context.Service`, zależności to `Layer`, błędy są typowane w kanale `E`, funkcje mają spany (`Effect.fn`).
 - **Czysty SQL przez `effect/sql`**, bez ORM-a. Sterownik: `@effect/sql-pg` (Postgres). Typy wyników pochodzą ze `Schema`, więc jedno źródło prawdy.
-- **Vertical slices.** Folder na domenę, a nie folder na warstwę. Wszystko, co dotyczy kopert, leży w `modules/envelopes/`.
+- **Vertical slices.** Każda domena ma własny folder; nie dzielimy kodu na foldery według warstw. Wspólna księgowość pieniędzy leży w `modules/ledger/`.
 - **Kontrakt jest osobnym pakietem** i jedynym miejscem, w którym definiujemy kształt API.
 
 ## Struktura
@@ -34,7 +34,20 @@ apps/api/src/
       <module>.module.ts         # jedyny publiczny plik modułu
 ```
 
-Moduły: `envelopes` (koperty, subkoperty i przydziały pieniędzy), `members` (członkowie i role), `invitations` (zaproszenia), `incomes` (przychody), `expenses`, `recurring` (reguły cykliczne: wydatki, wpływy, podział), `overview` (salda i historia miesięcy), `transfer` (eksport, import, CSV), `auth` (konta i sesje), `system` (health). Model danych opisuje [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md).
+Moduły:
+
+- `ledger`: wspólne pieniądze. `money.ts`, `cycle.ts` i `dates.ts` to czysta arytmetyka. `store.ts` zawiera SQL. `core.ts` ma operacje używane przez kilka modułów (przelew, wydatek z krokami F08, zamknięcie okresu, udziały). Do tego `access.ts` (dostęp i transakcje) i `summary.ts` (zestawienia).
+- `households`: gospodarstwa, okresy, członkowie, zaproszenia i log.
+- `envelopes`: koperty i plany.
+- `expenses`: wydatki.
+- `wallet`: portfel i wpływy.
+- `recurring`: reguły cykliczne i silnik `engine.ts`.
+- `sync`: otwarcie aplikacji, „Do załatwienia” i pulpit.
+- `account`: konto.
+- `money`: handlery HTTP wszystkich grup pieniędzy.
+- `auth` i `system`: bez zmian.
+
+Model opisuje [MONEY_MODEL.md](MONEY_MODEL.md).
 
 ## Warstwy
 
@@ -47,7 +60,7 @@ Zależności idą w jedną stronę: `http → service → repository → SqlClie
 | Repozytorium | `*.repository.ts` | zapytania SQL, mapowanie wierszy na typy domenowe przez `Schema` | reguł biznesowych, transakcji, innych modułów |
 | Platforma | `platform/*` | konfiguracja, połączenie z bazą, migracje | wiedzy o domenach |
 
-Każda z warstw jest `Context.Service` z interfejsem i statycznym `layer`. Dzięki temu w testach podmieniamy implementację przez Layer, bez mocków.
+W `auth` każda warstwa to `Context.Service` z interfejsem i statycznym `layer`. Moduły pieniędzy (v0.5) są prostsze: serwisy to funkcje `Effect.fn`, które wymagają `SqlClient`, a SQL leży w funkcjach `ledger/store.ts`. Handlery w `money/money.http.ts` dostają `SqlClient` i `Mailer` z kontekstu Layera (`withServices`). Testy wołają serwisy bezpośrednio na prawdziwej bazie.
 
 ## Moduł i `*.module.ts`
 
@@ -77,8 +90,8 @@ Layery są memoizowane po referencji, więc moduł użyty przez kilka innych bud
 ### Reguły zależności
 
 1. Moduł importuje z innego modułu wyłącznie `*.module.ts` (serwis). Nigdy repozytorium, SQL ani tabele. Egzekwuje to reguła `noRestrictedImports` w Biome.
-2. Graf zależności jest acykliczny: `envelopes ← members ← invitations` i `envelopes ← expenses ← recurring`, a `transfer` zależy od `envelopes` i `expenses`. `incomes` i `overview` nie zależą od żadnego modułu.
-3. Gdy dwa moduły potrzebowałyby siebie nawzajem, cykl rozwiązuje baza, a nie kod. Przykład: usunięcie koperty kasuje jej wydatki, przydziały i reguły przez `FOREIGN KEY ... ON DELETE CASCADE`, więc `envelopes` nie zna `expenses` ani `recurring`.
+2. Graf zależności jest acykliczny. Wszystkie moduły pieniędzy zależą od `ledger`. Dodatkowo `account` zależy od `households`, a `sync` od `recurring` i `wallet`. `money` składa handlery wszystkich modułów.
+3. Gdy dwa moduły potrzebowałyby siebie nawzajem, cykl rozwiązuje baza albo `ledger`, a nie wzajemne importy. Przykład: usunięcie gospodarstwa kasuje okresy, koperty, plany, wydatki i reguły przez `ON DELETE CASCADE`, a wpisy portfela zostają (`ON DELETE SET NULL`).
 
 ### Składanie aplikacji
 
@@ -129,29 +142,22 @@ Runner: `vitest` z `@effect/vitest`.
 
 ## Kwoty i daty
 
-- **Kwota to liczba całkowita w groszach** (`amountMinor`): 12,34 zł to `1234`. Aplikacja ma jedną walutę, złotego, więc API nie niesie kodów walut (wielowalutowość odłożona, patrz [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md)). Baza trzyma `bigint`, a repozytoria rzutują go na liczbę (`::float8`), bo sterownik zwraca `bigint` jako tekst.
-- **Typy kwot** w `money.ts` kontraktu: `Money` (≥ 0), `PositiveMoney` (> 0), `NonZeroMoney` (przydział; ujemny zabiera pieniądze z koperty) i `Balance` (saldo, może być ujemne).
-- **Przychody i przydziały mają dzień** (`IsoDate`, kolumna `date`, czytana jako tekst, żeby nie ruszać jej strefą czasową). **Wydatek ma chwilę** (`spent_at`, `timestamptz`).
-- **Dzień wydatku zależy od strefy.** Zapytania o zakres dni (`GET /overview`) przyjmują `timeZone` (domyślnie `Europe/Warsaw`), a wydatek wpada w dzień, który miał w tej strefie. Lista wydatków (`GET /expenses`) filtruje po chwilach, więc klient sam przelicza dni na chwile.
-- **Eksport i CSV** formatują kwoty z dwoma miejscami po przecinku.
+- **Kwota to liczba całkowita w groszach** (`amountMinor`): 12,34 zł to `1234`. Aplikacja ma jedną walutę, złotego, więc API nie niesie kodów walut (wielowalutowość jest odłożona). Baza trzyma `bigint`, a repozytoria rzutują go na liczbę (`::float8`), bo sterownik zwraca `bigint` jako tekst.
+- **Typy kwot** w `money.ts` kontraktu: `Money` (≥ 0), `PositiveMoney` (> 0) i `Balance` (saldo, udział; może być ujemne).
+- **Wpływy i okresy mają dni** (`IsoDate`, kolumna `date`, czytana jako tekst, żeby nie zmieniała jej strefa czasowa). **Wydatek ma chwilę** (`spent_at`, `timestamptz`).
+- **Dzień wydatku zależy od strefy gospodarstwa.** Zakresy dni (`GET /overview`, `GET /expenses?from&to`) liczą się w tej strefie.
 
-## Koperty i pieniądze
+## Pieniądze (v0.5)
 
-Pełny opis zasad i widoku użytkownika: [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md). Tu tylko to, co dotyczy kodu.
+Pełny opis zasad: [MONEY_MODEL.md](MONEY_MODEL.md). W tej sekcji jest tylko to, co dotyczy kodu.
 
-- **Właścicielem danych jest użytkownik**, nie osobna encja. Przychód ma `user_id`, koperta `owner_id`, przydział `user_id` (kto wpłacił), wydatek `created_by`, reguła cykliczna `user_id`. Nie ma kolumny najemcy w każdej tabeli.
-- **Dostęp do koperty** daje wiersz w `envelope_members` (`role` = `owner` albo `member`) dla koperty top-level; subkoperta dziedziczy dostęp po `parent_id`. Zapytania łączą się przez `COALESCE(parent_id, id)`. Koperta, której użytkownik nie widzi, nie istnieje: 404 (`EnvelopeNotFound`). Widoczna, ale bez prawa zmiany: 403 (`Forbidden`).
-- **Serwisy przyjmują `userId`** (`UserId`) jako pierwszy parametr, a handlery HTTP biorą go z `CurrentUser` (middleware `Authenticated`). Nie ma ukrytego kontekstu.
-- **Uprawnienia wynikają z roli, nie z `owner_id`.** `owner_id` to twórca koperty. To, co wolno (edycja, usuwanie, podkoperty, zaproszenia, zmiana ról, usuwanie cudzych wydatków), zależy od roli w `envelope_members`; koperta może mieć kilku właścicieli.
-- **Głębokość jest pilnowana w serwisie**: rodzic musi być kopertą top-level (`ParentMustBeTopLevel`). Baza pilnuje tylko `parent_id <> id`.
-- **Salda nie są przechowywane.** Liczy je SQL z tabel `allocations` i `expenses`. Moduł `overview` czyta tabele innych modułów wprost, bo suma to pytanie o wszystkie naraz; to świadomy wyjątek od zasady o importach. Zakres dni dzieli sumy na „przed” (otwarcie) i „w zakresie”, a salda przechodzą między miesiącami.
-- **Reguły przydziałów** (`EnvelopesService.checkChange`) są sprawdzane w transakcji, po zablokowaniu koperty top-level blokadą doradczą (`pg_advisory_xact_lock(hashtext(id))`), żeby dwa równoległe przydziały nie przekroczyły sald. Naruszenie to 409 `NotEnoughMoney` z `availableMinor`. Ujemna pula i ujemne saldo od wydatków są dozwolone.
-- **Członkowie** (`members`): lista, zmiana roli, usunięcie i opuszczenie koperty to jedna operacja `remove` (właściciel usuwa każdego, każdy usuwa siebie), w transakcji pod blokadą doradczą na kopertę. Koperta zawsze ma co najmniej jednego właściciela (409 `LastOwner`), a członków może być `MAX_MEMBERS_PER_ENVELOPE` (10). Ktoś, kto odchodzi, zostawia przydziały i wydatki, a jego reguły cykliczne z tej koperty są kasowane. `GET /envelopes/{id}/contributions` zwraca sumę przydziałów per członek i per koperta (dla top-level także podkoperty).
-- **Zaproszenia** (`invitations`) są do adresu e-mail, nie do linku: `invited` → `accepted` (zaproszony przyjął) → `approved` (właściciel zatwierdził, dopiero wtedy dostaje dostęp). Pozostałe końce (odrzucone, cofnięte, wygasłe po 14 dniach) zostają w tabeli. Jedno otwarte zaproszenie na adres i kopertę (unikalny indeks); ponowne zaproszenie odnawia je i ustawia nową rolę. Limity: 10 zaproszeń na godzinę na osobę i 10 członków (łącznie z otwartymi zaproszeniami). Mail dostaje zaproszony, a po przyjęciu właściciele; po zatwierdzeniu zaproszony. Te maile to dodatek (`notify` w `platform/mailer.ts`): nieudana wysyłka jest tylko logowana i nie cofa ani nie psuje zaproszenia, bo jest ono i tak widoczne w aplikacji. Inaczej jest przy logowaniu, gdzie mail jest jedyną drogą i błąd poczty kończy się 500. Zapraszać można tylko do koperty top-level (422 `NotShareable`).
-- **Usuwanie** koperty kasuje kaskadą subkoperty, przydziały, wydatki i reguły (`ON DELETE CASCADE`).
-- **Eksport i import** (`transfer`) dotyczą kopert, których użytkownik jest **jedynym członkiem**, razem z przychodami i regułami do nich. Koperty współdzielone nie wchodzą do kopii i import ich nie rusza, bo nie należą do niego samego. Eksport CSV zawiera za to własne wydatki użytkownika także ze współdzielonych kopert. Import zastępuje te dane w jednej transakcji i nadaje wszystkiemu nowe ID (ID są globalne, więc dokument może pochodzić od kogokolwiek). Opis ścieżek: [BACKEND.md](BACKEND.md).
-- **Migracja 0009** przeniosła dane z przestrzeni i okresów do tego modelu (kategoria → koperta o tym samym ID, dochód okresu → przychód, plan okresu → przydział, oba z datą początku okresu). Przestrzeń bez członków (nieprzejęta przestrzeń domyślna) nie miała komu oddać danych i została usunięta.
-- **Testy** idą przez prawdziwe serwisy na bazie testowej (`insertUser`, `resetDb`, `TestAuthenticated` z `platform/testing.ts`), bo reguły o pieniądzach, klucze obce i sumy są sednem. Czas w testach to `TestClock` zaczynający od 1970 roku.
+- **Dostęp** daje wiersz w `household_members` z rolą `owner` albo `member` (`access.householdFor`). Gospodarstwo, okres, koperta czy wydatek, których użytkownik nie widzi, nie istnieją dla niego: serwer odpowiada 404. Gdy użytkownik widzi zasób, ale nie może go zmienić, serwer odpowiada 403 (`Forbidden`).
+- **Salda nie są przechowywane.** `ledger/core.bankOf` czyta ruchy, wydatki i plany jednego okresu, a `ledger/money.ts` liczy z nich saldo, wolne pieniądze, udziały i kroki F08. Logika pieniędzy leży więc w czystych funkcjach z testami jednostkowymi.
+- **Transakcje i blokady.** `access.inTx(keys, effect)` otwiera transakcję i najpierw bierze blokady doradcze (`pg_advisory_xact_lock(hashtext(key))`) na portfele (`w:<user>`) i gospodarstwa (`h:<household>`), posortowane. Błąd domenowy wycofuje całą operację, na przykład przelew zrobiony w ramach wydatku.
+- **Błędy 409 niosą decyzję.** `PlanTooSmall` i `NotEnoughInPeriod` mówią, ile przelać (`transferMinor`). `WalletWouldGoNegative` prosi o zgodę na minus. Klient ponawia żądanie z `decision` albo `correction`.
+- **Idempotencja `/sync`.** Każde wystąpienie reguły jest zapisywane w `rule_occurrences` przed wykonaniem. Unikalne indeksy po (`rule_id`, `occurrence_on`) gwarantują, że nic nie wykona się dwa razy, także przy równoległych wywołaniach.
+- **Czas.** Granice okresów to daty w strefie gospodarstwa (`households.time_zone`). Dzień wydatku liczy `localDay`. Testy nie przesuwają zegara; przesuwają okres w bazie (`endYesterday`) i wołają `sync`.
+- **Pola opcjonalne przyjmują `null`** (`Schema.optional(Schema.NullOr(...))`), bo wygenerowany klient Dart wysyła `null` zamiast pomijać pole.
 
 ## Konta i sesje
 
@@ -169,11 +175,11 @@ Zasada: zły input kończy się na brzegu odpowiedzią 400, a nie błędem bazy 
 
 - **ID to UUID** (`Uuid` z `uuid.ts`, `Schema.isUUID`). Dotyczy ścieżek, query i body.
 - **Daty kalendarzowe muszą istnieć** (`IsoDate` w `text.ts`): `2026-02-31` jest odrzucone.
-- **Limity:** nazwy ≤ 200 znaków, notatki ≤ 1000, ikona ≤ 50 (`text.ts`), kwoty od 0 (albo od 1 dla wydatków) do `MAX_MINOR` = 10^12 groszy (`money.ts`), tablice w dokumencie importu mają maksimum (np. 200 000 przydziałów). Ciało żądania jest ucinane przy 8 MiB (`platform/http.ts`, przetestowane na prawdziwym serwerze).
+- **Limity:** nazwy ≤ 200 znaków, notatki ≤ 1000, ikona ≤ 50 (`text.ts`), kwoty od 0 (albo od 1 dla wydatków) do `MAX_MINOR` = 10^12 groszy (`money.ts`), Ciało żądania jest ucinane przy 8 MiB (`platform/http.ts`, przetestowane na prawdziwym serwerze).
 - **Tworzenie zwraca 201** (`HttpApiSchema.status(201)`), usuwanie 204, błędy domenowe 404/409/422 z ciałem `{ _tag, ... }`. Zły input i nieoczekiwane awarie mają puste ciało (400 i 500), więc nic z wnętrza nie wycieka.
 - **Edycja to `PUT`** z pełnym obiektem (nie `PATCH`, bo nie przyjmujemy częściowych zmian).
 - **Nazwy w specu.** Schematy odpowiedzi mają `identifier`, a klasy błędów są nazywane przez `wire()` (`errors.ts`), żeby w OpenAPI nie pojawiało się `...Encoded`. `wire` zwraca ten sam schemat dla tej samej klasy, bo inaczej OpenAPI numeruje duplikaty (`EnvelopeNotFound_3`).
-- **Równoległe `apply`** reguł cyklicznych jest serializowane blokadą doradczą Postgresa (`pg_advisory_xact_lock`) na użytkownika i zakres dni, więc drugie wywołanie czeka i nie dodaje nic. Baza pilnuje tego dodatkowo unikalnymi indeksami: (`recurring_id`, `recurring_month`) na wydatkach i wpływach oraz (`rule_id`, `rule_month`) na przydziałach. `apply` robi wszystko w jednej transakcji (wpływy, przydziały, wydatki), a `pending` liczy to samo bez zapisu.
+- **Równoległe `/sync`** porządkują blokady doradcze na portfel i gospodarstwa oraz unikalne indeksy (`rule_id`, `occurrence_on`), więc drugie wywołanie czeka i niczego nie dubluje.
 
 Znane luki, celowo odłożone: limit żądań ogólnie (jest tylko limit maili logowania na adres), czyszczenie wygasłych kodów i sesji z bazy, listy bez paginacji (poza wydatkami).
 
@@ -223,4 +229,4 @@ Wnioski ze spike'u na `swagger_parser` i OpenAPI 3.1 wygenerowanym przez Effect 
 
 ## Stan na dziś
 
-Działa pełny backend: konta i sesje (link i kod z e-maila, Google), koperty z subkopertami, przychody, przydziały, wydatki, reguły cykliczne, przegląd miesięcy z saldami toczącymi się, eksport, import i CSV. Aplikacja mobilna i webowa pracują na tym modelu. Koperty można współdzielić: członkowie z rolami `owner` i `member`, zaproszenia z zatwierdzaniem przez właściciela, widok „kto ile włożył". Dalsze plany (cykliczne wpływy, reguły podziału): [ROADMAP.md](ROADMAP.md).
+Działa model SWS v0.5. Są w nim konta i sesje, prywatny portfel z wpływami pewnymi i szacowanymi oraz gospodarstwa z cyklem okresów. Każdy okres ma skarbonkę z planami kopert. Obsługiwane są też przelewy i wycofania, wydatki z krokami F08, udziały, wyjście i zamrażanie członków, reguły cykliczne wykonywane przy `POST /sync`, lista „Do załatwienia”, podsumowanie zamkniętego okresu i log zmian z cofaniem. CSV, kopie JSON i import z wersji offline zostały usunięte. Dalsze plany: [ROADMAP.md](ROADMAP.md).

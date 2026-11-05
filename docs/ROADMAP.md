@@ -78,7 +78,7 @@ Największa wartość dla użytkownika: po tym etapie działa dashboard.
 
 ## Etap 9 – Model kopert i współdzielenie
 
-Przestrzenie i okresy ustępują kopertom z subkopertami, saldem toczącym się i (dalej) współdzielonymi kopertami. Model, reguły i widok użytkownika: [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md). Całość idzie jedną gałęzią (`feat/envelopes`) i jednym PR-em; części są kolejnymi commitami.
+Przestrzenie i okresy ustępują kopertom z subkopertami, saldem toczącym się i (dalej) współdzielonymi kopertami. Model kopert zastąpił etap 10. Całość idzie jedną gałęzią (`feat/envelopes`) i jednym PR-em; części są kolejnymi commitami.
 
 **Część 1 – rdzeń (zrobione).**
 - Przychody, koperty z subkopertami, przydziały (z regułami sald), wydatki, reguły cykliczne
@@ -99,6 +99,18 @@ Przestrzenie i okresy ustępują kopertom z subkopertami, saldem toczącym się 
 
 **Dalej** (jeszcze nie zrobione): archiwizacja zamkniętych kopert, szybkie dodanie wydatku, automatyczne stosowanie reguł bez przycisku.
 
+## Etap 10 – Model pieniędzy SWS v0.5 (zrobione)
+
+Portfel, gospodarstwa, okresy i koperty z planem. Opis modelu: [MONEY_MODEL.md](MONEY_MODEL.md). Prace idą na gałęzi `feat/money-model-v05`.
+
+1. **Schemat:** jedna migracja bazowa `0001_base`, bez migracji danych. Do wyczyszczenia produkcji służy `apps/api/scripts/wipe-database.sql`; uruchamia go człowiek.
+2. **API:** portfel i wpływy, gospodarstwa z cyklem okresów, skarbonki, plany z częścią cykliczną, przelewy i wycofania, wydatki z krokami F08, udziały, wyjście i zamrożenie, reguły cykliczne, `POST /sync`, „Do załatwienia”, podsumowanie okresu, log z cofaniem, usunięcie konta.
+3. **Klient Dart** wygenerowany z kontraktu.
+4. **Aplikacja:** pulpit, gospodarstwo i okres, koperty, wydatek krok po kroku, portfel, reguły, członkowie, podsumowanie, log, kreator.
+5. **Usunięte:** CSV, kopie JSON, import z wersji offline, podkoperty, pula i salda toczące się.
+
+**Dalej:** potwierdzenie założeń z [MONEY_MODEL.md](MONEY_MODEL.md#założenia-do-potwierdzenia); wznawianie kreatora po przerwaniu (F30); znacznik na ikonie aplikacji (F34 – na razie licznik na pulpicie); wykres wydatków (F23 – na razie tylko różnice kwot).
+
 ## Zależności między etapami
 
 ```
@@ -106,6 +118,7 @@ Przestrzenie i okresy ustępują kopertom z subkopertami, saldem toczącym się 
                     └──────→ 4 budgets → 5 expenses → 6 recurring
                                               └──────→ 7 transfer
                                                        └──→ 9 koperty (zastępuje 2, 4, 5, 6, 7 nowym modelem)
+                                                              └──→ 10 portfel i gospodarstwa (zastępuje 9)
 ```
 
 Etap 3 można prowadzić równolegle z etapem 4.

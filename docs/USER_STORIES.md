@@ -1,6 +1,8 @@
 # User stories – Money Planner
 
-Co użytkownik może zrobić w aplikacji **dziś**. Model, na którym to stoi: [ENVELOPE_MODEL.md](ENVELOPE_MODEL.md). Współdzielenie kopert opisują historie w sekcji 9.
+Co użytkownik może zrobić w aplikacji **dziś**. Model, na którym to stało: kopert z podkopertami.
+
+> **Do aktualizacji.** Historie opisują model sprzed SWS v0.5. Obecny model: [MONEY_MODEL.md](MONEY_MODEL.md), karty wymagań: SWS 3.2 w Confluence. Współdzielenie kopert opisują historie w sekcji 9.
 
 Oznaczenia: 🌐 = wymaga endpointu · 📱 = zostaje lokalnie w apce.
 
