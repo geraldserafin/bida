@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'data/auth_repository.dart';
-import 'data/planner_repository.dart';
+import 'data/budget_repository.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/home/home_shell.dart';
 import 'screens/lock/lock_gate.dart';
 import 'screens/login/auth_gate.dart';
 import 'state/app_settings.dart';
 import 'state/auth_state.dart';
-import 'state/planner_state.dart';
+import 'state/budget_state.dart';
 import 'theme/app_theme.dart';
 import 'widgets/phone_frame.dart';
 
@@ -23,16 +23,12 @@ class MoneyPlannerApp extends StatefulWidget {
     required this.settings,
     required this.repository,
     required this.auth,
-    this.beforeLoad,
     this.linkToken,
   });
 
   final AppSettings settings;
-  final PlannerRepository repository;
+  final BudgetRepository repository;
   final AuthRepository auth;
-
-  /// Runs before the first load, e.g. to move data from an older version.
-  final Future<void> Function()? beforeLoad;
 
   /// The token of the sign-in link the browser app was opened from, if any.
   final String? linkToken;
@@ -82,14 +78,12 @@ class _MoneyPlannerAppState extends State<MoneyPlannerApp> {
         ChangeNotifierProvider.value(value: _auth),
         ChangeNotifierProvider.value(value: widget.settings),
         // loads the data once somebody is signed in, forgets it on sign-out
-        ChangeNotifierProxyProvider2<AuthState, AppSettings, PlannerState>(
-          create: (_) => PlannerState(
+        ChangeNotifierProxyProvider<AuthState, BudgetState>(
+          create: (_) => BudgetState(
             repository: widget.repository,
-            beforeLoad: widget.beforeLoad,
+            settings: widget.settings,
           ),
-          update: (_, auth, settings, planner) => planner!
-            ..useFirstDay(settings.firstDayOfMonth)
-            ..signedIn(auth.isSignedIn),
+          update: (_, auth, budget) => budget!..signedIn(auth.isSignedIn),
         ),
       ],
       child: Consumer<AppSettings>(

@@ -1,20 +1,16 @@
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/google_sign_in.dart';
-import '../../data/planner_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 
 import '../../state/app_settings.dart';
 import '../../state/auth_state.dart';
-import '../../state/planner_state.dart';
-import '../../util/api_errors.dart';
-import '../../util/csv_save.dart';
-import '../envelopes/envelopes_screen.dart';
-import '../incomes/incomes_screen.dart';
+import '../../state/budget_state.dart';
+import '../../util/money_steps.dart';
+import '../wallet/wallet_screen.dart';
 
 /// App settings: general, appearance, security, data.
 class SettingsScreen extends StatefulWidget {
@@ -87,52 +83,125 @@ class _SettingsScreenState extends State<SettingsScreen> {
     builder: (_) => const _PinSetupDialog(),
   );
 
-  // ---- data -----------------------------------------------------------------
+  // ---- the dashboard and the account -----------------------------------------
 
-  static const _csvTypeGroup = XTypeGroup(label: 'CSV', extensions: ['csv']);
-
-  Future<void> _exportCsv() async {
+  Future<void> _pickRange(AppSettings settings) async {
     final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final repository = context.read<PlannerRepository>();
-
-    String? csv;
-    final fetched = await attempt(
-      context,
-      () async => csv = await repository.exportCsv(),
-    );
-    if (!fetched) return;
-
-    final path = await saveCsv(csv!);
-    if (path == null) return; // user cancelled the dialog
-    messenger.showSnackBar(SnackBar(content: Text(l10n.csvExported(path))));
-  }
-
-  Future<void> _pickFirstDay(AppSettings settings) async {
-    final l10n = AppLocalizations.of(context);
-    final day = await showDialog<int>(
+    final state = context.read<BudgetState>();
+    final range = await showDialog<DashboardRange>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: Text(l10n.firstDayOfMonth),
+        title: Text(l10n.dashboardShows),
         children: [
-          SizedBox(
-            width: double.maxFinite,
-            height: 320,
-            child: RadioGroup<int>(
-              groupValue: settings.firstDayOfMonth,
-              onChanged: (v) => Navigator.of(ctx).pop(v),
-              child: ListView(
-                children: [
-                  for (var d = 1; d <= 28; d++)
-                    RadioListTile<int>(value: d, title: Text('$d')),
-                ],
-              ),
+          for (final r in DashboardRange.values)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(ctx).pop(r),
+              child: Text(_rangeLabel(l10n, r)),
             ),
+        ],
+      ),
+    );
+    if (range == null || !mounted) return;
+    DateTimeRange? custom;
+    if (range == DashboardRange.custom) {
+      final now = DateTime.now();
+      custom = await showDateRangePicker(
+        context: context,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(now.year + 2),
+        initialDateRange: settings.customRange,
+      );
+      if (custom == null) return;
+    }
+    await settings.setDashboardRange(range, custom: custom);
+    await state.refresh();
+  }
+
+  String _rangeLabel(AppLocalizations l10n, DashboardRange r) => switch (r) {
+    DashboardRange.month => l10n.rangeMonth,
+    DashboardRange.period => l10n.rangePeriod,
+    DashboardRange.custom => l10n.rangeCustom,
+  };
+
+  Future<void> _setName() async {
+    final l10n = AppLocalizations.of(context);
+    final state = context.read<BudgetState>();
+    final name = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.yourName),
+        content: TextField(
+          controller: name,
+          autofocus: true,
+          decoration: InputDecoration(helperText: l10n.yourNameHint),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.save),
           ),
         ],
       ),
     );
-    if (day != null) await settings.setFirstDayOfMonth(day);
+    final text = name.text.trim();
+    name.dispose();
+    if (ok != true || !mounted) return;
+    await attemptMoney(
+      context,
+      () => state.change((repo) => repo.setName(text.isEmpty ? null : text)),
+    );
+  }
+
+  /// F04: confirmed by typing the address; refused while the user owes a
+  /// household.
+  Future<void> _deleteAccount() async {
+    final l10n = AppLocalizations.of(context);
+    final state = context.read<BudgetState>();
+    final auth = context.read<AuthState>();
+    final email = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.deleteAccount),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.deleteAccountBody),
+            TextField(
+              controller: email,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(labelText: l10n.email),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.deleteAccount),
+          ),
+        ],
+      ),
+    );
+    final typed = email.text.trim();
+    email.dispose();
+    if (ok != true || !mounted) return;
+    final deleted = await attemptMoney(
+      context,
+      () => state.repository.deleteAccount(typed),
+    );
+    if (deleted) await auth.signOut();
   }
 
   Future<void> _signOut() async {
@@ -160,31 +229,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await signOutOfGoogle();
       await auth.signOut();
     }
-  }
-
-  Future<void> _importCsv() async {
-    final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final repository = context.read<PlannerRepository>();
-    final planner = context.read<PlannerState>();
-
-    final file = await openFile(acceptedTypeGroups: const [_csvTypeGroup]);
-    if (file == null) return; // user cancelled the dialog
-    final csv = await file.readAsString();
-    if (!mounted) return;
-
-    ({int imported, int skipped})? result;
-    final imported = await attempt(
-      context,
-      () async => result = await repository.importCsv(csv),
-    );
-    if (!imported) return;
-
-    await planner.load();
-    final message =
-        l10n.importResult(result!.imported) +
-        (result!.skipped > 0 ? l10n.importSkipped(result!.skipped) : '');
-    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -247,19 +291,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
 
-          // ---- Months ----
+          // ---- The dashboard ----
           _SectionHeader(l10n.general),
           _Group(
             children: [
               ListTile(
-                leading: const Icon(Icons.calendar_month_outlined),
-                title: Text(l10n.firstDayOfMonth),
-                subtitle: Text(l10n.firstDayOfMonthHint),
-                trailing: Text(
-                  '${settings.firstDayOfMonth}',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                onTap: () => _pickFirstDay(settings),
+                leading: const Icon(Icons.date_range_outlined),
+                title: Text(l10n.dashboardShows),
+                subtitle: Text(_rangeLabel(l10n, settings.dashboardRange)),
+                onTap: () => _pickRange(settings),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.account_balance_wallet_outlined),
+                title: Text(l10n.wallet),
+                onTap: () => Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const WalletScreen())),
               ),
             ],
           ),
@@ -276,9 +324,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(height: 1),
               ListTile(
+                leading: const Icon(Icons.badge_outlined),
+                title: Text(l10n.yourName),
+                onTap: _setName,
+              ),
+              const Divider(height: 1),
+              ListTile(
                 leading: const Icon(Icons.logout),
                 title: Text(l10n.signOut),
                 onTap: _signOut,
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.person_remove_outlined),
+                title: Text(l10n.deleteAccount),
+                onTap: _deleteAccount,
               ),
             ],
           ),
@@ -311,44 +371,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onChanged: _toggleBiometric,
                 ),
               ],
-            ],
-          ),
-
-          // ---- Data ----
-          _SectionHeader(l10n.dataSection),
-          _Group(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.file_download_outlined),
-                title: Text(l10n.exportCsv),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _exportCsv,
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.file_upload_outlined),
-                title: Text(l10n.importCsv),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _importCsv,
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.grid_view_outlined),
-                title: Text(l10n.manageEnvelopes),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const EnvelopesScreen()),
-                ),
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.payments_outlined),
-                title: Text(l10n.incomes),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const IncomesScreen()),
-                ),
-              ),
             ],
           ),
 

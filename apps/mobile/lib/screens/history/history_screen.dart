@@ -3,21 +3,20 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/transaction.dart';
-import '../../state/planner_state.dart';
+import '../../models/models.dart';
+import '../../state/budget_state.dart';
 import '../../theme/envelope_visuals.dart';
 import '../../util/money_format.dart';
-import '../../util/month_label.dart';
-import '../../util/pickers.dart';
-import '../../widgets/labeled_field.dart';
 import '../../widgets/pill_chip.dart';
 import '../../widgets/remote_data.dart';
 import '../../widgets/screen_header.dart';
 import '../../widgets/transaction_row.dart';
 import '../add_expense/add_expense_screen.dart';
 
-/// History tab ("Historia"): the month's expenses, newest first, filtered by
-/// envelope and by date and time.
+final _at = DateFormat('dd.MM, HH:mm');
+
+/// The expenses of the household on screen (F10): newest first, filtered by
+/// period, envelope, author and "for whom". The wallet has its own history.
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
@@ -26,231 +25,157 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  String? _envelopeId; // null = all
-  DateTimeRange? _dateRange; // null = any date
-  TimeOfDay _startTime = const TimeOfDay(hour: 0, minute: 0);
-  TimeOfDay _endTime = const TimeOfDay(hour: 23, minute: 59);
-
-  /// Lower bound of the active date+time filter, or null when no range is set.
-  DateTime? get _from {
-    final r = _dateRange;
-    if (r == null) return null;
-    return DateTime(
-      r.start.year,
-      r.start.month,
-      r.start.day,
-      _startTime.hour,
-      _startTime.minute,
-    );
-  }
-
-  /// Upper bound of the active date+time filter, or null when no range is set.
-  DateTime? get _to {
-    final r = _dateRange;
-    if (r == null) return null;
-    return DateTime(
-      r.end.year,
-      r.end.month,
-      r.end.day,
-      _endTime.hour,
-      _endTime.minute,
-    );
-  }
-
-  Future<void> _pickRange() async {
-    final picked = await pickDateRange(context, initial: _dateRange);
-    if (picked != null) setState(() => _dateRange = picked);
-  }
-
-  Future<void> _pickTime({required bool isStart}) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: isStart ? _startTime : _endTime,
-    );
-    if (picked != null) {
-      setState(() {
-        if (isStart) {
-          _startTime = picked;
-        } else {
-          _endTime = picked;
-        }
-      });
-    }
-  }
-
-  void _clearDates() => setState(() {
-    _dateRange = null;
-    _startTime = const TimeOfDay(hour: 0, minute: 0);
-    _endTime = const TimeOfDay(hour: 23, minute: 59);
-  });
+  bool _wholeHistory = false;
+  String? _envelopeId;
+  String? _authorId;
+  String? _forWhom;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = context.watch<PlannerState>();
-
+    final state = context.watch<BudgetState>();
+    final household = state.household;
+    if (household == null) return const SizedBox.shrink();
+    final period = state.period;
+    final members = state.members;
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 14),
-              child: TabTitle(l10n.history, trailing: monthLabel(state.month)),
-            ),
-            Expanded(
-              child: RemoteData<List<Transaction>>(
-                // fetched again when the month or what was spent changes,
-                // not on every filter tap
-                version: (state.month, state.spent),
-                load: state.monthTransactions,
-                builder: (context, all) => _filtered(context, all),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _filtered(BuildContext context, List<Transaction> all) {
-    final l10n = AppLocalizations.of(context);
-    if (all.isEmpty) {
-      return Center(child: Text(l10n.noTransactions));
-    }
-
-    // Distinct envelopes for the filter row (first-seen order).
-    final envelopes = <String, String>{};
-    for (final t in all) {
-      envelopes.putIfAbsent(t.envelope.id!, () => t.envelope.name);
-    }
-
-    final from = _from;
-    final to = _to;
-    final visible = all.where((t) {
-      if (_envelopeId != null && t.envelope.id != _envelopeId) return false;
-      if (from != null && t.date.isBefore(from)) return false;
-      if (to != null && t.date.isAfter(to)) return false;
-      return true;
-    }).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Overline(l10n.envelope),
-        ),
-        const SizedBox(height: 14),
-        _ChipRow(
-          children: [
-            PillChip(
-              label: l10n.all,
-              selected: _envelopeId == null,
-              onTap: () => setState(() => _envelopeId = null),
-            ),
-            for (final entry in envelopes.entries)
-              PillChip(
-                label: entry.value,
-                selected: _envelopeId == entry.key,
-                onTap: () => setState(() => _envelopeId = entry.key),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        _ChipRow(children: _dateChips(context)),
-        const SizedBox(height: 10),
-        Expanded(
-          child: visible.isEmpty
-              ? Center(child: Text(l10n.noMatchingExpenses))
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                  itemCount: visible.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 8),
-                  itemBuilder: (context, i) =>
-                      _TransactionTile(transaction: visible[i]),
+            TabTitle(l10n.history, trailing: household.name),
+            const SizedBox(height: 12),
+            ChipWrap(
+              children: [
+                PillChip(
+                  label: l10n.thisPeriod,
+                  selected: !_wholeHistory,
+                  onTap: () => setState(() => _wholeHistory = false),
                 ),
+                PillChip(
+                  label: l10n.allPeriods,
+                  selected: _wholeHistory,
+                  onTap: () => setState(() => _wholeHistory = true),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ChipWrap(
+              children: [
+                PillChip(
+                  label: l10n.allEnvelopes,
+                  selected: _envelopeId == null,
+                  onTap: () => setState(() => _envelopeId = null),
+                ),
+                for (final e in state.envelopes)
+                  PillChip(
+                    label: e.name,
+                    selected: _envelopeId == e.id,
+                    onTap: () => setState(() => _envelopeId = e.id),
+                  ),
+              ],
+            ),
+            if (members.length > 1) ...[
+              const SizedBox(height: 8),
+              ChipWrap(
+                children: [
+                  PillChip(
+                    label: l10n.anyAuthor,
+                    selected: _authorId == null,
+                    onTap: () => setState(() => _authorId = null),
+                  ),
+                  for (final m in members)
+                    PillChip(
+                      label: l10n.byAuthor(m.displayName),
+                      selected: _authorId == m.userId,
+                      onTap: () => setState(() => _authorId = m.userId),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ChipWrap(
+                children: [
+                  PillChip(
+                    label: l10n.forAnybody,
+                    selected: _forWhom == null,
+                    onTap: () => setState(() => _forWhom = null),
+                  ),
+                  PillChip(
+                    label: l10n.forWhomShared,
+                    selected: _forWhom == 'shared',
+                    onTap: () => setState(() => _forWhom = 'shared'),
+                  ),
+                  for (final m in members)
+                    PillChip(
+                      label: l10n.forMember(m.displayName),
+                      selected: _forWhom == m.userId,
+                      onTap: () => setState(() => _forWhom = m.userId),
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 16),
+            RemoteData<List<Expense>>(
+              version: Object.hash(
+                state.version,
+                household.id,
+                _wholeHistory,
+                _envelopeId,
+                _authorId,
+                _forWhom,
+                period?.id,
+              ),
+              load: () => state.repository.expenses(
+                householdId: household.id,
+                periodId: _wholeHistory ? null : period?.id,
+                envelopeId: _envelopeId,
+                authorId: _authorId,
+                forWhom: _forWhom,
+              ),
+              builder: (context, expenses) => expenses.isEmpty
+                  ? Text(l10n.noExpensesForFilters)
+                  : Column(
+                      children: [
+                        for (final x in expenses)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _ExpenseRow(expense: x),
+                          ),
+                      ],
+                    ),
+            ),
+          ],
         ),
-      ],
-    );
-  }
-
-  /// A "date range" chip; once a range is picked, start and end time chips
-  /// and one that clears them.
-  List<Widget> _dateChips(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final range = _dateRange;
-    final dateFmt = DateFormat.MMMd('pl');
-    return [
-      PillChip(
-        label: range == null
-            ? l10n.dateRange
-            : '${dateFmt.format(range.start)} – ${dateFmt.format(range.end)}',
-        selected: range != null,
-        onTap: _pickRange,
       ),
-      if (range != null) ...[
-        PillChip(
-          label: _startTime.format(context),
-          selected: false,
-          onTap: () => _pickTime(isStart: true),
-        ),
-        PillChip(
-          label: _endTime.format(context),
-          selected: false,
-          onTap: () => _pickTime(isStart: false),
-        ),
-        PillChip(label: '×', selected: false, onTap: _clearDates),
-      ],
-    ];
+    );
   }
 }
 
-/// Chips in one line that scrolls sideways.
-class _ChipRow extends StatelessWidget {
-  const _ChipRow({required this.children});
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: children.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (_, i) => children[i],
-      ),
-    );
-  }
-}
-
-class _TransactionTile extends StatelessWidget {
-  const _TransactionTile({required this.transaction});
-  final Transaction transaction;
+class _ExpenseRow extends StatelessWidget {
+  const _ExpenseRow({required this.expense});
+  final Expense expense;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final note = transaction.note;
-    final hasNote = note != null && note.isNotEmpty;
+    final state = context.read<BudgetState>();
+    final envelope = state.envelopeById(expense.envelopeId);
     final details = [
-      DateFormat('dd.MM HH:mm').format(transaction.date),
-      if (hasNote) transaction.envelope.name,
-      if (transaction.recurringId != null) l10n.recurringMark,
-    ].join(' · ');
-
+      _at.format(expense.spentAt),
+      envelope?.name ?? '',
+      expense.authorName,
+      if (expense.forWhom == ForWhom.shared) l10n.forWhomShared,
+      if (expense.forWhomName != null) l10n.forMember(expense.forWhomName!),
+    ].where((s) => s.isNotEmpty).join(' · ');
     return TransactionRow(
-      color: transaction.envelope.displayColor,
-      title: hasNote ? note : transaction.envelope.name,
+      color: envelope?.displayColor ?? Colors.blueGrey,
+      title: expense.title ?? envelope?.name ?? l10n.expense,
       details: details,
-      amount: '−${formatZloty(transaction.amount)}',
+      amount: formatMinor(expense.amountMinor),
+      tone: expense.estimated ? AmountTone.estimate : AmountTone.normal,
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => AddExpenseScreen(existing: transaction.expense),
-        ),
+        MaterialPageRoute(builder: (_) => AddExpenseScreen(existing: expense)),
       ),
     );
   }

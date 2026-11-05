@@ -4,25 +4,20 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/envelope_progress.dart';
-import '../../models/expense.dart';
-import '../../state/planner_state.dart';
+import '../../models/models.dart';
+import '../../state/budget_state.dart';
 import '../../theme/app_theme.dart';
 import '../../util/amounts.dart';
-import '../../util/api_errors.dart';
 import '../../util/money_format.dart';
-import '../../util/month_label.dart';
+import '../../util/money_steps.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/labeled_field.dart';
 import '../../widgets/pill_chip.dart';
 import '../../widgets/screen_header.dart';
-import '../envelopes/envelope_editor.dart';
 
-/// The month on screen, what the top bar of a new entry says it goes into.
-String entryTarget(PlannerState state) => monthLabel(state.month);
-
-/// Amount-first entry for logging a real expense against an envelope, or
-/// editing an existing one when [existing] is provided.
+/// Amount-first entry of an expense in the current period of the household
+/// on screen (F08), or editing one when [existing] is given (F09). When it
+/// does not fit the plan or the balance, the steps of F08 ask what to do.
 class AddExpenseScreen extends StatefulWidget {
   const AddExpenseScreen({super.key, this.initialEnvelopeId, this.existing});
 
@@ -35,10 +30,12 @@ class AddExpenseScreen extends StatefulWidget {
 
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _amountController = TextEditingController();
-  final _noteController = TextEditingController();
+  final _titleController = TextEditingController();
 
   String? _envelopeId;
-  DateTime _date = DateTime.now();
+  DateTime _spentAt = DateTime.now();
+  ForWhom? _forWhom;
+  String? _forWhomUserId;
   bool _saving = false;
   String? _amountError;
 
@@ -50,9 +47,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final e = widget.existing;
     if (e != null) {
       _envelopeId = e.envelopeId;
-      _amountController.text = amountText(e.amount);
-      _date = e.date;
-      _noteController.text = e.note ?? '';
+      _amountController.text = amountText(e.amountMinor / 100);
+      _spentAt = e.spentAt;
+      _titleController.text = e.title ?? '';
+      _forWhom = e.forWhom;
+      _forWhomUserId = e.forWhomUserId;
     } else {
       _envelopeId = widget.initialEnvelopeId;
     }
@@ -61,161 +60,144 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   @override
   void dispose() {
     _amountController.dispose();
-    _noteController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
-  double get _amount => parseAmount(_amountController.text) ?? 0;
+  int get _amountMinor =>
+      ((parseAmount(_amountController.text) ?? 0) * 100).round();
 
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context);
-    if (_amount <= 0) {
+    final state = context.read<BudgetState>();
+    final household = state.household;
+    if (_amountMinor <= 0) {
       setState(() => _amountError = l10n.enterAmount);
       return;
     }
-    if (_envelopeId == null) {
+    if (_envelopeId == null || household == null) {
       setState(() {}); // surface the "pick an envelope" hint
       return;
     }
-
     setState(() => _saving = true);
-    final state = context.read<PlannerState>();
-    final note = _noteController.text.trim().isEmpty
-        ? null
-        : _noteController.text.trim();
-
-    final saved = await attempt(context, () {
-      if (_isEdit) {
-        return state.updateExpense(
-          widget.existing!.copyWith(
-            envelopeId: _envelopeId!,
-            amount: _amount,
-            date: _date,
-            note: note,
-          ),
-        );
-      }
-      return state.addExpense(
-        envelopeId: _envelopeId!,
-        amount: _amount,
-        date: _date,
-        note: note,
-      );
-    });
-
+    final title = _titleController.text.trim();
+    final draft = ExpenseDraft(
+      envelopeId: _envelopeId!,
+      amountMinor: _amountMinor,
+      spentAt: _spentAt,
+      title: title.isEmpty ? null : title,
+      forWhom: _forWhom,
+      forWhomUserId: _forWhom == ForWhom.member ? _forWhomUserId : null,
+    );
+    final outcome = await sendWithSteps(
+      context,
+      draft.amountMinor,
+      (decision) => _isEdit
+          ? state.repository.updateExpense(
+              widget.existing!.id,
+              draft,
+              decision: decision,
+            )
+          : state.repository.addExpense(
+              household.id,
+              draft,
+              decision: decision,
+            ),
+    );
     if (!mounted) return;
-    if (saved) {
-      // Return the envelope that was saved to, so callers can follow it.
-      Navigator.of(context).pop(_envelopeId);
-    } else {
+    if (outcome == null) {
       setState(() => _saving = false); // stay here so nothing typed is lost
+      return;
     }
+    await state.refresh();
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (outcome.raisedPlanMinor > 0) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.planRaised(formatMinor(outcome.raisedPlanMinor))),
+        ),
+      );
+    } else if (outcome.plansExceedBalance) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.plansExceedBalance)));
+    }
+    Navigator.of(context).pop(true);
   }
 
-  Future<void> _deleteExpense() async {
+  Future<void> _delete() async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.deleteExpense),
-        content: Text(
-          l10n.deleteExpenseConfirm(formatZloty(widget.existing!.amount)),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    setState(() => _saving = true);
-    final state = context.read<PlannerState>();
-    final deleted = await attempt(
+    final ok = await confirmDanger(
       context,
-      () => state.deleteExpense(widget.existing!.id!),
+      title: l10n.deleteExpense,
+      body: l10n.deleteExpenseConfirm(
+        formatMinor(widget.existing!.amountMinor),
+      ),
+      action: l10n.delete,
+    );
+    if (!ok || !mounted) return;
+    setState(() => _saving = true);
+    final state = context.read<BudgetState>();
+    final deleted = await attemptMoney(
+      context,
+      () => state.change((repo) => repo.deleteExpense(widget.existing!.id)),
     );
     if (!mounted) return;
     if (deleted) {
-      Navigator.of(context).pop(_envelopeId);
+      Navigator.of(context).pop(true);
     } else {
       setState(() => _saving = false);
     }
   }
 
-  Future<void> _pickDate() async {
+  Future<void> _pickDate(Period period) async {
+    final now = DateTime.now();
+    final last = period.endsOn.isBefore(now) ? period.endsOn : now;
     final picked = await showDatePicker(
       context: context,
-      initialDate: _date,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      initialDate: _spentAt.isAfter(last) ? last : _spentAt,
+      firstDate: period.startsOn,
+      lastDate: last,
     );
-    if (picked != null) setState(() => _date = picked);
-  }
-
-  Future<void> _addNewEnvelope() async {
-    final created = await showEnvelopeEditor(context);
-    if (created == null || !mounted) return;
-    final state = context.read<PlannerState>();
-    String? envelopeId;
-    await attempt(
-      context,
-      () async => envelopeId = (await state.addEnvelope(created)).id,
+    if (picked == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_spentAt),
     );
-    if (mounted && envelopeId != null) {
-      setState(() => _envelopeId = envelopeId);
-    }
-  }
-
-  String _dateLabel(AppLocalizations l10n) {
-    final now = DateTime.now();
-    final isToday =
-        _date.year == now.year &&
-        _date.month == now.month &&
-        _date.day == now.day;
-    final formatted = DateFormat('dd.MM.yyyy').format(_date);
-    return isToday ? '${l10n.today}, $formatted' : formatted;
+    var at = DateTime(
+      picked.year,
+      picked.month,
+      picked.day,
+      time?.hour ?? _spentAt.hour,
+      time?.minute ?? _spentAt.minute,
+    );
+    // an expense is never dated in the future
+    if (at.isAfter(now)) at = now;
+    setState(() => _spentAt = at);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final c = AppColors.of(context);
-    final state = context.watch<PlannerState>();
-    // every envelope you can spend from, each followed by its sub-envelopes
-    final progress = [
-      for (final p in state.topLevelProgress) ...[
-        p,
-        ...state.childrenProgressOf(p.envelope.id!),
-      ],
-    ];
-    EnvelopeProgress? selected;
-    for (final p in progress) {
-      if (p.envelope.id == _envelopeId) {
-        selected = p;
-        break;
-      }
-    }
+    final state = context.watch<BudgetState>();
+    final household = state.household;
+    final envelopes = state.activeEnvelopes;
+    final figures = state.summary?.envelopes
+        .where((e) => e.envelopeId == _envelopeId)
+        .firstOrNull;
+    final period = household?.current;
+    final others = state.members;
 
     return Scaffold(
       appBar: FormTopBar(
         title: _isEdit ? l10n.editExpense : l10n.newExpense,
-        where: _isEdit ? null : entryTarget(state),
+        where: household?.name,
         actions: [
           if (_isEdit)
             IconButton(
               tooltip: l10n.deleteExpense,
               icon: const Icon(Icons.delete_outline),
-              onPressed: _saving ? null : _deleteExpense,
+              onPressed: _saving ? null : _delete,
             ),
         ],
       ),
@@ -229,12 +211,16 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         child: AppButton(
           label: _isEdit ? l10n.saveChanges : l10n.saveExpense,
           busy: _saving,
-          onPressed: _save,
+          onPressed: household == null || household.frozen ? null : _save,
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
         children: [
+          if (household?.frozen == true) ...[
+            Text(l10n.errMemberFrozen, style: TextStyle(color: c.danger)),
+            const SizedBox(height: 12),
+          ],
           BigAmountField(
             label: l10n.amount,
             controller: _amountController,
@@ -248,11 +234,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             },
           ),
           const SizedBox(height: 20),
-
-          // ---- envelope ----
           FieldLabel(l10n.envelope),
           const SizedBox(height: 10),
-          if (progress.isEmpty)
+          if (envelopes.isEmpty)
             Text(
               l10n.noEnvelopesForExpense,
               style: TextStyle(color: c.textMuted),
@@ -260,50 +244,68 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           else
             ChipWrap(
               children: [
-                for (final p in progress)
+                for (final e in envelopes)
                   PillChip(
-                    label: p.envelope.isTopLevel
-                        ? p.envelope.name
-                        : '${state.envelopeById(p.envelope.parentId)?.name ?? ''} · ${p.envelope.name}',
-                    selected: p.envelope.id == _envelopeId,
-                    onTap: () => setState(() {
-                      _envelopeId = p.envelope.id;
-                      _amountError = null;
-                    }),
+                    label: e.name,
+                    selected: e.id == _envelopeId,
+                    onTap: () => setState(() => _envelopeId = e.id),
                   ),
-                PillChip(
-                  label: '+ ${l10n.addNew}',
-                  selected: false,
-                  onTap: _addNewEnvelope,
-                ),
               ],
             ),
-          if (selected != null) ...[
+          if (figures != null) ...[
             const SizedBox(height: 12),
             ValueRow(
               small: true,
-              label: l10n.balanceOfEnvelope(selected.envelope.name),
-              value: formatZloty(selected.balance),
-              valueColor: selected.balance < 0 ? c.danger : null,
+              label: l10n.leftInPlan(figures.name),
+              value: formatMinor(figures.leftMinor),
+              valueColor: figures.leftMinor < 0 ? c.danger : null,
             ),
           ],
           const SizedBox(height: 20),
-
-          // ---- date ----
-          ValueRow(
-            label: l10n.date,
-            value: _dateLabel(l10n),
-            divided: true,
-            onTap: _pickDate,
-          ),
+          if (period != null)
+            ValueRow(
+              label: l10n.dateAndTime,
+              value: DateFormat('dd.MM.yyyy, HH:mm').format(_spentAt),
+              divided: true,
+              onTap: () => _pickDate(period),
+            ),
           const SizedBox(height: 20),
-
-          // ---- note ----
           LabeledField(
-            label: l10n.descriptionOptional,
-            controller: _noteController,
+            label: l10n.titleOptional,
+            controller: _titleController,
             hint: l10n.descriptionHint,
           ),
+          // F28: hidden while the household has one member
+          if (others.length > 1) ...[
+            const SizedBox(height: 20),
+            FieldLabel(l10n.forWhom),
+            const SizedBox(height: 10),
+            ChipWrap(
+              children: [
+                PillChip(
+                  label: l10n.forWhomNobody,
+                  selected: _forWhom == null,
+                  onTap: () => setState(() => _forWhom = null),
+                ),
+                PillChip(
+                  label: l10n.forWhomShared,
+                  selected: _forWhom == ForWhom.shared,
+                  onTap: () => setState(() => _forWhom = ForWhom.shared),
+                ),
+                for (final m in others)
+                  PillChip(
+                    label: m.displayName,
+                    selected:
+                        _forWhom == ForWhom.member &&
+                        _forWhomUserId == m.userId,
+                    onTap: () => setState(() {
+                      _forWhom = ForWhom.member;
+                      _forWhomUserId = m.userId;
+                    }),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );

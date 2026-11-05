@@ -1,411 +1,456 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/models.dart';
-import '../../state/planner_state.dart';
+import '../../state/budget_state.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/envelope_visuals.dart';
-import '../../util/api_errors.dart';
-import '../../util/applied_summary.dart';
+import '../../util/amounts.dart';
 import '../../util/money_format.dart';
-import '../../util/month_label.dart';
+import '../../util/money_steps.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/labeled_field.dart';
 import '../../widgets/pill_chip.dart';
+import '../../widgets/remote_data.dart';
 import '../../widgets/screen_header.dart';
 import '../../widgets/surface_card.dart';
 import '../../widgets/toggle_switch.dart';
-import '../../widgets/transaction_row.dart';
-import 'money_rule_sheets.dart';
-import 'recurring_editor.dart';
 
-enum _Side { incomes, expenses, allocations }
-
-/// Recurring tab ("Cykliczne"): what repeats — income (a salary), expenses
-/// (rent) and the sums that go into envelopes every month — switched on and
-/// off here, and added to the month on screen in one tap.
-class RecurringRulesScreen extends StatefulWidget {
+/// The recurring rules (F25-F27): incomes into the wallet, transfers into
+/// households, expenses of households. They run on their own at the app
+/// start; "Zastosuj" applies the next one early.
+class RecurringRulesScreen extends StatelessWidget {
   const RecurringRulesScreen({super.key});
 
   @override
-  State<RecurringRulesScreen> createState() => _RecurringRulesScreenState();
-}
-
-class _RecurringRulesScreenState extends State<RecurringRulesScreen> {
-  _Side _side = _Side.expenses;
-
-  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final state = context.watch<PlannerState>();
-    final c = AppColors.of(context);
-    final anyActive =
-        state.recurringRules.any((r) => r.active) ||
-        state.recurringIncomes.any((r) => r.active) ||
-        state.allocationRules.any((r) => r.active);
-
+    final state = context.watch<BudgetState>();
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TabTitle(l10n.recurringTab),
-                  const SizedBox(height: 14),
-                  SegmentedPills<_Side>(
-                    options: [
-                      (_Side.incomes, l10n.incomes),
-                      (_Side.expenses, l10n.expenses),
-                      (_Side.allocations, l10n.allocations),
-                    ],
-                    selected: _side,
-                    onChanged: (side) => setState(() => _side = side),
-                  ),
-                ],
+        child: RemoteData<List<RecurringRule>>(
+          version: state.version,
+          load: () => state.repository.recurringRules(),
+          builder: (context, rules) => ListView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
+            children: [
+              TabTitle(l10n.recurringTab),
+              const SizedBox(height: 8),
+              Text(
+                l10n.recurringIntro,
+                style: TextStyle(color: AppColors.of(context).textMuted),
               ),
-            ),
-            Expanded(
-              child: switch (_side) {
-                _Side.incomes => _RuleList(
-                  empty: l10n.noRecurringIncomes,
-                  onAdd: () => _addIncomeRule(context, state),
-                  children: [
-                    for (final rule in state.recurringIncomes)
-                      _IncomeRuleCard(rule: rule),
-                  ],
+              for (final kind in RuleKind.values) ...[
+                const SizedBox(height: 20),
+                Text(
+                  _heading(l10n, kind),
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                _Side.expenses => _RuleList(
-                  empty: l10n.noRecurringRules,
-                  onAdd: () => editRecurringRule(context, state),
-                  children: [
-                    for (final rule in state.recurringRules)
-                      _ExpenseRuleCard(
-                        rule: rule,
-                        envelope: state.envelopeById(rule.envelopeId),
-                      ),
-                  ],
-                ),
-                _Side.allocations => _RuleList(
-                  empty: l10n.noAllocationRules,
-                  onAdd: () => _editAllocationRule(context, state),
-                  children: [
-                    for (final rule in state.allocationRules)
-                      _AllocationRuleCard(
-                        rule: rule,
-                        envelope: state.envelopeById(rule.envelopeId),
-                      ),
-                  ],
-                ),
-              },
-            ),
-            if (anyActive)
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border(top: BorderSide(color: c.border)),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      AppButton(
-                        label: l10n.applyTo(monthLabel(state.month)),
-                        onPressed: () => applyRecurring(context),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        l10n.applyHint,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
+                const SizedBox(height: 8),
+                for (final r in rules.where((r) => r.kind == kind))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _RuleRow(rule: r),
+                  ),
+              ],
+              if (state.household != null) ...[
+                const SizedBox(height: 12),
+                AppButton(
+                  label: l10n.applyAllExpenses(state.household!.name),
+                  kind: ButtonKind.secondary,
+                  onPressed: () => attemptMoney(
+                    context,
+                    () => state.change(
+                      (repo) => repo.applyAllRules(state.household!.id),
+                    ),
                   ),
                 ),
-              ),
-          ],
+              ],
+            ],
+          ),
         ),
+      ),
+      floatingActionButton: AppButton(
+        label: l10n.addRule,
+        height: 48,
+        onPressed: () => showRuleSheet(context),
       ),
     );
   }
 
-  Future<void> _addIncomeRule(BuildContext context, PlannerState state) async {
-    final rule = await showRecurringIncomeSheet(context);
-    if (rule != null && context.mounted) {
-      await attempt(context, () => state.saveRecurringIncome(rule));
+  String _heading(AppLocalizations l10n, RuleKind kind) => switch (kind) {
+    RuleKind.income => l10n.rulesIncomes,
+    RuleKind.transfer => l10n.rulesTransfers,
+    RuleKind.expense => l10n.rulesExpenses,
+  };
+}
+
+String scheduleLabel(AppLocalizations l10n, RecurringRule r) =>
+    r.frequency == RuleFrequency.monthly
+    ? l10n.monthlyOnDay(r.dayOfMonth ?? 1)
+    : l10n.everyWeeksFrom(
+        r.everyWeeks ?? 1,
+        DateFormat('d.MM').format(r.anchorOn ?? r.startsOn ?? DateTime.now()),
+      );
+
+class _RuleRow extends StatelessWidget {
+  const _RuleRow({required this.rule});
+  final RecurringRule rule;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final c = AppColors.of(context);
+    final state = context.read<BudgetState>();
+    final household = state.households
+        .where((h) => h.id == rule.householdId)
+        .firstOrNull;
+    return SurfaceCard(
+      outline: rule.estimated ? CardOutline.estimate : CardOutline.normal,
+      onTap: () => showRuleSheet(context, existing: rule),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(rule.name, style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  [
+                    scheduleLabel(l10n, rule),
+                    if (household != null) household.name,
+                    if (rule.estimated) l10n.estimated,
+                    if (rule.toNextPeriod) l10n.toNextPeriod,
+                  ].join(' · '),
+                  style: TextStyle(color: c.textMuted),
+                ),
+                Text(formatMinor(rule.amountMinor)),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: rule.active
+                ? () async {
+                    final amount = rule.estimated
+                        ? await askAmount(
+                            context,
+                            title: l10n.applyNow,
+                            message: l10n.applyEstimateHint,
+                            initialMinor: rule.amountMinor,
+                          )
+                        : rule.amountMinor;
+                    if (amount == null || !context.mounted) return;
+                    var todo = 0;
+                    final ok = await attemptMoney(
+                      context,
+                      () async => todo = await state.change(
+                        (repo) => repo.applyRule(
+                          rule.id!,
+                          amountMinor: rule.estimated ? amount : null,
+                        ),
+                      ),
+                    );
+                    if (ok && todo > 0 && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.appliedToTodo)),
+                      );
+                    }
+                  }
+                : null,
+            child: Text(l10n.applyNow),
+          ),
+          ToggleSwitch(
+            value: rule.active,
+            onChanged: (v) => attemptMoney(
+              context,
+              () => state.change(
+                (repo) => repo.saveRule(rule.copyWith(active: v)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> showRuleSheet(BuildContext context, {RecurringRule? existing}) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _RuleSheet(existing: existing),
+    );
+
+class _RuleSheet extends StatefulWidget {
+  const _RuleSheet({this.existing});
+  final RecurringRule? existing;
+
+  @override
+  State<_RuleSheet> createState() => _RuleSheetState();
+}
+
+class _RuleSheetState extends State<_RuleSheet> {
+  late RuleKind _kind = widget.existing?.kind ?? RuleKind.expense;
+  late final _name = TextEditingController(text: widget.existing?.name ?? '');
+  late final _amount = TextEditingController(
+    text: widget.existing == null
+        ? ''
+        : amountText(widget.existing!.amountMinor / 100),
+  );
+  late bool _estimated = widget.existing?.estimated ?? false;
+  late RuleFrequency _frequency =
+      widget.existing?.frequency ?? RuleFrequency.monthly;
+  late int _day = widget.existing?.dayOfMonth ?? DateTime.now().day;
+  late int _weeks = widget.existing?.everyWeeks ?? 1;
+  late DateTime _anchor = widget.existing?.anchorOn ?? DateTime.now();
+  late bool _toNext = widget.existing?.toNextPeriod ?? false;
+  String? _householdId;
+  String? _envelopeId;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final state = context.read<BudgetState>();
+    _householdId = widget.existing?.householdId ?? state.household?.id;
+    _envelopeId = widget.existing?.envelopeId;
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _amount.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final minor = ((parseAmount(_amount.text) ?? 0) * 100).round();
+    if (minor <= 0 || _name.text.trim().isEmpty) return;
+    if (_kind == RuleKind.expense && _envelopeId == null) return;
+    setState(() => _saving = true);
+    final state = context.read<BudgetState>();
+    final rule = RecurringRule(
+      id: widget.existing?.id,
+      kind: _kind,
+      householdId: _kind == RuleKind.income ? null : _householdId,
+      envelopeId: _kind == RuleKind.expense ? _envelopeId : null,
+      name: _name.text.trim(),
+      amountMinor: minor,
+      estimated: _kind != RuleKind.transfer && _estimated,
+      frequency: _frequency,
+      dayOfMonth: _day,
+      everyWeeks: _weeks,
+      anchorOn: _frequency == RuleFrequency.weeks ? _anchor : null,
+      startsOn: widget.existing?.startsOn,
+      toNextPeriod: _toNext,
+      active: widget.existing?.active ?? true,
+    );
+    final ok = await attemptMoney(
+      context,
+      () => state.change((repo) => repo.saveRule(rule)),
+    );
+    if (!mounted) return;
+    if (ok) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() => _saving = false);
     }
   }
-}
 
-/// Applies the rules to the month on screen and says what was added.
-Future<void> applyRecurring(BuildContext context) async {
-  final l10n = AppLocalizations.of(context);
-  final messenger = ScaffoldMessenger.of(context);
-  final state = context.read<PlannerState>();
-  ApplyOutcome? outcome;
-  final applied = await attempt(
-    context,
-    () async => outcome = await state.applyRecurringToMonth(),
-  );
-  if (!applied) return;
-  messenger.showSnackBar(
-    SnackBar(content: Text(appliedMessage(l10n, outcome!))),
-  );
-}
-
-/// The top-level envelopes, each followed by its sub-envelopes.
-List<Envelope> envelopesInOrder(PlannerState state) => [
-  for (final top in state.topLevel) ...[top, ...state.childrenOf(top.id!)],
-];
-
-/// Opens the rule editor for a new recurring expense, or for [existing], and
-/// saves or deletes what comes back.
-Future<void> editRecurringRule(
-  BuildContext context,
-  PlannerState state, {
-  RecurringRule? existing,
-}) async {
-  final l10n = AppLocalizations.of(context);
-  final messenger = ScaffoldMessenger.of(context);
-  if (state.envelopes.isEmpty) {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.needEnvelopeFirst)));
-    return;
-  }
-  final rule = await showRecurringEditor(
-    context,
-    envelopes: envelopesInOrder(state),
-    existing: existing,
-    onDelete: existing == null
-        ? null
-        : () => attempt(context, () => state.deleteRecurringRule(existing.id!)),
-  );
-  if (rule != null && context.mounted) {
-    await attempt(context, () => state.saveRecurringRule(rule));
-  }
-}
-
-Future<void> _editAllocationRule(
-  BuildContext context,
-  PlannerState state, {
-  AllocationRule? existing,
-}) async {
-  final l10n = AppLocalizations.of(context);
-  final messenger = ScaffoldMessenger.of(context);
-  if (state.envelopes.isEmpty) {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.needEnvelopeFirst)));
-    return;
-  }
-  final rule = await showAllocationRuleSheet(
-    context,
-    envelopes: envelopesInOrder(state),
-    existing: existing,
-    onDelete: existing == null
-        ? null
-        : () =>
-              attempt(context, () => state.deleteAllocationRule(existing.id!)),
-  );
-  if (rule != null && context.mounted) {
-    await attempt(context, () => state.saveAllocationRule(rule));
-  }
-}
-
-class _RuleList extends StatelessWidget {
-  const _RuleList({
-    required this.empty,
-    required this.onAdd,
-    required this.children,
-  });
-
-  final String empty;
-  final VoidCallback onAdd;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
+  Future<void> _delete() async {
     final l10n = AppLocalizations.of(context);
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-      children: [
-        if (children.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: Text(empty, textAlign: TextAlign.center),
-          ),
-        for (final child in children) ...[child, const SizedBox(height: 10)],
-        AppButton(
-          label: l10n.newRulePlus,
-          kind: ButtonKind.dashed,
-          onPressed: onAdd,
-        ),
-      ],
+    final state = context.read<BudgetState>();
+    final yes = await confirmDanger(
+      context,
+      title: l10n.deleteRule,
+      body: l10n.deleteRuleConfirm,
+      action: l10n.delete,
     );
+    if (!yes || !mounted) return;
+    final navigator = Navigator.of(context);
+    final ok = await attemptMoney(
+      context,
+      () => state.change((repo) => repo.deleteRule(widget.existing!.id!)),
+    );
+    if (ok) navigator.pop();
   }
-}
-
-/// A rule: a dot, its name, how it repeats, the amount, and a switch.
-class _RuleCard extends StatelessWidget {
-  const _RuleCard({
-    required this.color,
-    required this.title,
-    required this.details,
-    required this.amount,
-    required this.active,
-    required this.onTap,
-    required this.onActive,
-  });
-
-  final Color color;
-  final String title;
-  final String details;
-  final double amount;
-  final bool active;
-  final VoidCallback onTap;
-  final ValueChanged<bool> onActive;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Opacity(
-      opacity: active ? 1 : 0.55,
-      child: SurfaceCard(
-        onTap: onTap,
-        child: Row(
+    final state = context.watch<BudgetState>();
+    final isNew = widget.existing == null;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        20,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            CategoryDot(color),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Text(
+              isNew ? l10n.addRule : l10n.editRule,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 12),
+            if (isNew)
+              ChipWrap(
                 children: [
-                  Text(title, style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 3),
-                  Text(details, style: Theme.of(context).textTheme.bodySmall),
-                  const SizedBox(height: 3),
-                  Text(
-                    formatZloty(amount),
-                    style: Theme.of(context).textTheme.titleSmall,
+                  for (final k in RuleKind.values)
+                    PillChip(
+                      label: switch (k) {
+                        RuleKind.income => l10n.ruleIncome,
+                        RuleKind.transfer => l10n.ruleTransfer,
+                        RuleKind.expense => l10n.ruleExpense,
+                      },
+                      selected: _kind == k,
+                      onTap: () => setState(() => _kind = k),
+                    ),
+                ],
+              ),
+            const SizedBox(height: 12),
+            LabeledField(label: l10n.name, controller: _name),
+            const SizedBox(height: 12),
+            BigAmountField(label: l10n.amount, controller: _amount),
+            if (_kind != RuleKind.income) ...[
+              const SizedBox(height: 12),
+              FieldLabel(l10n.household),
+              ChipWrap(
+                children: [
+                  for (final h in state.households)
+                    PillChip(
+                      label: h.name,
+                      selected: _householdId == h.id,
+                      onTap: () => setState(() {
+                        _householdId = h.id;
+                        _envelopeId = null;
+                      }),
+                    ),
+                ],
+              ),
+            ],
+            if (_kind == RuleKind.expense && _householdId != null) ...[
+              const SizedBox(height: 12),
+              FieldLabel(l10n.envelope),
+              RemoteData<List<Envelope>>(
+                version: _householdId,
+                load: () => state.repository.envelopes(_householdId!),
+                builder: (context, envelopes) => ChipWrap(
+                  children: [
+                    for (final e in envelopes.where((e) => !e.archived))
+                      PillChip(
+                        label: e.name,
+                        selected: _envelopeId == e.id,
+                        onTap: () => setState(() => _envelopeId = e.id),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            FieldLabel(l10n.frequency),
+            ChipWrap(
+              children: [
+                PillChip(
+                  label: l10n.monthly,
+                  selected: _frequency == RuleFrequency.monthly,
+                  onTap: () =>
+                      setState(() => _frequency = RuleFrequency.monthly),
+                ),
+                PillChip(
+                  label: l10n.weekly,
+                  selected: _frequency == RuleFrequency.weeks,
+                  onTap: () => setState(() => _frequency = RuleFrequency.weeks),
+                ),
+              ],
+            ),
+            if (_frequency == RuleFrequency.monthly)
+              DropdownButton<int>(
+                value: _day,
+                items: [
+                  for (var d = 1; d <= 31; d++)
+                    DropdownMenuItem(
+                      value: d,
+                      child: Text(l10n.monthlyOnDay(d)),
+                    ),
+                ],
+                onChanged: (d) => setState(() => _day = d ?? 1),
+              )
+            else
+              Row(
+                children: [
+                  DropdownButton<int>(
+                    value: _weeks,
+                    items: [
+                      for (var w = 1; w <= 8; w++)
+                        DropdownMenuItem(
+                          value: w,
+                          child: Text(l10n.cycleEveryWeeks(w)),
+                        ),
+                    ],
+                    onChanged: (w) => setState(() => _weeks = w ?? 1),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _anchor,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) setState(() => _anchor = picked);
+                    },
+                    child: Text(
+                      l10n.cycleFromDay(
+                        DateFormat('d.MM.yyyy').format(_anchor),
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(width: 12),
-            ToggleSwitch(
-              value: active,
-              semanticLabel: l10n.active,
-              onChanged: onActive,
-            ),
+            if (_kind != RuleKind.transfer)
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _kind == RuleKind.income
+                          ? l10n.estimatedIncomeRule
+                          : l10n.estimatedExpenseRule,
+                    ),
+                  ),
+                  ToggleSwitch(
+                    value: _estimated,
+                    onChanged: (v) => setState(() => _estimated = v),
+                  ),
+                ],
+              ),
+            if (_kind == RuleKind.transfer)
+              Row(
+                children: [
+                  Expanded(child: Text(l10n.toNextPeriodHint)),
+                  ToggleSwitch(
+                    value: _toNext,
+                    onChanged: (v) => setState(() => _toNext = v),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 16),
+            AppButton(label: l10n.save, busy: _saving, onPressed: _save),
+            if (!isNew) ...[
+              const SizedBox(height: 8),
+              AppButton(
+                label: l10n.deleteRule,
+                kind: ButtonKind.secondary,
+                onPressed: _saving ? null : _delete,
+              ),
+            ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ExpenseRuleCard extends StatelessWidget {
-  const _ExpenseRuleCard({required this.rule, required this.envelope});
-
-  final RecurringRule rule;
-  final Envelope? envelope;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.read<PlannerState>();
-    return _RuleCard(
-      color: envelope?.displayColor ?? AppColors.of(context).textMuted,
-      title: rule.note?.isNotEmpty == true ? rule.note! : envelope?.name ?? '—',
-      details: [
-        ?envelope?.name,
-        rule.active ? l10n.everyMonth : l10n.ruleOff,
-      ].join(' · '),
-      amount: rule.amount,
-      active: rule.active,
-      onTap: () => editRecurringRule(context, state, existing: rule),
-      onActive: (on) => attempt(
-        context,
-        () => state.saveRecurringRule(rule.copyWith(active: on)),
-      ),
-    );
-  }
-}
-
-class _IncomeRuleCard extends StatelessWidget {
-  const _IncomeRuleCard({required this.rule});
-
-  final RecurringIncome rule;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.read<PlannerState>();
-    return _RuleCard(
-      color: AppColors.of(context).accent,
-      title: rule.note?.isNotEmpty == true ? rule.note! : l10n.income,
-      details: rule.active ? l10n.everyMonthOn(rule.dayOfMonth) : l10n.ruleOff,
-      amount: rule.amount,
-      active: rule.active,
-      onTap: () async {
-        final edited = await showRecurringIncomeSheet(
-          context,
-          existing: rule,
-          onDelete: () =>
-              attempt(context, () => state.deleteRecurringIncome(rule.id!)),
-        );
-        if (edited != null && context.mounted) {
-          await attempt(context, () => state.saveRecurringIncome(edited));
-        }
-      },
-      onActive: (on) => attempt(
-        context,
-        () => state.saveRecurringIncome(
-          RecurringIncome(
-            id: rule.id,
-            amount: rule.amount,
-            dayOfMonth: rule.dayOfMonth,
-            note: rule.note,
-            active: on,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AllocationRuleCard extends StatelessWidget {
-  const _AllocationRuleCard({required this.rule, required this.envelope});
-
-  final AllocationRule rule;
-  final Envelope? envelope;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final state = context.read<PlannerState>();
-    return _RuleCard(
-      color: envelope?.displayColor ?? AppColors.of(context).textMuted,
-      title: envelope?.name ?? '—',
-      details: [
-        rule.active ? l10n.everyMonthOn(rule.dayOfMonth) : l10n.ruleOff,
-        if (rule.note?.isNotEmpty == true) rule.note!,
-      ].join(' · '),
-      amount: rule.amount,
-      active: rule.active,
-      onTap: () => _editAllocationRule(context, state, existing: rule),
-      onActive: (on) => attempt(
-        context,
-        () => state.saveAllocationRule(
-          AllocationRule(
-            id: rule.id,
-            envelopeId: rule.envelopeId,
-            amount: rule.amount,
-            dayOfMonth: rule.dayOfMonth,
-            note: rule.note,
-            active: on,
-          ),
         ),
       ),
     );

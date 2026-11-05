@@ -37,8 +37,36 @@ class ApiException implements Exception {
   /// The other fields of the error body, e.g. `availableMinor` of `NotEnoughMoney`.
   final Map<String, Object?> details;
 
-  /// For `NotEnoughMoney`: how much the envelope can give, in grosze.
+  /// For `NotEnoughMoney`: how much there is to take, in grosze.
   int? get availableMinor => details['availableMinor'] as int?;
+
+  /// For `PlanTooSmall` and `NotEnoughInPeriod`: what to bring from the
+  /// wallet so the expense fits.
+  int? get transferMinor => details['transferMinor'] as int?;
+
+  /// For `PlanTooSmall`: by how much the plan is too small.
+  int? get planShortMinor => details['planShortMinor'] as int?;
+
+  /// For `PlanTooSmall` and `NotEnoughInPeriod`: the balance of the period.
+  int? get balanceMinor => details['balanceMinor'] as int?;
+
+  /// For `WalletWouldGoNegative` and `WalletNegative`: the wallet now.
+  int? get walletMinor => details['walletMinor'] as int?;
+
+  /// For `WalletWouldGoNegative`: how much would be missing.
+  int? get neededMinor => details['neededMinor'] as int?;
+
+  /// For `NegativeShare`: who owes how much where, as "name: amount" pairs.
+  List<({String name, String household, int shareMinor})> get negativeShares =>
+      [
+        for (final e in (details['entries'] as List?) ?? const [])
+          if (e is Map)
+            (
+              name: e['name'] as String? ?? '',
+              household: e['householdName'] as String? ?? '',
+              shareMinor: e['shareMinor'] as int? ?? 0,
+            ),
+      ];
 
   factory ApiException.from(DioException error) {
     final status = error.response?.statusCode;

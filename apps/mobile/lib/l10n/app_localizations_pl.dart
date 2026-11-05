@@ -12,22 +12,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get appTitle => 'PLNing';
 
   @override
-  String get addExpense => 'Dodaj wydatek';
-
-  @override
   String get envelopes => 'Koperty';
 
   @override
-  String get noEnvelopes => 'Nie ma jeszcze żadnych kopert.';
-
-  @override
-  String get income => 'Wpływy';
-
-  @override
   String get spent => 'Wydano';
-
-  @override
-  String get overAllocated => 'Przydzielono za dużo';
 
   @override
   String get saveChanges => 'Zapisz zmiany';
@@ -40,9 +28,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get envelope => 'Koperta';
 
   @override
-  String get pickEnvelope => 'Wybierz kopertę';
-
-  @override
   String get amount => 'Kwota';
 
   @override
@@ -50,9 +35,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get date => 'Data';
-
-  @override
-  String get noteOptional => 'Notatka (opcjonalnie)';
 
   @override
   String get saveExpense => 'Zapisz wydatek';
@@ -64,22 +46,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get name => 'Nazwa';
 
   @override
-  String get icon => 'Ikona';
-
-  @override
-  String get color => 'Kolor';
-
-  @override
   String get save => 'Zapisz';
 
   @override
   String get delete => 'Usuń';
-
-  @override
-  String get expenses => 'Wydatki';
-
-  @override
-  String get noExpenses => 'Brak wydatków w tej kopercie.';
 
   @override
   String get deleteExpense => 'Usuń wydatek';
@@ -91,28 +61,6 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get cancel => 'Anuluj';
-
-  @override
-  String get expenseDeleted => 'Wydatek usunięty';
-
-  @override
-  String get spendingOverTime => 'Wydatki w czasie';
-
-  @override
-  String get notEnoughData => 'Za mało danych.';
-
-  @override
-  String get newRule => 'Nowa reguła';
-
-  @override
-  String get editRule => 'Edytuj regułę';
-
-  @override
-  String get active => 'Aktywna';
-
-  @override
-  String get noRecurringRules =>
-      'Brak reguł cyklicznych. Dodaj szablony dla stałych przychodów lub wydatków.';
 
   @override
   String get settings => 'Ustawienia';
@@ -175,15 +123,6 @@ class AppLocalizationsPl extends AppLocalizations {
   String get appearance => 'Wygląd';
 
   @override
-  String get dataSection => 'Dane';
-
-  @override
-  String get currency => 'Waluta';
-
-  @override
-  String get firstDayOfMonth => 'Pierwszy dzień miesiąca';
-
-  @override
   String get theme => 'Motyw';
 
   @override
@@ -196,66 +135,10 @@ class AppLocalizationsPl extends AppLocalizations {
   String get themeAuto => 'Auto';
 
   @override
-  String get exportCsv => 'Eksportuj dane (CSV)';
-
-  @override
-  String get importCsv => 'Importuj z CSV';
-
-  @override
-  String importResult(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Zaimportowano $count wydatku',
-      many: 'Zaimportowano $count wydatków',
-      few: 'Zaimportowano $count wydatki',
-      one: 'Zaimportowano 1 wydatek',
-      zero: 'Brak wydatków do zaimportowania',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String importSkipped(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: ', pominięto $count duplikatu',
-      many: ', pominięto $count duplikatów',
-      few: ', pominięto $count duplikaty',
-      one: ', pominięto 1 duplikat',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get about => 'O aplikacji';
 
   @override
-  String csvExported(String path) {
-    return 'Wyeksportowano do $path';
-  }
-
-  @override
-  String get today => 'Dziś';
-
-  @override
-  String get noteHint => 'np. Zakupy tygodniowe';
-
-  @override
-  String get addNew => 'Nowa';
-
-  @override
   String get history => 'Historia';
-
-  @override
-  String get all => 'Wszystkie';
-
-  @override
-  String get dateRange => 'Zakres dat';
-
-  @override
-  String get noMatchingExpenses => 'Brak wydatków pasujących do filtrów.';
 
   @override
   String get newExpense => 'Nowy wydatek';
@@ -347,381 +230,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get orSeparator => 'albo';
 
   @override
-  String get addEnvelope => 'Dodaj kopertę';
-
-  @override
-  String get addIncome => 'Dodaj wpływ';
-
-  @override
-  String get addSubEnvelope => 'Dodaj podkopertę';
-
-  @override
-  String get allocate => 'Przydziel';
-
-  @override
-  String get allocated => 'Rozdzielone';
-
-  @override
-  String get allocationDeleted => 'Przydział usunięty';
-
-  @override
-  String get allocations => 'Przydziały';
-
-  @override
-  String get available => 'Dostępne';
-
-  @override
-  String get balance => 'Saldo';
-
-  @override
-  String balanceOfEnvelope(String envelope) {
-    return 'Saldo koperty $envelope';
-  }
-
-  @override
-  String canTakeBack(String amount) {
-    return 'Do wycofania: $amount';
-  }
-
-  @override
-  String get deleteAllocation => 'Usuń przydział';
-
-  @override
-  String deleteAllocationConfirm(String amount) {
-    return 'Usunąć przydział na $amount?';
-  }
-
-  @override
-  String get deleteEnvelope => 'Usuń kopertę';
-
-  @override
-  String deleteEnvelopeConfirm(String name) {
-    return 'Usunąć „$name” razem z podkopertami, wydatkami i przydziałami? Przydzielone pieniądze wrócą do puli.';
-  }
-
-  @override
-  String get deleteIncome => 'Usuń wpływ';
-
-  @override
-  String deleteIncomeConfirm(String amount) {
-    return 'Usunąć wpływ na $amount?';
-  }
-
-  @override
-  String get editEnvelope => 'Edytuj kopertę';
-
-  @override
-  String get editIncome => 'Edytuj wpływ';
-
-  @override
-  String get envelopeDeleted => 'Koperta usunięta';
-
-  @override
-  String get firstDayOfMonthHint => 'Od tego dnia liczy się miesiąc budżetowy';
-
-  @override
-  String get freeInEnvelope => 'Wolne w kopercie';
-
-  @override
-  String get fromEarlierMonths => 'Z poprzednich miesięcy';
-
-  @override
-  String get incomeDeleted => 'Wpływ usunięty';
-
-  @override
-  String get incomeNoteHint => 'np. Wypłata';
-
-  @override
-  String get incomes => 'Wpłaty';
-
-  @override
   String get manageEnvelopes => 'Zarządzaj kopertami';
-
-  @override
-  String monthLine(String income, String allocated) {
-    return 'Wpływy $income · przydzielono $allocated';
-  }
-
-  @override
-  String get months => 'Miesiące';
-
-  @override
-  String get needEnvelopeFirst => 'Najpierw dodaj kopertę.';
-
-  @override
-  String get newEnvelope => 'Nowa koperta';
-
-  @override
-  String get nextMonth => 'Następny miesiąc';
-
-  @override
-  String get noAllocations => 'Nic jeszcze nie przydzielono.';
-
-  @override
-  String get noIncomes =>
-      'Brak wpływów. Dodaj pierwszą wypłatę, a potem podziel ją na koperty.';
-
-  @override
-  String get noMonthsYet => 'Brak miesięcy.';
-
-  @override
-  String get noParent => 'Brak (koperta główna)';
-
-  @override
-  String notEnoughMoney(String amount) {
-    return 'Za mało środków. Dostępne: $amount.';
-  }
-
-  @override
-  String get parentEnvelope => 'Nadrzędna koperta';
-
-  @override
-  String parentFreeCaption(String parent, String amount) {
-    return 'Wolne w „$parent”: $amount';
-  }
-
-  @override
-  String poolCaption(String amount) {
-    return 'Nieprzydzielone: $amount';
-  }
-
-  @override
-  String get previousMonth => 'Poprzedni miesiąc';
-
-  @override
-  String get subEnvelopes => 'Podkoperty';
-
-  @override
-  String get takeBack => 'Wycofaj';
-
-  @override
-  String get accept => 'Przyjmij';
-
-  @override
-  String get alreadyMember => 'Ten adres należy już do członka koperty.';
-
-  @override
-  String get approve => 'Zatwierdź';
-
-  @override
-  String get awaitingAnswer => 'Czeka na odpowiedź';
-
-  @override
-  String get awaitingApproval => 'Przyjęte, czeka na zatwierdzenie';
-
-  @override
-  String get decline => 'Odrzuć';
-
-  @override
-  String get formerMember => 'Były członek';
-
-  @override
-  String get invitationAccepted =>
-      'Przyjęto zaproszenie. Właściciel koperty musi jeszcze zatwierdzić Twoje dołączenie.';
-
-  @override
-  String invitationBanner(String inviter, String envelope) {
-    return '$inviter zaprasza Cię do koperty „$envelope”';
-  }
-
-  @override
-  String get invitations => 'Zaproszenia';
-
-  @override
-  String invitationSent(String email) {
-    return 'Zaproszono $email. Osoba zobaczy zaproszenie w aplikacji po zalogowaniu tym adresem.';
-  }
-
-  @override
-  String get invite => 'Zaproś';
-
-  @override
-  String get inviteByEmail => 'Zaproś przez e-mail';
-
-  @override
-  String get lastOwner =>
-      'Koperta musi mieć co najmniej jednego właściciela. Najpierw zrób właścicielem kogoś innego.';
-
-  @override
-  String get leave => 'Opuść';
-
-  @override
-  String get leaveEnvelope => 'Opuść kopertę';
-
-  @override
-  String leaveEnvelopeConfirm(String name) {
-    return 'Opuścić „$name”? Pieniądze, które do niej włożyłeś, i Twoje wydatki w niej zostają.';
-  }
-
-  @override
-  String get leftEnvelope => 'Opuszczono kopertę';
-
-  @override
-  String get limitReached =>
-      'Osiągnięto limit: do koperty można zaprosić do 10 osób, a wysłać do 10 zaproszeń na godzinę.';
-
-  @override
-  String get makeMember => 'Zmień na członka';
-
-  @override
-  String get makeOwner => 'Zrób właścicielem';
-
-  @override
-  String get members => 'Członkowie';
-
-  @override
-  String membersOf(String name) {
-    return 'Członkowie · $name';
-  }
-
-  @override
-  String get notShareable =>
-      'Współdzielić można tylko kopertę główną; podkoperty idą razem z nią.';
-
-  @override
-  String get reject => 'Odrzuć';
-
-  @override
-  String get remove => 'Usuń';
-
-  @override
-  String get removeMember => 'Usuń z koperty';
-
-  @override
-  String removeMemberConfirm(String name) {
-    return 'Usunąć $name z koperty? Pieniądze, które włożył, i jego wydatki zostają w kopercie.';
-  }
-
-  @override
-  String get revokeInvitation => 'Cofnij zaproszenie';
-
-  @override
-  String get role => 'Rola';
-
-  @override
-  String get roleExplained =>
-      'Właściciel zarządza kopertą i jej członkami. Członek dodaje wydatki i przydziela własne pieniądze.';
-
-  @override
-  String get roleMember => 'Członek';
-
-  @override
-  String get roleOwner => 'Właściciel';
-
-  @override
-  String sharedWith(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count osoby',
-      many: '$count osób',
-      few: '$count osoby',
-      one: 'tylko Ty',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get someone => 'Ktoś';
-
-  @override
-  String get whoPutHowMuch => 'Kto ile włożył';
-
-  @override
-  String get you => 'Ty';
-
-  @override
-  String youWith(String name) {
-    return '$name (Ty)';
-  }
-
-  @override
-  String get addPending => 'Dodaj';
-
-  @override
-  String get appliedNothing => 'Wszystko jest już aktualne';
-
-  @override
-  String appliedSummary(String parts) {
-    return 'Dodano: $parts.';
-  }
-
-  @override
-  String countAllocations(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count przydziału',
-      many: '$count przydziałów',
-      few: '$count przydziały',
-      one: '$count przydział',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String countExpenses(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count wydatku',
-      many: '$count wydatków',
-      few: '$count wydatki',
-      one: '$count wydatek',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String countIncomes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count wpływu',
-      many: '$count wpływów',
-      few: '$count wpływy',
-      one: '$count wpływ',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get dayOfMonth => 'Dzień miesiąca';
-
-  @override
-  String get editAllocationRule => 'Edytuj regułę podziału';
-
-  @override
-  String get editIncomeRule => 'Edytuj wpływ cykliczny';
-
-  @override
-  String everyMonthOn(int day) {
-    return 'Co miesiąc, $day.';
-  }
-
-  @override
-  String get newAllocationRule => 'Nowa reguła podziału';
-
-  @override
-  String get newIncomeRule => 'Nowy wpływ cykliczny';
-
-  @override
-  String get noAllocationRules =>
-      'Brak reguł podziału. Dodaj, ile pieniędzy co miesiąc ma trafiać do koperty, np. 1000 zł do Domu.';
-
-  @override
-  String get noRecurringIncomes =>
-      'Brak cyklicznych wpływów. Dodaj wypłatę, która wpada co miesiąc w tym samym dniu.';
-
-  @override
-  String pendingTitle(String parts) {
-    return 'Do dodania w tym miesiącu: $parts';
-  }
-
-  @override
-  String skippedAllocations(int count) {
-    return 'Pominięto przydziały bez pokrycia w kopercie: $count.';
-  }
 
   @override
   String get loginHeadline => 'Budżet domowy,\nwspólnie albo solo';
@@ -750,16 +259,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get recurringTab => 'Cykliczne';
 
   @override
-  String get unallocatedToEnvelopes => 'Nierozdzielone na koperty';
-
-  @override
-  String get addIncomeShort => '+ Wpłata';
-
-  @override
   String get addExpenseShort => '+ Wydatek';
-
-  @override
-  String get soloSubtitle => 'Solo · tylko Ty';
 
   @override
   String get wizardStartTitle => 'Ustawmy Twój budżet';
@@ -772,9 +272,788 @@ class AppLocalizationsPl extends AppLocalizations {
   String get wizardStart => 'Zaczynamy';
 
   @override
-  String stepOf(int step, int total) {
+  String get descriptionOptional => 'Opis (opcjonalnie)';
+
+  @override
+  String get descriptionHint => 'np. zakupy w Biedronce';
+
+  @override
+  String get addRule => 'Dodaj regułę';
+
+  @override
+  String get allEnvelopes => 'Wszystkie koperty';
+
+  @override
+  String get allPeriods => 'Wszystkie okresy';
+
+  @override
+  String get anyAuthor => 'Każdy autor';
+
+  @override
+  String get appliedToTodo =>
+      'Nie zmieściło się – trafiło do „Do załatwienia”.';
+
+  @override
+  String applyAllExpenses(String name) {
+    return 'Zastosuj wszystkie wydatki cykliczne: $name';
+  }
+
+  @override
+  String get applyEstimateHint => 'Podaj rzeczywistą kwotę.';
+
+  @override
+  String get applyNow => 'Zastosuj';
+
+  @override
+  String get archive => 'Archiwizuj';
+
+  @override
+  String get archived => 'w archiwum';
+
+  @override
+  String byAuthor(String name) {
+    return 'Autor: $name';
+  }
+
+  @override
+  String get carryIn => 'Niewydane z poprzedniego okresu';
+
+  @override
+  String get changeLog => 'Log zmian';
+
+  @override
+  String get chooseHousehold => 'Wybierz gospodarstwo';
+
+  @override
+  String get closedCarried => 'Przeszło do następnego okresu';
+
+  @override
+  String get closedCarriedHint =>
+      'Te pieniądze są teraz w bieżącym okresie, wspólne dla wszystkich.';
+
+  @override
+  String get closedNothingCarried => 'Tym razem nic nie przeszło dalej.';
+
+  @override
+  String get closedOk => 'Super';
+
+  @override
+  String get closedPeriod => 'Zamknięty';
+
+  @override
+  String get closedPutIn => 'Wpłacono';
+
+  @override
+  String get closedSpent => 'Wydano';
+
+  @override
+  String closedTitle(String name) {
+    return 'Okres zamknięty: $name';
+  }
+
+  @override
+  String comparedToPrevious(String delta) {
+    return 'vs poprzedni: $delta';
+  }
+
+  @override
+  String get confirm => 'Potwierdź';
+
+  @override
+  String correctionBody(String amount) {
+    return 'Po tej korekcie portfel zejdzie poniżej zera o $amount. Wycofać brakującą kwotę z gospodarstwa czy zostawić minus do następnego wpływu?';
+  }
+
+  @override
+  String get correctionKeepMinus => 'Zostaw minus';
+
+  @override
+  String get correctionTitle => 'Portfel zejdzie poniżej zera';
+
+  @override
+  String correctionWithdrawFrom(String name) {
+    return 'Wycofaj z: $name';
+  }
+
+  @override
+  String get currentPeriod => 'Bieżący';
+
+  @override
+  String get currentPeriodEnd => 'Koniec bieżącego okresu';
+
+  @override
+  String get currentPeriodEndHint => 'Nie wcześniej niż dziś';
+
+  @override
+  String get cycle => 'Okresy';
+
+  @override
+  String cycleEveryWeeks(int weeks) {
+    String _temp0 = intl.Intl.pluralLogic(
+      weeks,
+      locale: localeName,
+      other: 'co $weeks tygodnia',
+      many: 'co $weeks tygodni',
+      few: 'co $weeks tygodnie',
+      one: 'co tydzień',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cycleFromDay(String day) {
+    return 'od $day';
+  }
+
+  @override
+  String get cycleManual => 'Ręcznie';
+
+  @override
+  String get cycleManualHint =>
+      'Koniec ustawiasz sam; nowy okres trwa tyle, co poprzedni.';
+
+  @override
+  String get cycleMonthly => 'Co miesiąc';
+
+  @override
+  String cycleMonthlyFrom(int day) {
+    return 'co miesiąc od $day.';
+  }
+
+  @override
+  String get cycleWeeks => 'Co N tygodni';
+
+  @override
+  String dashboardRangeLabel(String from, String to) {
+    return 'Gospodarstwa $from – $to';
+  }
+
+  @override
+  String get dashboardShows => 'Pulpit pokazuje';
+
+  @override
+  String get dateAndTime => 'Data i godzina';
+
+  @override
+  String get deleteAccount => 'Usuń konto';
+
+  @override
+  String get deleteAccountBody =>
+      'Portfel, wpływy i reguły znikną. Twoje dodatnie udziały zostaną w gospodarstwach jako pieniądze niczyje. Wpisz swój adres e-mail, żeby potwierdzić.';
+
+  @override
+  String get deleteHousehold => 'Usuń gospodarstwo';
+
+  @override
+  String deleteHouseholdConfirm(String name) {
+    return 'Usunąć „$name” razem z kopertami i wydatkami? Dodatnie udziały wrócą do portfeli.';
+  }
+
+  @override
+  String get deleteHouseholdHint => 'Niemożliwe, dopóki ktoś ma ujemny udział.';
+
+  @override
+  String get deleteRule => 'Usuń regułę';
+
+  @override
+  String get deleteRuleConfirm => 'To, co reguła już dodała, zostanie.';
+
+  @override
+  String get email => 'Adres e-mail';
+
+  @override
+  String get envelopeHasExpensesTitle => 'Koperta ma wydatki';
+
+  @override
+  String get errAlreadyMember => 'Ta osoba już jest członkiem.';
+
+  @override
+  String get errCannotUndo => 'Tej zmiany nie da się już cofnąć.';
+
+  @override
+  String get errConfirmationMismatch => 'Adres się nie zgadza.';
+
+  @override
+  String get errDateOutsidePeriod =>
+      'Data musi należeć do bieżącego okresu i nie być późniejsza niż teraz.';
+
+  @override
+  String get errDuplicateEnvelope => 'Koperta o tej nazwie już jest.';
+
+  @override
+  String get errEnvelopeHasExpenses =>
+      'Koperty z wydatkami nie można usunąć – można ją zarchiwizować; wydatki zostaną w historii.';
+
+  @override
+  String get errInvalidPeriodEnd =>
+      'Koniec nie może być wcześniejszy niż dziś ani nachodzić na następny okres.';
+
+  @override
+  String get errLastEnvelope =>
+      'Gospodarstwo musi mieć co najmniej jedną aktywną kopertę.';
+
+  @override
+  String get errLastOwner =>
+      'Gospodarstwo musi mieć co najmniej jednego właściciela. Najpierw nadaj tę rolę komuś innemu.';
+
+  @override
+  String get errMemberFrozen =>
+      'Jesteś zamrożony w tym gospodarstwie: wyrównaj udział, żeby znów wydawać.';
+
+  @override
+  String errNegativeShare(String list) {
+    return 'Najpierw trzeba wyrównać ujemny udział: $list';
+  }
+
+  @override
+  String get errNextPeriodOpen => 'Następny okres jest już otwarty.';
+
+  @override
+  String errNotEnoughMoney(String amount) {
+    return 'Za mało pieniędzy. Dostępne: $amount.';
+  }
+
+  @override
+  String get errPeriodClosed =>
+      'Okres jest zamknięty: można zmienić tylko tytuł wydatku.';
+
+  @override
+  String get errPeriodNotCurrent => 'Wydawać można tylko z bieżącego okresu.';
+
+  @override
+  String get errPlanBelowSpent =>
+      'Plan nie może być niższy niż to, co już wydano.';
+
+  @override
+  String get errWalletNegative =>
+      'Portfel jest na minusie – przelewy są zablokowane do następnego wpływu.';
+
+  @override
+  String get estimated => 'szacowany';
+
+  @override
+  String get estimatedExpenseRule => 'Kwota szacowana (do potwierdzenia)';
+
+  @override
+  String get estimatedIncome => 'Szacowany (do potwierdzenia)';
+
+  @override
+  String get estimatedIncomeRule =>
+      'Szacowany: wejdzie z kwotą szacowaną w terminie';
+
+  @override
+  String get estimatedSpent => 'w tym szacowane';
+
+  @override
+  String everyWeeksFrom(int weeks, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      weeks,
+      locale: localeName,
+      other: 'co $weeks tygodnia',
+      many: 'co $weeks tygodni',
+      few: 'co $weeks tygodnie',
+      one: 'co tydzień',
+    );
+    return '$_temp0 od $day';
+  }
+
+  @override
+  String get expense => 'Wydatek';
+
+  @override
+  String get firstPeriodEnd => 'Koniec pierwszego okresu';
+
+  @override
+  String get forAnybody => 'Dla kogokolwiek';
+
+  @override
+  String forMember(String name) {
+    return 'dla: $name';
+  }
+
+  @override
+  String get forWhom => 'Dla kogo';
+
+  @override
+  String get forWhomNobody => 'Nie podano';
+
+  @override
+  String get forWhomShared => 'Wspólne';
+
+  @override
+  String get forecast => 'Prognoza do końca okresu';
+
+  @override
+  String get forecastBalance => 'Przewidywane saldo';
+
+  @override
+  String get forecastRecurring => 'w tym cykliczne';
+
+  @override
+  String get forecastSpent => 'Przewidywane wydatki';
+
+  @override
+  String freeMoney(String amount) {
+    return 'Wolne: $amount';
+  }
+
+  @override
+  String get freeMoneyLabel => 'Wolne pieniądze';
+
+  @override
+  String get freeze => 'Zamroź';
+
+  @override
+  String get frequency => 'Jak często';
+
+  @override
+  String get frozen => 'zamrożony';
+
+  @override
+  String get household => 'Gospodarstwo';
+
+  @override
+  String get householdSettings => 'Ustawienia gospodarstwa';
+
+  @override
+  String householdSpentInRange(String amount) {
+    return 'Wydano: $amount';
+  }
+
+  @override
+  String get householdTab => 'Gospodarstwo';
+
+  @override
+  String get invitationPending => 'Czeka na odpowiedź';
+
+  @override
+  String invitationTo(String name) {
+    return 'Zaproszenie do „$name”';
+  }
+
+  @override
+  String invitedBy(String name) {
+    return 'Zaprasza: $name';
+  }
+
+  @override
+  String leaveBody(String name) {
+    return 'Wychodzisz z „$name”. Wycofać swoje udziały do portfela? Jeśli nie, zostaną w gospodarstwie jako pieniądze niczyje.';
+  }
+
+  @override
+  String get leaveHousehold => 'Wyjdź z gospodarstwa';
+
+  @override
+  String get leaveKeepShares => 'Zostaw w gospodarstwie';
+
+  @override
+  String get leaveWithdraw => 'Wycofaj do portfela';
+
+  @override
+  String leftAmount(String amount) {
+    return 'zostało $amount';
+  }
+
+  @override
+  String leftInPlan(String name) {
+    return 'Zostało w planie „$name”';
+  }
+
+  @override
+  String get logEmpty => 'Brak zmian w otwartych okresach.';
+
+  @override
+  String get monthly => 'Co miesiąc';
+
+  @override
+  String monthlyOnDay(int day) {
+    return 'co miesiąc, $day.';
+  }
+
+  @override
+  String get negativeShareHint =>
+      'Ujemny udział: ta osoba wydała więcej, niż włożyła.';
+
+  @override
+  String get newHousehold => 'Nowe gospodarstwo';
+
+  @override
+  String get nextPeriod => 'Następny';
+
+  @override
+  String get noExpensesForFilters => 'Brak wydatków dla wybranych filtrów';
+
+  @override
+  String get noExpensesInPeriod => 'Brak wydatków w tym okresie.';
+
+  @override
+  String get nobodysMoney => 'Pieniądze niczyje';
+
+  @override
+  String get openNextPeriod => 'Otwórz następny okres';
+
+  @override
+  String get periods => 'Okresy';
+
+  @override
+  String get piggyBalance => 'Saldo skarbonki';
+
+  @override
+  String planOf(String name) {
+    return 'Plan: $name';
+  }
+
+  @override
+  String planRaised(String amount) {
+    return 'Plan koperty podniósł się o $amount z wolnych pieniędzy.';
+  }
+
+  @override
+  String planRecurringPart(String amount) {
+    return 'W tym z wydatków cyklicznych: $amount';
+  }
+
+  @override
+  String get plansExceedBalance => 'Plan przekracza saldo gospodarstwa';
+
+  @override
+  String get plansTotal => 'Suma planów';
+
+  @override
+  String get rangeCustom => 'Dowolny zakres dat';
+
+  @override
+  String get rangeMonth => 'Bieżący miesiąc';
+
+  @override
+  String get rangePeriod => 'Okres wybranego gospodarstwa';
+
+  @override
+  String recurringInPlan(String amount) {
+    return 'cykliczne $amount';
+  }
+
+  @override
+  String get recurringIntro =>
+      'Wykonują się same przy otwarciu aplikacji: najpierw wpływy, potem przelewy, potem wydatki.';
+
+  @override
+  String returnedFrom(String name) {
+    return 'Zwrot udziału: $name';
+  }
+
+  @override
+  String get revoke => 'Odwołaj';
+
+  @override
+  String roleConfirm(String name) {
+    return 'Zmienić rolę osoby $name?';
+  }
+
+  @override
+  String get ruleExpense => 'Wydatek';
+
+  @override
+  String get ruleIncome => 'Wpływ';
+
+  @override
+  String get ruleTransfer => 'Przelew';
+
+  @override
+  String get rulesExpenses => 'Wydatki cykliczne';
+
+  @override
+  String get rulesIncomes => 'Wpływy do portfela';
+
+  @override
+  String get rulesTransfers => 'Przelewy do gospodarstw';
+
+  @override
+  String shareOf(String amount) {
+    return 'udział $amount';
+  }
+
+  @override
+  String get shares => 'Udziały';
+
+  @override
+  String stepBring(String amount) {
+    return 'Dołóż $amount z portfela';
+  }
+
+  @override
+  String stepBringAndRaise(String amount) {
+    return 'Dołóż $amount i podnieś plan';
+  }
+
+  @override
+  String stepNotEnoughBody(String amount) {
+    return 'W skarbonce jest tylko $amount.';
+  }
+
+  @override
+  String get stepNotEnoughTitle => 'Za mało w skarbonce';
+
+  @override
+  String stepPlanTooSmallBody(String amount) {
+    return 'Brakuje $amount w planie koperty, a w skarbonce nie ma wolnych pieniędzy.';
+  }
+
+  @override
+  String get stepPlanTooSmallTitle => 'Trzeba podnieść plan';
+
+  @override
+  String get stepRaiseOnly => 'Tylko podnieś plan';
+
+  @override
+  String stepWalletNegativeBody(String amount) {
+    return 'Portfel zejdzie poniżej zera: będzie $amount. Do następnego wpływu nie zrobisz przelewu.';
+  }
+
+  @override
+  String get stepWalletNegativeConfirm => 'Zatwierdź minus';
+
+  @override
+  String get stepWalletNegativeTitle => 'W portfelu brakuje pieniędzy';
+
+  @override
+  String get takeOwner => 'Odbierz rolę właściciela';
+
+  @override
+  String get thisPeriod => 'Ten okres';
+
+  @override
+  String get titleOptional => 'Tytuł (opcjonalnie)';
+
+  @override
+  String get toNextPeriod => 'na następny okres';
+
+  @override
+  String get toNextPeriodHint =>
+      'Do następnego okresu (np. wypłata 28. na kolejny miesiąc)';
+
+  @override
+  String get todoAddExpense => 'Dodaj wydatek';
+
+  @override
+  String get todoConfirmAmount => 'Potwierdź kwotę';
+
+  @override
+  String get todoDismiss => 'Zostaw';
+
+  @override
+  String get todoDo => 'Zrób';
+
+  @override
+  String todoExpenseEstimate(String what, String amount) {
+    return 'Wydatek szacowany „$what”: $amount. Potwierdź rzeczywistą kwotę do końca okresu.';
+  }
+
+  @override
+  String todoExpenseMissed(String what, String amount) {
+    return '„$what” ($amount) wypadł w okresie, który już się zamknął.';
+  }
+
+  @override
+  String todoExpenseNotFit(String what, String amount) {
+    return 'Wydatek cykliczny „$what” ($amount) nie mieści się w planie albo w saldzie.';
+  }
+
+  @override
+  String todoIncomeEstimate(String what, String amount) {
+    return 'Wpływ „$what” wszedł z kwotą szacowaną $amount. Skoryguj ją.';
+  }
+
+  @override
+  String get todoTitle => 'Do załatwienia';
+
+  @override
+  String get todoTransfer => 'Przelej';
+
+  @override
+  String todoTransferNoMoney(String what, String amount) {
+    return 'Przelew cykliczny „$what” ($amount) nie poszedł: w portfelu brakowało pieniędzy.';
+  }
+
+  @override
+  String get transfer => 'Przelej';
+
+  @override
+  String get transferFromWallet => 'Przelew z portfela';
+
+  @override
+  String transferHint(String amount) {
+    return 'W portfelu: $amount';
+  }
+
+  @override
+  String transferTo(String name) {
+    return 'Przelew: $name';
+  }
+
+  @override
+  String get transfers => 'Przelewy';
+
+  @override
+  String get unarchive => 'Przywróć';
+
+  @override
+  String get undo => 'Cofnij';
+
+  @override
+  String get unfreeze => 'Odmroź';
+
+  @override
+  String get usedUnconfirmed =>
+      'Przelew częściowo z niepotwierdzonych wpływów.';
+
+  @override
+  String get wallet => 'Portfel';
+
+  @override
+  String get walletBalance => 'Saldo portfela';
+
+  @override
+  String get walletEmpty => 'Nic tu jeszcze nie ma. Dodaj pierwszy wpływ.';
+
+  @override
+  String get walletNegativeHint =>
+      'Portfel jest na minusie: przelewy wrócą po następnym wpływie.';
+
+  @override
+  String walletUnconfirmed(String amount) {
+    return 'w tym niepotwierdzone: $amount';
+  }
+
+  @override
+  String get walletUnconfirmedLabel => 'w tym niepotwierdzone';
+
+  @override
+  String get weekly => 'Co N tygodni';
+
+  @override
+  String get withdraw => 'Wycofaj';
+
+  @override
+  String get withdrawHint =>
+      'Najwyżej Twój udział i najwyżej tyle, ile jest w skarbonce.';
+
+  @override
+  String withdrawalFrom(String name) {
+    return 'Wycofanie: $name';
+  }
+
+  @override
+  String get withdrawals => 'Wycofania';
+
+  @override
+  String get wizardDoneBody =>
+      'Wszystko gotowe. Innych osób zaprosisz później w „Członkach”.';
+
+  @override
+  String get wizardDoneTitle => 'Gotowe';
+
+  @override
+  String get wizardFinish => 'Do pulpitu';
+
+  @override
+  String get wizardHouseholdBody =>
+      'Gospodarstwo to wspólne miejsce na koperty i okresy – dla Ciebie albo kilku osób.';
+
+  @override
+  String get wizardHouseholdTitle => 'Twoje gospodarstwo';
+
+  @override
+  String wizardStep(int step, int total) {
     return 'Krok $step z $total';
   }
+
+  @override
+  String get wizardTitle => 'Na start';
+
+  @override
+  String wizardTransferBody(String amount) {
+    return 'Ile z portfela ($amount) przelać do bieżącego okresu?';
+  }
+
+  @override
+  String get wizardTransferTitle => 'Przelew do gospodarstwa';
+
+  @override
+  String get wizardEnvelopesTitle => 'Koperty';
+
+  @override
+  String get wizardEnvelopesBody =>
+      'Wybierz startowe koperty. Dodasz i zmienisz je później.';
+
+  @override
+  String get wizardIncomeTitle => 'Pierwszy wpływ';
+
+  @override
+  String get wizardIncomeBody =>
+      'Ile pieniędzy masz do rozdania? Trafią do Twojego prywatnego portfela.';
+
+  @override
+  String get yourName => 'Twoje imię';
+
+  @override
+  String get yourNameHint => 'Widzą je inni członkowie gospodarstw.';
+
+  @override
+  String get addEnvelope => 'Dodaj kopertę';
+
+  @override
+  String get editEnvelope => 'Edytuj kopertę';
+
+  @override
+  String get editIncome => 'Korekta wpływu';
+
+  @override
+  String get deleteIncome => 'Usuń wpływ';
+
+  @override
+  String deleteIncomeConfirm(String amount) {
+    return 'Usunąć wpływ $amount?';
+  }
+
+  @override
+  String get editRule => 'Edytuj regułę';
+
+  @override
+  String get makeOwner => 'Nadaj rolę właściciela';
+
+  @override
+  String get removeMember => 'Usuń z gospodarstwa';
+
+  @override
+  String removeMemberConfirm(String name) {
+    return 'Usunąć $name? Dodatni udział wróci do portfela tej osoby.';
+  }
+
+  @override
+  String get roleOwner => 'właściciel';
+
+  @override
+  String get roleMember => 'członek';
+
+  @override
+  String get invite => 'Zaproś';
+
+  @override
+  String get send => 'Wyślij';
+
+  @override
+  String get accept => 'Przyjmij';
+
+  @override
+  String get decline => 'Odrzuć';
+
+  @override
+  String get members => 'Członkowie';
+
+  @override
+  String get formerMember => 'były członek';
 
   @override
   String get later => 'Później';
@@ -783,213 +1062,8 @@ class AppLocalizationsPl extends AppLocalizations {
   String get next => 'Dalej';
 
   @override
-  String get back => 'Wstecz';
+  String get income => 'Wpływ';
 
   @override
-  String get currencyPln => 'PLN – złoty';
-
-  @override
-  String get starterFood => 'Jedzenie';
-
-  @override
-  String get starterHousing => 'Mieszkanie i rachunki';
-
-  @override
-  String get starterTransport => 'Transport';
-
-  @override
-  String get starterHealth => 'Zdrowie';
-
-  @override
-  String get starterFun => 'Rozrywka';
-
-  @override
-  String get starterClothes => 'Ubrania';
-
-  @override
-  String get starterOther => 'Inne';
-
-  @override
-  String get wizardWhoTitle => 'Kto będzie korzystał z kopert?';
-
-  @override
-  String get soloTitle => 'Tylko ja · Solo';
-
-  @override
-  String get soloBody =>
-      'Prywatny budżet. Możesz go później zamienić na wspólny.';
-
-  @override
-  String get multiTitle => 'Z innymi · wspólne koperty';
-
-  @override
-  String get multiBody =>
-      'Wszyscy widzą te same dane. Przy wpłatach i wydatkach wskażesz, kogo dotyczą.';
-
-  @override
-  String get inviteHint => 'adres@osoby.pl';
-
-  @override
-  String get send => 'Wyślij';
-
-  @override
-  String get wizardIncomeTitle => 'Skąd przychodzą pieniądze?';
-
-  @override
-  String wizardIncomeBody(String period) {
-    return 'Ten miesiąc: $period. Wypłatę zaznacz jako cykliczną – co miesiąc doda się sama, gdy zastosujesz reguły.';
-  }
-
-  @override
-  String get newIncome => 'Nowa wpłata';
-
-  @override
-  String get incomeNameHint => 'np. Pensja';
-
-  @override
-  String get addIncomeAction => 'Dodaj wpłatę';
-
-  @override
-  String get wizardBillsTitle => 'Rachunki, które wracają co miesiąc';
-
-  @override
-  String get wizardBillsBody =>
-      'Stałe, jak czynsz, i zmienne, jak prąd. Przycisk „Zastosuj” doda je do każdego miesiąca.';
-
-  @override
-  String get addRecurringExpense => '+ Dodaj wydatek cykliczny';
-
-  @override
-  String get wizardEnvelopesTitle => 'Rozdziel dochód na koperty';
-
-  @override
-  String get wizardEnvelopesBody =>
-      'Ile pieniędzy włożyć do każdej koperty. Kwoty z rachunków cyklicznych są już podpowiedziane.';
-
-  @override
-  String fromRecurring(String amount) {
-    return 'cykliczne: $amount';
-  }
-
-  @override
-  String get unallocatedShort => 'Nierozdzielone';
-
-  @override
-  String get wizardDone => 'Gotowe – przejdź do pulpitu';
-
-  @override
-  String get everyMonth => 'co miesiąc';
-
-  @override
-  String get descriptionOptional => 'Opis (opcjonalnie)';
-
-  @override
-  String get descriptionHint => 'np. zakupy w Biedronce';
-
-  @override
-  String get oneOff => 'Jednorazowa';
-
-  @override
-  String get recurringIncome => 'Cykliczna';
-
-  @override
-  String get saveIncome => 'Zapisz wpłatę';
-
-  @override
-  String get incomeAdded => 'Dodano wpłatę';
-
-  @override
-  String get recurringMark => 'cykliczny';
-
-  @override
-  String get noTransactions => 'Brak wydatków w tym miesiącu.';
-
-  @override
-  String get newRulePlus => '+ Nowa reguła';
-
-  @override
-  String applyTo(String period) {
-    return 'Zastosuj do: $period';
-  }
-
-  @override
-  String get applyHint =>
-      'Doda wpisy z aktywnych reguł. Już dodane się nie zdublują.';
-
-  @override
-  String get ruleOff => 'wyłączona';
-
-  @override
-  String get more => 'Więcej';
-
-  @override
-  String get enterIncome => 'Podaj swój dochód';
-
-  @override
-  String get envelopesTab => 'Koperty';
-
-  @override
-  String get newEnvelopePlus => '+ Nowa koperta';
-
-  @override
-  String get addEnvelopePlus => '+ Dodaj kopertę';
-
-  @override
-  String get sharingPerEnvelope =>
-      'Kopertę można udostępnić innym osobom: wejdź w nią i otwórz „Członkowie”.';
-
-  @override
-  String sharedEnvelopes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count wspólnej koperty',
-      many: '$count wspólnych kopert',
-      few: '$count wspólne koperty',
-      one: '1 wspólna koperta',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get allocatedThisMonth => 'Przydzielone w tym miesiącu';
-
-  @override
-  String get incomeGoesToPool =>
-      'Wpłata trafi do puli, z której przydzielasz pieniądze do kopert.';
-
-  @override
-  String get recurringIncomeHint =>
-      'Wpłata pojawi się co miesiąc tego dnia, gdy zastosujesz reguły cykliczne.';
-
-  @override
-  String get recurringIncomeAdded => 'Dodano wpłatę cykliczną';
-
-  @override
-  String get wizardStartersTitle => 'Na co wydajesz pieniądze?';
-
-  @override
-  String get wizardStartersBody =>
-      'Każda kategoria wydatków to koperta. Odznacz te, których nie potrzebujesz – kolejne dodasz w każdej chwili.';
-
-  @override
-  String get starterEnvelopes => 'Koperty na start';
-
-  @override
-  String get shareWhichEnvelope => 'Którą kopertę udostępnić?';
-
-  @override
-  String invitedPeople(String emails) {
-    return 'Zaproszeni: $emails. Dostaną dostęp, gdy przyjmą zaproszenie i je zatwierdzisz.';
-  }
-
-  @override
-  String get monthIncome => 'Wpływy w miesiącu';
-
-  @override
-  String get repeatMonthly => 'Powtarzaj co miesiąc';
-
-  @override
-  String get repeatMonthlyHint =>
-      'Te kwoty trafią do kopert w każdym miesiącu (reguły podziału).';
+  String get addIncome => 'Dodaj wpływ';
 }

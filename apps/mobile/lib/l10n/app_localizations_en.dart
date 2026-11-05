@@ -12,22 +12,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'PLNing';
 
   @override
-  String get addExpense => 'Add expense';
-
-  @override
   String get envelopes => 'Envelopes';
 
   @override
-  String get noEnvelopes => 'No envelopes yet.';
-
-  @override
-  String get income => 'Income';
-
-  @override
   String get spent => 'Spent';
-
-  @override
-  String get overAllocated => 'Over-allocated';
 
   @override
   String get saveChanges => 'Save changes';
@@ -40,9 +28,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get envelope => 'Envelope';
 
   @override
-  String get pickEnvelope => 'Pick an envelope';
-
-  @override
   String get amount => 'Amount';
 
   @override
@@ -50,9 +35,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get date => 'Date';
-
-  @override
-  String get noteOptional => 'Note (optional)';
 
   @override
   String get saveExpense => 'Save expense';
@@ -64,22 +46,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get name => 'Name';
 
   @override
-  String get icon => 'Icon';
-
-  @override
-  String get color => 'Color';
-
-  @override
   String get save => 'Save';
 
   @override
   String get delete => 'Delete';
-
-  @override
-  String get expenses => 'Expenses';
-
-  @override
-  String get noExpenses => 'No expenses in this envelope yet.';
 
   @override
   String get deleteExpense => 'Delete expense';
@@ -91,28 +61,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
-
-  @override
-  String get expenseDeleted => 'Expense deleted';
-
-  @override
-  String get spendingOverTime => 'Spending over time';
-
-  @override
-  String get notEnoughData => 'Not enough data yet.';
-
-  @override
-  String get newRule => 'New rule';
-
-  @override
-  String get editRule => 'Edit rule';
-
-  @override
-  String get active => 'Active';
-
-  @override
-  String get noRecurringRules =>
-      'No recurring rules yet. Add templates for regular income or expenses.';
 
   @override
   String get settings => 'Settings';
@@ -175,15 +123,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appearance => 'Appearance';
 
   @override
-  String get dataSection => 'Data';
-
-  @override
-  String get currency => 'Currency';
-
-  @override
-  String get firstDayOfMonth => 'First day of month';
-
-  @override
   String get theme => 'Theme';
 
   @override
@@ -196,62 +135,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeAuto => 'Auto';
 
   @override
-  String get exportCsv => 'Export data (CSV)';
-
-  @override
-  String get importCsv => 'Import from CSV';
-
-  @override
-  String importResult(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Imported $count expenses',
-      one: 'Imported 1 expense',
-      zero: 'No expenses to import',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String importSkipped(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: ', skipped $count duplicates',
-      one: ', skipped 1 duplicate',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get about => 'About';
 
   @override
-  String csvExported(String path) {
-    return 'Exported to $path';
-  }
-
-  @override
-  String get today => 'Today';
-
-  @override
-  String get noteHint => 'e.g. Weekly groceries';
-
-  @override
-  String get addNew => 'New';
-
-  @override
   String get history => 'History';
-
-  @override
-  String get all => 'All';
-
-  @override
-  String get dateRange => 'Date range';
-
-  @override
-  String get noMatchingExpenses => 'No expenses match the filters.';
 
   @override
   String get newExpense => 'New expense';
@@ -342,374 +229,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orSeparator => 'or';
 
   @override
-  String get addEnvelope => 'Add envelope';
-
-  @override
-  String get addIncome => 'Add income';
-
-  @override
-  String get addSubEnvelope => 'Add sub-envelope';
-
-  @override
-  String get allocate => 'Allocate';
-
-  @override
-  String get allocated => 'Allocated';
-
-  @override
-  String get allocationDeleted => 'Allocation deleted';
-
-  @override
-  String get allocations => 'Allocations';
-
-  @override
-  String get available => 'Available';
-
-  @override
-  String get balance => 'Balance';
-
-  @override
-  String balanceOfEnvelope(String envelope) {
-    return 'Balance of $envelope';
-  }
-
-  @override
-  String canTakeBack(String amount) {
-    return 'Can take back: $amount';
-  }
-
-  @override
-  String get deleteAllocation => 'Delete allocation';
-
-  @override
-  String deleteAllocationConfirm(String amount) {
-    return 'Delete the allocation of $amount?';
-  }
-
-  @override
-  String get deleteEnvelope => 'Delete envelope';
-
-  @override
-  String deleteEnvelopeConfirm(String name) {
-    return 'Delete “$name” with its sub-envelopes, expenses and allocations? The money put into it goes back to the pool.';
-  }
-
-  @override
-  String get deleteIncome => 'Delete income';
-
-  @override
-  String deleteIncomeConfirm(String amount) {
-    return 'Delete the income of $amount?';
-  }
-
-  @override
-  String get editEnvelope => 'Edit envelope';
-
-  @override
-  String get editIncome => 'Edit income';
-
-  @override
-  String get envelopeDeleted => 'Envelope deleted';
-
-  @override
-  String get firstDayOfMonthHint => 'Budget months start on this day';
-
-  @override
-  String get freeInEnvelope => 'Free in envelope';
-
-  @override
-  String get fromEarlierMonths => 'From earlier months';
-
-  @override
-  String get incomeDeleted => 'Income deleted';
-
-  @override
-  String get incomeNoteHint => 'e.g. Salary';
-
-  @override
-  String get incomes => 'Income';
-
-  @override
   String get manageEnvelopes => 'Manage envelopes';
-
-  @override
-  String monthLine(String income, String allocated) {
-    return 'Income $income · allocated $allocated';
-  }
-
-  @override
-  String get months => 'Months';
-
-  @override
-  String get needEnvelopeFirst => 'Add an envelope first.';
-
-  @override
-  String get newEnvelope => 'New envelope';
-
-  @override
-  String get nextMonth => 'Next month';
-
-  @override
-  String get noAllocations => 'Nothing allocated yet.';
-
-  @override
-  String get noIncomes =>
-      'No income yet. Add your first payday, then split it between envelopes.';
-
-  @override
-  String get noMonthsYet => 'No months yet.';
-
-  @override
-  String get noParent => 'None (top-level envelope)';
-
-  @override
-  String notEnoughMoney(String amount) {
-    return 'Not enough money. Available: $amount.';
-  }
-
-  @override
-  String get parentEnvelope => 'Parent envelope';
-
-  @override
-  String parentFreeCaption(String parent, String amount) {
-    return 'Free in “$parent”: $amount';
-  }
-
-  @override
-  String poolCaption(String amount) {
-    return 'Unallocated: $amount';
-  }
-
-  @override
-  String get previousMonth => 'Previous month';
-
-  @override
-  String get subEnvelopes => 'Sub-envelopes';
-
-  @override
-  String get takeBack => 'Take back';
-
-  @override
-  String get accept => 'Accept';
-
-  @override
-  String get alreadyMember =>
-      'This address already belongs to a member of the envelope.';
-
-  @override
-  String get approve => 'Approve';
-
-  @override
-  String get awaitingAnswer => 'Waiting for an answer';
-
-  @override
-  String get awaitingApproval => 'Accepted, waiting for approval';
-
-  @override
-  String get decline => 'Decline';
-
-  @override
-  String get formerMember => 'Former member';
-
-  @override
-  String get invitationAccepted =>
-      'Invitation accepted. An owner of the envelope still has to approve you.';
-
-  @override
-  String invitationBanner(String inviter, String envelope) {
-    return '$inviter invites you to the envelope “$envelope”';
-  }
-
-  @override
-  String get invitations => 'Invitations';
-
-  @override
-  String invitationSent(String email) {
-    return 'Invited $email. They will see the invitation in the app once signed in with that address.';
-  }
-
-  @override
-  String get invite => 'Invite';
-
-  @override
-  String get inviteByEmail => 'Invite by e-mail';
-
-  @override
-  String get lastOwner =>
-      'An envelope needs at least one owner. Make somebody else an owner first.';
-
-  @override
-  String get leave => 'Leave';
-
-  @override
-  String get leaveEnvelope => 'Leave the envelope';
-
-  @override
-  String leaveEnvelopeConfirm(String name) {
-    return 'Leave “$name”? The money you put into it and your expenses in it stay.';
-  }
-
-  @override
-  String get leftEnvelope => 'You left the envelope';
-
-  @override
-  String get limitReached =>
-      'Limit reached: an envelope has up to 10 people, and you can send 10 invitations an hour.';
-
-  @override
-  String get makeMember => 'Make member';
-
-  @override
-  String get makeOwner => 'Make owner';
-
-  @override
-  String get members => 'Members';
-
-  @override
-  String membersOf(String name) {
-    return 'Members · $name';
-  }
-
-  @override
-  String get notShareable =>
-      'Only a top-level envelope can be shared; sub-envelopes go with it.';
-
-  @override
-  String get reject => 'Turn down';
-
-  @override
-  String get remove => 'Remove';
-
-  @override
-  String get removeMember => 'Remove from the envelope';
-
-  @override
-  String removeMemberConfirm(String name) {
-    return 'Remove $name from the envelope? The money they put in and their expenses stay in it.';
-  }
-
-  @override
-  String get revokeInvitation => 'Revoke the invitation';
-
-  @override
-  String get role => 'Role';
-
-  @override
-  String get roleExplained =>
-      'An owner manages the envelope and its members. A member adds expenses and puts in their own money.';
-
-  @override
-  String get roleMember => 'Member';
-
-  @override
-  String get roleOwner => 'Owner';
-
-  @override
-  String sharedWith(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count people',
-      one: 'only you',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get someone => 'Somebody';
-
-  @override
-  String get whoPutHowMuch => 'Who put how much';
-
-  @override
-  String get you => 'You';
-
-  @override
-  String youWith(String name) {
-    return '$name (you)';
-  }
-
-  @override
-  String get addPending => 'Add';
-
-  @override
-  String get appliedNothing => 'Everything is up to date';
-
-  @override
-  String appliedSummary(String parts) {
-    return 'Added: $parts.';
-  }
-
-  @override
-  String countAllocations(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count allocations',
-      one: '$count allocation',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String countExpenses(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count expenses',
-      one: '$count expense',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String countIncomes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count incomes',
-      one: '$count income',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get dayOfMonth => 'Day of the month';
-
-  @override
-  String get editAllocationRule => 'Edit allocation rule';
-
-  @override
-  String get editIncomeRule => 'Edit recurring income';
-
-  @override
-  String everyMonthOn(int day) {
-    return 'Every month on the $day.';
-  }
-
-  @override
-  String get newAllocationRule => 'New allocation rule';
-
-  @override
-  String get newIncomeRule => 'New recurring income';
-
-  @override
-  String get noAllocationRules =>
-      'No allocation rules. Add how much goes into an envelope every month, e.g. 1000 zł into Home.';
-
-  @override
-  String get noRecurringIncomes =>
-      'No recurring income. Add a salary that comes in on the same day every month.';
-
-  @override
-  String pendingTitle(String parts) {
-    return 'To add this month: $parts';
-  }
-
-  @override
-  String skippedAllocations(int count) {
-    return 'Allocations skipped for lack of money in the envelope: $count.';
-  }
 
   @override
   String get loginHeadline => 'Household budget,\ntogether or solo';
@@ -739,16 +259,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringTab => 'Recurring';
 
   @override
-  String get unallocatedToEnvelopes => 'Not in any envelope';
-
-  @override
-  String get addIncomeShort => '+ Income';
-
-  @override
   String get addExpenseShort => '+ Expense';
-
-  @override
-  String get soloSubtitle => 'Solo · just you';
 
   @override
   String get wizardStartTitle => 'Let\'s set up your budget';
@@ -761,9 +272,785 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wizardStart => 'Let\'s start';
 
   @override
-  String stepOf(int step, int total) {
+  String get descriptionOptional => 'Description (optional)';
+
+  @override
+  String get descriptionHint => 'e.g. groceries';
+
+  @override
+  String get addRule => 'Add a rule';
+
+  @override
+  String get allEnvelopes => 'All envelopes';
+
+  @override
+  String get allPeriods => 'All periods';
+
+  @override
+  String get anyAuthor => 'Any author';
+
+  @override
+  String get appliedToTodo => 'It did not fit and went to the to-do list.';
+
+  @override
+  String applyAllExpenses(String name) {
+    return 'Apply all recurring expenses: $name';
+  }
+
+  @override
+  String get applyEstimateHint => 'Enter the real amount.';
+
+  @override
+  String get applyNow => 'Apply';
+
+  @override
+  String get archive => 'Archive';
+
+  @override
+  String get archived => 'archived';
+
+  @override
+  String byAuthor(String name) {
+    return 'By $name';
+  }
+
+  @override
+  String get carryIn => 'Unspent from the previous period';
+
+  @override
+  String get changeLog => 'Change log';
+
+  @override
+  String get chooseHousehold => 'Choose a household';
+
+  @override
+  String get closedCarried => 'Went on to the next period';
+
+  @override
+  String get closedCarriedHint =>
+      'This money is now in the current period, shared by everybody.';
+
+  @override
+  String get closedNothingCarried => 'Nothing went on this time.';
+
+  @override
+  String get closedOk => 'Great';
+
+  @override
+  String get closedPeriod => 'Closed';
+
+  @override
+  String get closedPutIn => 'Put in';
+
+  @override
+  String get closedSpent => 'Spent';
+
+  @override
+  String closedTitle(String name) {
+    return 'Period closed: $name';
+  }
+
+  @override
+  String comparedToPrevious(String delta) {
+    return 'vs previous: $delta';
+  }
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String correctionBody(String amount) {
+    return 'After this correction the wallet goes $amount below zero. Take the missing amount back from a household, or keep the minus until the next income?';
+  }
+
+  @override
+  String get correctionKeepMinus => 'Keep the minus';
+
+  @override
+  String get correctionTitle => 'The wallet goes below zero';
+
+  @override
+  String correctionWithdrawFrom(String name) {
+    return 'Take back from $name';
+  }
+
+  @override
+  String get currentPeriod => 'Current';
+
+  @override
+  String get currentPeriodEnd => 'End of the current period';
+
+  @override
+  String get currentPeriodEndHint => 'Not before today';
+
+  @override
+  String get cycle => 'Periods';
+
+  @override
+  String cycleEveryWeeks(int weeks) {
+    String _temp0 = intl.Intl.pluralLogic(
+      weeks,
+      locale: localeName,
+      other: 'every $weeks weeks',
+      one: 'every week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String cycleFromDay(String day) {
+    return 'from $day';
+  }
+
+  @override
+  String get cycleManual => 'Manual';
+
+  @override
+  String get cycleManualHint =>
+      'You set the end; a new period lasts as long as the one before.';
+
+  @override
+  String get cycleMonthly => 'Monthly';
+
+  @override
+  String cycleMonthlyFrom(int day) {
+    return 'monthly from day $day';
+  }
+
+  @override
+  String get cycleWeeks => 'Every N weeks';
+
+  @override
+  String dashboardRangeLabel(String from, String to) {
+    return 'Households $from – $to';
+  }
+
+  @override
+  String get dashboardShows => 'The dashboard shows';
+
+  @override
+  String get dateAndTime => 'Date and time';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountBody =>
+      'Your wallet, incomes and rules go. Your positive shares stay in the households as nobody\'s money. Type your e-mail address to confirm.';
+
+  @override
+  String get deleteHousehold => 'Delete household';
+
+  @override
+  String deleteHouseholdConfirm(String name) {
+    return 'Delete “$name” with its envelopes and expenses? Positive shares go back to the wallets.';
+  }
+
+  @override
+  String get deleteHouseholdHint => 'Not while anybody has a negative share.';
+
+  @override
+  String get deleteRule => 'Delete rule';
+
+  @override
+  String get deleteRuleConfirm => 'What the rule has made stays.';
+
+  @override
+  String get email => 'E-mail address';
+
+  @override
+  String get envelopeHasExpensesTitle => 'The envelope has expenses';
+
+  @override
+  String get errAlreadyMember => 'That person is a member already.';
+
+  @override
+  String get errCannotUndo => 'This change can no longer be undone.';
+
+  @override
+  String get errConfirmationMismatch => 'The address does not match.';
+
+  @override
+  String get errDateOutsidePeriod =>
+      'The date has to be in the current period and not later than now.';
+
+  @override
+  String get errDuplicateEnvelope =>
+      'There is an envelope with this name already.';
+
+  @override
+  String get errEnvelopeHasExpenses =>
+      'An envelope with expenses cannot be deleted – archive it; its expenses stay in the history.';
+
+  @override
+  String get errInvalidPeriodEnd =>
+      'The end cannot be before today or run into the next period.';
+
+  @override
+  String get errLastEnvelope =>
+      'A household needs at least one active envelope.';
+
+  @override
+  String get errLastOwner =>
+      'A household needs at least one owner. Give the role to somebody else first.';
+
+  @override
+  String get errMemberFrozen =>
+      'You are frozen in this household: even out your share to spend again.';
+
+  @override
+  String errNegativeShare(String list) {
+    return 'A negative share has to be evened out first: $list';
+  }
+
+  @override
+  String get errNextPeriodOpen => 'The next period is open already.';
+
+  @override
+  String errNotEnoughMoney(String amount) {
+    return 'Not enough money. Available: $amount.';
+  }
+
+  @override
+  String get errPeriodClosed =>
+      'The period is closed: only the title of an expense can change.';
+
+  @override
+  String get errPeriodNotCurrent =>
+      'Money is spent only from the current period.';
+
+  @override
+  String get errPlanBelowSpent => 'A plan cannot be lower than what was spent.';
+
+  @override
+  String get errWalletNegative =>
+      'The wallet is below zero – transfers wait for the next income.';
+
+  @override
+  String get estimated => 'estimated';
+
+  @override
+  String get estimatedExpenseRule => 'Estimated amount (to confirm)';
+
+  @override
+  String get estimatedIncome => 'Estimated (to confirm)';
+
+  @override
+  String get estimatedIncomeRule =>
+      'Estimated: goes in with its estimate on the day';
+
+  @override
+  String get estimatedSpent => 'of it estimated';
+
+  @override
+  String everyWeeksFrom(int weeks, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      weeks,
+      locale: localeName,
+      other: 'every $weeks weeks',
+      one: 'every week',
+    );
+    return '$_temp0 from $day';
+  }
+
+  @override
+  String get expense => 'Expense';
+
+  @override
+  String get firstPeriodEnd => 'End of the first period';
+
+  @override
+  String get forAnybody => 'For anybody';
+
+  @override
+  String forMember(String name) {
+    return 'for $name';
+  }
+
+  @override
+  String get forWhom => 'For whom';
+
+  @override
+  String get forWhomNobody => 'Not set';
+
+  @override
+  String get forWhomShared => 'Shared';
+
+  @override
+  String get forecast => 'Forecast to the end of the period';
+
+  @override
+  String get forecastBalance => 'Projected balance';
+
+  @override
+  String get forecastRecurring => 'of it recurring';
+
+  @override
+  String get forecastSpent => 'Projected spending';
+
+  @override
+  String freeMoney(String amount) {
+    return 'Free: $amount';
+  }
+
+  @override
+  String get freeMoneyLabel => 'Free money';
+
+  @override
+  String get freeze => 'Freeze';
+
+  @override
+  String get frequency => 'How often';
+
+  @override
+  String get frozen => 'frozen';
+
+  @override
+  String get household => 'Household';
+
+  @override
+  String get householdSettings => 'Household settings';
+
+  @override
+  String householdSpentInRange(String amount) {
+    return 'Spent: $amount';
+  }
+
+  @override
+  String get householdTab => 'Household';
+
+  @override
+  String get invitationPending => 'Waiting for an answer';
+
+  @override
+  String invitationTo(String name) {
+    return 'Invitation to “$name”';
+  }
+
+  @override
+  String invitedBy(String name) {
+    return 'From $name';
+  }
+
+  @override
+  String leaveBody(String name) {
+    return 'You leave “$name”. Take your shares back to the wallet? Otherwise they stay in the household as nobody\'s money.';
+  }
+
+  @override
+  String get leaveHousehold => 'Leave household';
+
+  @override
+  String get leaveKeepShares => 'Leave them';
+
+  @override
+  String get leaveWithdraw => 'Take them back';
+
+  @override
+  String leftAmount(String amount) {
+    return '$amount left';
+  }
+
+  @override
+  String leftInPlan(String name) {
+    return 'Left in the plan of “$name”';
+  }
+
+  @override
+  String get logEmpty => 'No changes in the open periods.';
+
+  @override
+  String get monthly => 'Monthly';
+
+  @override
+  String monthlyOnDay(int day) {
+    return 'monthly on day $day';
+  }
+
+  @override
+  String get negativeShareHint =>
+      'A negative share: this person spent more than they put in.';
+
+  @override
+  String get newHousehold => 'New household';
+
+  @override
+  String get nextPeriod => 'Next';
+
+  @override
+  String get noExpensesForFilters => 'No expenses for the chosen filters';
+
+  @override
+  String get noExpensesInPeriod => 'No expenses in this period.';
+
+  @override
+  String get nobodysMoney => 'Nobody\'s money';
+
+  @override
+  String get openNextPeriod => 'Open the next period';
+
+  @override
+  String get periods => 'Periods';
+
+  @override
+  String get piggyBalance => 'Piggy bank balance';
+
+  @override
+  String planOf(String name) {
+    return 'Plan: $name';
+  }
+
+  @override
+  String planRaised(String amount) {
+    return 'The plan went up by $amount out of free money.';
+  }
+
+  @override
+  String planRecurringPart(String amount) {
+    return 'Of it from recurring expenses: $amount';
+  }
+
+  @override
+  String get plansExceedBalance =>
+      'The plans exceed the balance of the household';
+
+  @override
+  String get plansTotal => 'Plans in total';
+
+  @override
+  String get rangeCustom => 'A range of days';
+
+  @override
+  String get rangeMonth => 'The current month';
+
+  @override
+  String get rangePeriod => 'The period of the chosen household';
+
+  @override
+  String recurringInPlan(String amount) {
+    return 'recurring $amount';
+  }
+
+  @override
+  String get recurringIntro =>
+      'They run on their own when the app starts: incomes, then transfers, then expenses.';
+
+  @override
+  String returnedFrom(String name) {
+    return 'Share given back: $name';
+  }
+
+  @override
+  String get revoke => 'Revoke';
+
+  @override
+  String roleConfirm(String name) {
+    return 'Change the role of $name?';
+  }
+
+  @override
+  String get ruleExpense => 'Expense';
+
+  @override
+  String get ruleIncome => 'Income';
+
+  @override
+  String get ruleTransfer => 'Transfer';
+
+  @override
+  String get rulesExpenses => 'Recurring expenses';
+
+  @override
+  String get rulesIncomes => 'Incomes into the wallet';
+
+  @override
+  String get rulesTransfers => 'Transfers into households';
+
+  @override
+  String shareOf(String amount) {
+    return 'share $amount';
+  }
+
+  @override
+  String get shares => 'Shares';
+
+  @override
+  String stepBring(String amount) {
+    return 'Bring $amount from the wallet';
+  }
+
+  @override
+  String stepBringAndRaise(String amount) {
+    return 'Bring $amount and raise the plan';
+  }
+
+  @override
+  String stepNotEnoughBody(String amount) {
+    return 'There is only $amount in the piggy bank.';
+  }
+
+  @override
+  String get stepNotEnoughTitle => 'Not enough in the piggy bank';
+
+  @override
+  String stepPlanTooSmallBody(String amount) {
+    return 'The plan of the envelope is $amount short and there is no free money.';
+  }
+
+  @override
+  String get stepPlanTooSmallTitle => 'The plan has to go up';
+
+  @override
+  String get stepRaiseOnly => 'Only raise the plan';
+
+  @override
+  String stepWalletNegativeBody(String amount) {
+    return 'The wallet goes below zero: $amount. No transfers until the next income.';
+  }
+
+  @override
+  String get stepWalletNegativeConfirm => 'Confirm the minus';
+
+  @override
+  String get stepWalletNegativeTitle => 'The wallet is short';
+
+  @override
+  String get takeOwner => 'Take the owner role';
+
+  @override
+  String get thisPeriod => 'This period';
+
+  @override
+  String get titleOptional => 'Title (optional)';
+
+  @override
+  String get toNextPeriod => 'to the next period';
+
+  @override
+  String get toNextPeriodHint =>
+      'To the next period (e.g. pay on the 28th for the next month)';
+
+  @override
+  String get todoAddExpense => 'Add the expense';
+
+  @override
+  String get todoConfirmAmount => 'Confirm the amount';
+
+  @override
+  String get todoDismiss => 'Leave it';
+
+  @override
+  String get todoDo => 'Do it';
+
+  @override
+  String todoExpenseEstimate(String what, String amount) {
+    return 'Estimated expense “$what”: $amount. Confirm the real amount before the period ends.';
+  }
+
+  @override
+  String todoExpenseMissed(String what, String amount) {
+    return '“$what” ($amount) fell in a period that has closed.';
+  }
+
+  @override
+  String todoExpenseNotFit(String what, String amount) {
+    return 'The recurring expense “$what” ($amount) does not fit the plan or the balance.';
+  }
+
+  @override
+  String todoIncomeEstimate(String what, String amount) {
+    return 'The income “$what” went in with its estimate $amount. Correct it.';
+  }
+
+  @override
+  String get todoTitle => 'To do';
+
+  @override
+  String get todoTransfer => 'Transfer';
+
+  @override
+  String todoTransferNoMoney(String what, String amount) {
+    return 'The recurring transfer “$what” ($amount) did not go: the wallet was short.';
+  }
+
+  @override
+  String get transfer => 'Transfer';
+
+  @override
+  String get transferFromWallet => 'Transfer from the wallet';
+
+  @override
+  String transferHint(String amount) {
+    return 'In the wallet: $amount';
+  }
+
+  @override
+  String transferTo(String name) {
+    return 'Transfer: $name';
+  }
+
+  @override
+  String get transfers => 'Transfers';
+
+  @override
+  String get unarchive => 'Bring back';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get unfreeze => 'Unfreeze';
+
+  @override
+  String get usedUnconfirmed =>
+      'Part of the transfer came from unconfirmed incomes.';
+
+  @override
+  String get wallet => 'Wallet';
+
+  @override
+  String get walletBalance => 'Wallet balance';
+
+  @override
+  String get walletEmpty => 'Nothing here yet. Add the first income.';
+
+  @override
+  String get walletNegativeHint =>
+      'The wallet is below zero: transfers come back after the next income.';
+
+  @override
+  String walletUnconfirmed(String amount) {
+    return 'of it unconfirmed: $amount';
+  }
+
+  @override
+  String get walletUnconfirmedLabel => 'of it unconfirmed';
+
+  @override
+  String get weekly => 'Every N weeks';
+
+  @override
+  String get withdraw => 'Withdraw';
+
+  @override
+  String get withdrawHint =>
+      'At most your share and at most what is in the piggy bank.';
+
+  @override
+  String withdrawalFrom(String name) {
+    return 'Withdrawal: $name';
+  }
+
+  @override
+  String get withdrawals => 'Withdrawals';
+
+  @override
+  String get wizardDoneBody =>
+      'All set. You can invite others later in “Members”.';
+
+  @override
+  String get wizardDoneTitle => 'Done';
+
+  @override
+  String get wizardFinish => 'To the dashboard';
+
+  @override
+  String get wizardHouseholdBody =>
+      'A household holds envelopes and periods – for you alone or several people.';
+
+  @override
+  String get wizardHouseholdTitle => 'Your household';
+
+  @override
+  String wizardStep(int step, int total) {
     return 'Step $step of $total';
   }
+
+  @override
+  String get wizardTitle => 'Getting started';
+
+  @override
+  String wizardTransferBody(String amount) {
+    return 'How much of the wallet ($amount) goes into the current period?';
+  }
+
+  @override
+  String get wizardTransferTitle => 'Transfer to the household';
+
+  @override
+  String get wizardEnvelopesTitle => 'Envelopes';
+
+  @override
+  String get wizardEnvelopesBody =>
+      'Pick the first envelopes. You can change them later.';
+
+  @override
+  String get wizardIncomeTitle => 'The first income';
+
+  @override
+  String get wizardIncomeBody =>
+      'How much do you have to hand out? It goes into your private wallet.';
+
+  @override
+  String get yourName => 'Your name';
+
+  @override
+  String get yourNameHint => 'Other members of your households see it.';
+
+  @override
+  String get addEnvelope => 'Add envelope';
+
+  @override
+  String get editEnvelope => 'Edit envelope';
+
+  @override
+  String get editIncome => 'Correct income';
+
+  @override
+  String get deleteIncome => 'Delete income';
+
+  @override
+  String deleteIncomeConfirm(String amount) {
+    return 'Delete the income of $amount?';
+  }
+
+  @override
+  String get editRule => 'Edit rule';
+
+  @override
+  String get makeOwner => 'Make owner';
+
+  @override
+  String get removeMember => 'Remove';
+
+  @override
+  String removeMemberConfirm(String name) {
+    return 'Remove $name? A positive share goes back to their wallet.';
+  }
+
+  @override
+  String get roleOwner => 'owner';
+
+  @override
+  String get roleMember => 'member';
+
+  @override
+  String get invite => 'Invite';
+
+  @override
+  String get send => 'Send';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get decline => 'Decline';
+
+  @override
+  String get members => 'Members';
+
+  @override
+  String get formerMember => 'former member';
 
   @override
   String get later => 'Later';
@@ -772,210 +1059,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get next => 'Next';
 
   @override
-  String get back => 'Back';
+  String get income => 'Income';
 
   @override
-  String get currencyPln => 'PLN – złoty';
-
-  @override
-  String get starterFood => 'Food';
-
-  @override
-  String get starterHousing => 'Home and bills';
-
-  @override
-  String get starterTransport => 'Transport';
-
-  @override
-  String get starterHealth => 'Health';
-
-  @override
-  String get starterFun => 'Fun';
-
-  @override
-  String get starterClothes => 'Clothes';
-
-  @override
-  String get starterOther => 'Other';
-
-  @override
-  String get wizardWhoTitle => 'Who will use the envelopes?';
-
-  @override
-  String get soloTitle => 'Just me · Solo';
-
-  @override
-  String get soloBody => 'A private budget. You can share it later.';
-
-  @override
-  String get multiTitle => 'With others · shared envelopes';
-
-  @override
-  String get multiBody =>
-      'Everyone sees the same data. You\'ll say who each entry is for.';
-
-  @override
-  String get inviteHint => 'their@address.com';
-
-  @override
-  String get send => 'Send';
-
-  @override
-  String get wizardIncomeTitle => 'Where does the money come from?';
-
-  @override
-  String wizardIncomeBody(String period) {
-    return 'This month: $period. Mark a salary as recurring – it is added every month when you apply the rules.';
-  }
-
-  @override
-  String get newIncome => 'New income';
-
-  @override
-  String get incomeNameHint => 'e.g. Salary';
-
-  @override
-  String get addIncomeAction => 'Add income';
-
-  @override
-  String get wizardBillsTitle => 'Bills that come back every month';
-
-  @override
-  String get wizardBillsBody =>
-      'Fixed ones like rent and variable ones like electricity. “Apply” adds them to every month.';
-
-  @override
-  String get addRecurringExpense => '+ Add a recurring expense';
-
-  @override
-  String get wizardEnvelopesTitle => 'Split the income into envelopes';
-
-  @override
-  String get wizardEnvelopesBody =>
-      'How much money to put into each envelope. Amounts of recurring bills are filled in.';
-
-  @override
-  String fromRecurring(String amount) {
-    return 'recurring: $amount';
-  }
-
-  @override
-  String get unallocatedShort => 'Unallocated';
-
-  @override
-  String get wizardDone => 'Done – go to the dashboard';
-
-  @override
-  String get everyMonth => 'every month';
-
-  @override
-  String get descriptionOptional => 'Description (optional)';
-
-  @override
-  String get descriptionHint => 'e.g. groceries';
-
-  @override
-  String get oneOff => 'One-off';
-
-  @override
-  String get recurringIncome => 'Recurring';
-
-  @override
-  String get saveIncome => 'Save income';
-
-  @override
-  String get incomeAdded => 'Income added';
-
-  @override
-  String get recurringMark => 'recurring';
-
-  @override
-  String get noTransactions => 'No expenses this month.';
-
-  @override
-  String get newRulePlus => '+ New rule';
-
-  @override
-  String applyTo(String period) {
-    return 'Apply to $period';
-  }
-
-  @override
-  String get applyHint =>
-      'Adds entries of the active rules. Ones already added aren\'t doubled.';
-
-  @override
-  String get ruleOff => 'off';
-
-  @override
-  String get more => 'More';
-
-  @override
-  String get enterIncome => 'Enter your income';
-
-  @override
-  String get envelopesTab => 'Envelopes';
-
-  @override
-  String get newEnvelopePlus => '+ New envelope';
-
-  @override
-  String get addEnvelopePlus => '+ Add envelope';
-
-  @override
-  String get sharingPerEnvelope =>
-      'An envelope can be shared with other people: open it and go to “Members”.';
-
-  @override
-  String sharedEnvelopes(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count shared envelopes',
-      one: '1 shared envelope',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get allocatedThisMonth => 'Put into envelopes this month';
-
-  @override
-  String get incomeGoesToPool =>
-      'The money goes to the pool, from which you put it into envelopes.';
-
-  @override
-  String get recurringIncomeHint =>
-      'The income shows up every month on this day when you apply the recurring rules.';
-
-  @override
-  String get recurringIncomeAdded => 'Recurring income added';
-
-  @override
-  String get wizardStartersTitle => 'What do you spend money on?';
-
-  @override
-  String get wizardStartersBody =>
-      'Every kind of spending is an envelope. Untick the ones you don\'t need – you can add more at any time.';
-
-  @override
-  String get starterEnvelopes => 'Envelopes to start with';
-
-  @override
-  String get shareWhichEnvelope => 'Which envelope to share?';
-
-  @override
-  String invitedPeople(String emails) {
-    return 'Invited: $emails. They get access once they accept and you approve.';
-  }
-
-  @override
-  String get monthIncome => 'Income this month';
-
-  @override
-  String get repeatMonthly => 'Repeat every month';
-
-  @override
-  String get repeatMonthlyHint =>
-      'These amounts go into the envelopes every month (allocation rules).';
+  String get addIncome => 'Add income';
 }

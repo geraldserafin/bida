@@ -20,3 +20,6 @@ final NumberFormat _plPlain = NumberFormat.decimalPatternDigits(
 /// An amount without the currency, e.g. `1 234,56`: the first half of
 /// "spent / planned", or the value of an amount field.
 String formatPlain(num amount) => _plPlain.format(amount);
+
+/// An amount in grosze, as the API sends it, e.g. `1 234,56 zł`.
+String formatMinor(int minor) => formatZloty(minor / 100);

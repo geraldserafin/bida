@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/envelope.dart';
+import '../models/models.dart';
 
 /// Icon keys a user can choose from, mapped to their [IconData].
 ///

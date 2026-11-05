@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:money_planner/data/planner_repository.dart';
+import 'package:money_planner/data/budget_repository.dart';
 
 /// What a route answers with.
 class Reply {
@@ -50,21 +50,22 @@ class FakeBackend implements HttpClientAdapter {
   final Map<String, Handler> routes = {};
   final List<Seen> requests = [];
 
-  /// Answers the requests every load makes about recurring rules and
-  /// invitations with "none", for tests that are about something else.
-  void noRules() {
-    on('GET /recurring-rules', (_) => const Reply([]));
-    on('GET /recurring-incomes', (_) => const Reply([]));
-    on('GET /allocation-rules', (_) => const Reply([]));
+  /// Answers what every load asks for with a signed-in user with one
+  /// household "Dom", an empty to-do list and no invitations.
+  void household({int walletMinor = 0, List<Object?> todo = const []}) {
+    on('POST /sync', (_) => Reply(syncJson()));
+    on('GET /households', (_) => Reply([householdJson()]));
+    on('GET /overview', (_) => Reply(overviewJson(walletMinor: walletMinor)));
+    on('GET /todo', (_) => Reply(todo));
     on('GET /invitations', (_) => const Reply([]));
+    on('GET /periods/p1', (_) => Reply(summaryJson()));
     on(
-      'GET /recurring-rules/pending',
-      (_) => const Reply({
-        'incomes': 0,
-        'allocations': 0,
-        'expenses': 0,
-        'skipped': 0,
-      }),
+      'GET /households/h1/envelopes',
+      (_) => Reply([envelopeJson('e1', 'Jedzenie')]),
+    );
+    on(
+      'GET /households/h1/members',
+      (_) => Reply([memberJson('u1', 'ann@example.com')]),
     );
   }
 
@@ -74,8 +75,7 @@ class FakeBackend implements HttpClientAdapter {
   Dio dio() =>
       Dio(BaseOptions(baseUrl: 'http://fake'))..httpClientAdapter = this;
 
-  PlannerRepository repository({int pageSize = 200}) =>
-      PlannerRepository(dio(), pageSize: pageSize);
+  BudgetRepository repository() => BudgetRepository(dio());
 
   Iterable<Seen> sent(String route) => requests.where((r) => r.route == route);
 
@@ -138,224 +138,181 @@ class FakeBackend implements HttpClientAdapter {
 
 const _stamp = '2026-07-01T00:00:00.000Z';
 
-Map<String, Object?> envelopeJson(
-  String id,
-  String name, {
-  String? parentId,
-  String color = '#22C55E',
-  String? icon,
+Map<String, Object?> periodJson({
+  String id = 'p1',
+  String status = 'current',
+  String startsOn = '2026-07-01',
+  String endsOn = '2026-07-31',
 }) => {
   'id': id,
-  'ownerId': 'u1',
-  'parentId': parentId,
-  'name': name,
-  'color': color,
-  'icon': icon,
+  'householdId': 'h1',
+  'startsOn': startsOn,
+  'endsOn': endsOn,
+  'status': status,
+};
+
+Map<String, Object?> householdJson({int balanceMinor = 0}) => {
+  'id': 'h1',
+  'name': 'Dom',
+  'timeZone': 'Europe/Warsaw',
+  'cycle': {'kind': 'monthly', 'day': 1, 'weeks': null, 'anchorOn': null},
+  'role': 'owner',
+  'frozen': false,
+  'memberCount': 1,
+  'current': periodJson(),
+  'next': null,
+  'balanceMinor': balanceMinor,
   'createdAt': _stamp,
-  'updatedAt': _stamp,
+};
+
+Map<String, Object?> walletJson({int balanceMinor = 0, int unconfirmed = 0}) =>
+    {'balanceMinor': balanceMinor, 'unconfirmedMinor': unconfirmed};
+
+Map<String, Object?> overviewJson({
+  int walletMinor = 0,
+  bool households = true,
+}) => {
+  'wallet': walletJson(balanceMinor: walletMinor),
+  'households': [
+    if (households)
+      {
+        'id': 'h1',
+        'name': 'Dom',
+        'current': periodJson(),
+        'balanceMinor': 0,
+        'freeMinor': 0,
+        'spentMinor': 0,
+      },
+  ],
+  'todo': 0,
+};
+
+Map<String, Object?> syncJson({List<Object?> summaries = const []}) => {
+  'closedPeriods': 0,
+  'openedPeriods': 0,
+  'incomes': 0,
+  'transfers': 0,
+  'expenses': 0,
+  'todo': 0,
+  'summaries': summaries,
+};
+
+Map<String, Object?> envelopeJson(String id, String name) => {
+  'id': id,
+  'householdId': 'h1',
+  'name': name,
+  'color': '#22C55E',
+  'icon': null,
+  'position': 0,
+  'archived': false,
 };
 
 Map<String, Object?> figuresJson(
-  String envelopeId, {
-  String? parentId,
-  int opening = 0,
-  int allocated = 0,
-  int spent = 0,
-  int? balance,
-  int? free,
-  String role = 'owner',
-  int memberCount = 1,
-}) {
-  final left = balance ?? opening + allocated - spent;
-  return {
-    'envelopeId': envelopeId,
-    'parentId': parentId,
-    'openingMinor': opening,
-    'allocatedMinor': allocated,
-    'spentMinor': spent,
-    'balanceMinor': left,
-    'freeMinor': free ?? left,
-    'role': role,
-    'memberCount': memberCount,
-  };
-}
-
-Map<String, Object?> overviewJson({
-  String from = '2026-08-01',
-  String to = '2026-08-31',
-  int income = 0,
-  int allocated = 0,
-  int spent = 0,
-  int pool = 0,
-  List<Map<String, Object?>> envelopes = const [],
-}) => {
-  'from': from,
-  'to': to,
-  'incomeMinor': income,
-  'allocatedMinor': allocated,
-  'spentMinor': spent,
-  'poolMinor': pool,
-  'envelopes': envelopes,
-};
-
-Map<String, Object?> monthSummaryJson(
-  String from,
-  String to, {
-  int income = 0,
-  int allocated = 0,
+  String id,
+  String name, {
+  int plan = 0,
   int spent = 0,
 }) => {
-  'from': from,
-  'to': to,
-  'incomeMinor': income,
-  'allocatedMinor': allocated,
-  'spentMinor': spent,
-};
-
-Map<String, Object?> allocationJson(
-  String id,
-  String envelopeId,
-  int amountMinor, {
-  String madeOn = '2026-08-02',
-  String? note,
-}) => {
-  'id': id,
-  'envelopeId': envelopeId,
-  'userId': 'u1',
-  'amountMinor': amountMinor,
-  'madeOn': madeOn,
-  'note': note,
-  'createdAt': _stamp,
-  'updatedAt': _stamp,
-};
-
-Map<String, Object?> incomeJson(
-  String id,
-  int amountMinor, {
-  String receivedOn = '2026-08-01',
-  String? note,
-}) => {
-  'id': id,
-  'userId': 'u1',
-  'amountMinor': amountMinor,
-  'receivedOn': receivedOn,
-  'note': note,
-  'createdAt': _stamp,
-  'updatedAt': _stamp,
-};
-
-Map<String, Object?> expenseJson(
-  String id,
-  String envelopeId,
-  int amountMinor, {
-  String spentAt = '2026-08-03T10:30:00.000Z',
-  String? note,
-  String? recurringId,
-}) => {
-  'id': id,
-  'envelopeId': envelopeId,
-  'createdBy': 'u1',
-  'amountMinor': amountMinor,
-  'spentAt': spentAt,
-  'note': note,
-  'recurringId': recurringId,
-  'createdAt': '2026-08-03T10:30:00.000Z',
-  'updatedAt': '2026-08-03T10:30:00.000Z',
-};
-
-Map<String, Object?> ruleJson(
-  String id,
-  String envelopeId,
-  int amountMinor, {
-  String frequency = 'monthly',
-  String? note,
-  bool active = true,
-}) => {
-  'id': id,
-  'userId': 'u1',
-  'envelopeId': envelopeId,
-  'amountMinor': amountMinor,
-  'frequency': frequency,
-  'note': note,
-  'active': active,
-  'createdAt': _stamp,
-  'updatedAt': _stamp,
-};
-
-Map<String, Object?> memberJson(
-  String userId,
-  String email, {
-  String? name,
-  String role = 'member',
-}) => {
-  'userId': userId,
-  'email': email,
+  'envelopeId': id,
   'name': name,
-  'role': role,
-  'joinedAt': _stamp,
+  'color': '#22C55E',
+  'icon': null,
+  'archived': false,
+  'planMinor': plan,
+  'manualMinor': plan,
+  'recurringMinor': 0,
+  'spentMinor': spent,
+  'leftMinor': plan - spent,
+  'sharePercent': 0,
+  'previousSpentMinor': null,
 };
 
-Map<String, Object?> contributionJson(
-  String envelopeId,
-  String userId,
-  int amountMinor,
-) => {'envelopeId': envelopeId, 'userId': userId, 'amountMinor': amountMinor};
-
-Map<String, Object?> invitationJson(
-  String id,
-  String envelopeId,
-  String email, {
-  String envelopeName = 'Home',
-  String status = 'invited',
-  String role = 'member',
-  String? invitedBy = 'ann@example.com',
+Map<String, Object?> summaryJson({
+  int balanceMinor = 0,
+  List<Object?>? envelopes,
 }) => {
-  'id': id,
-  'envelopeId': envelopeId,
-  'envelopeName': envelopeName,
+  'period': periodJson(),
+  'transfersMinor': balanceMinor,
+  'withdrawalsMinor': 0,
+  'carryInMinor': 0,
+  'spentMinor': 0,
+  'estimatedSpentMinor': 0,
+  'balanceMinor': balanceMinor,
+  'plansTotalMinor': 0,
+  'remainingPlansMinor': 0,
+  'freeMinor': balanceMinor,
+  'plansExceedBalance': false,
+  'carryOutMinor': null,
+  'nobodyMinor': 0,
+  'nobodyLeftMinor': 0,
+  'envelopes': envelopes ?? [figuresJson('e1', 'Jedzenie')],
+  'shares': [
+    {
+      'userId': 'u1',
+      'name': 'ann@example.com',
+      'member': true,
+      'transfersMinor': balanceMinor,
+      'withdrawalsMinor': 0,
+      'forfeitedMinor': 0,
+      'spentMinor': 0,
+      'fromNobodyMinor': 0,
+      'shareMinor': balanceMinor,
+    },
+  ],
+  'forecast': null,
+};
+
+Map<String, Object?> memberJson(String id, String email) => {
+  'userId': id,
   'email': email,
-  'role': role,
-  'status': status,
-  'invitedBy': invitedBy == null ? null : {'email': invitedBy, 'name': null},
-  'acceptedBy': null,
-  'expiresAt': '2026-11-01T00:00:00.000Z',
-  'createdAt': _stamp,
+  'name': null,
+  'role': 'owner',
+  'frozen': false,
+  'joinedAt': _stamp,
+  'shareMinor': 0,
 };
 
-Map<String, Object?> recurringIncomeJson(
-  String id,
-  int amountMinor,
-  int dayOfMonth, {
-  String? note,
-  bool active = true,
-}) => {
-  'id': id,
-  'userId': 'u1',
-  'amountMinor': amountMinor,
-  'dayOfMonth': dayOfMonth,
-  'note': note,
-  'active': active,
-  'createdAt': _stamp,
-  'updatedAt': _stamp,
+Map<String, Object?> expenseResultJson(int amountMinor) => {
+  'expense': {
+    'id': 'x1',
+    'householdId': 'h1',
+    'periodId': 'p1',
+    'envelopeId': 'e1',
+    'createdBy': 'u1',
+    'authorName': 'ann@example.com',
+    'amountMinor': amountMinor,
+    'spentAt': _stamp,
+    'title': null,
+    'forWhom': null,
+    'forWhomUserId': null,
+    'forWhomName': null,
+    'estimated': false,
+    'ruleId': null,
+    'createdAt': _stamp,
+    'updatedAt': _stamp,
+  },
+  'transferredMinor': 0,
+  'raisedPlanMinor': 0,
+  'plansExceedBalance': false,
 };
 
-Map<String, Object?> allocationRuleJson(
+Map<String, Object?> todoJson(
   String id,
-  String envelopeId,
-  int amountMinor,
-  int dayOfMonth, {
-  String? note,
-  bool active = true,
+  String kind, {
+  int amountMinor = 1000,
 }) => {
   'id': id,
-  'userId': 'u1',
-  'envelopeId': envelopeId,
+  'kind': kind,
+  'householdId': kind.startsWith('expense') ? 'h1' : null,
+  'householdName': kind.startsWith('expense') ? 'Dom' : null,
+  'periodId': 'p1',
+  'ruleId': 'r1',
+  'refId': null,
+  'envelopeId': 'e1',
+  'occurrenceOn': '2026-07-05',
   'amountMinor': amountMinor,
-  'dayOfMonth': dayOfMonth,
-  'note': note,
-  'active': active,
+  'title': 'Czynsz',
   'createdAt': _stamp,
-  'updatedAt': _stamp,
 };
 
 Map<String, Object?> userJson(String email) => {
