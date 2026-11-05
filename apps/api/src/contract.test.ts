@@ -1,11 +1,17 @@
 import {
+  CreateHousehold,
+  CreateIncome,
+  Cycle,
   IsoDate,
   MAX_MINOR,
   Money,
   Name,
   NonZeroMoney,
+  PlanTooSmall,
   PositiveMoney,
+  SaveEnvelope,
   Uuid,
+  wire,
 } from "@bida/api-contract";
 import { assert, it } from "@effect/vitest";
 import { Schema } from "effect";
@@ -44,4 +50,42 @@ it("names are bounded", () => {
   assert.isTrue(Schema.is(Name)("a".repeat(200)));
   assert.isFalse(Schema.is(Name)("a".repeat(201)));
   assert.isFalse(Schema.is(Name)(""));
+});
+
+it("an income is positive, with at most a 200-character note (F31)", () => {
+  const ok = {
+    amountMinor: 1,
+    onDate: "2026-11-05",
+    note: null,
+    estimated: true,
+  };
+  assert.isTrue(Schema.is(CreateIncome)(ok));
+  assert.isFalse(Schema.is(CreateIncome)({ ...ok, amountMinor: 0 }));
+  assert.isFalse(Schema.is(CreateIncome)({ ...ok, note: "a".repeat(201) }));
+});
+
+it("a household name is 1-50 characters, an envelope name 1-30 (F05, F12)", () => {
+  assert.isTrue(Schema.is(CreateHousehold)({ name: "Dom" }));
+  assert.isFalse(Schema.is(CreateHousehold)({ name: "" }));
+  assert.isFalse(Schema.is(CreateHousehold)({ name: "a".repeat(51) }));
+  const envelope = { color: "#112233", icon: null };
+  assert.isTrue(Schema.is(SaveEnvelope)({ ...envelope, name: "a".repeat(30) }));
+  assert.isFalse(
+    Schema.is(SaveEnvelope)({ ...envelope, name: "a".repeat(31) }),
+  );
+});
+
+it("a cycle day is 1-31 and weeks 1-52 (F24)", () => {
+  const cycle = { kind: "monthly", day: 31, weeks: null, anchorOn: null };
+  assert.isTrue(Schema.is(Cycle)(cycle));
+  assert.isFalse(Schema.is(Cycle)({ ...cycle, day: 32 }));
+  assert.isFalse(Schema.is(Cycle)({ ...cycle, kind: "weeks", weeks: 53 }));
+});
+
+it("wire() names the response schema after the error class", () => {
+  const annotated = wire(PlanTooSmall);
+  assert.strictEqual(
+    Schema.toEncoded(annotated).ast.annotations?.identifier,
+    "PlanTooSmall",
+  );
 });

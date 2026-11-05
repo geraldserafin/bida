@@ -10,6 +10,7 @@ import {
   AuthModule,
   GoogleVerifier,
 } from "./modules/auth/auth.module.ts";
+import { MoneyHttp } from "./modules/money/money.module.ts";
 import { SystemHttp } from "./modules/system/system.module.ts";
 import { AppConfig } from "./platform/config.ts";
 import { DbLive } from "./platform/db.ts";
@@ -22,7 +23,7 @@ const Modules = Layer.mergeAll(AuthModule);
 // The handlers of every group behind a sign-in are wrapped in the
 // Authenticated middleware, so it has to be available to them and to the
 // router.
-const Handlers = Layer.mergeAll(SystemHttp, AuthHttp).pipe(
+const Handlers = Layer.mergeAll(SystemHttp, AuthHttp, MoneyHttp).pipe(
   Layer.provideMerge(AuthenticatedModule),
 );
 
