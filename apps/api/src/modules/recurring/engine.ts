@@ -10,6 +10,7 @@ import {
   addExpense,
   type Day,
   DEFAULT_TIME_ZONE,
+  householdKey,
   instantOn,
   openNext,
   openOf,
@@ -67,7 +68,37 @@ export const addRuleIncome = Effect.fn("engine.addRuleIncome")(function* (
       amountMinor,
       title: rule.name,
     });
+  else yield* runLinked(rule.id, rule.userId, day, amountMinor);
   return true;
+});
+
+/** The locks the transfers following an income rule need: their households. */
+export const linkedKeys = Effect.fn("engine.linkedKeys")(function* (
+  incomeRuleId: string | null,
+) {
+  if (incomeRuleId === null) return [];
+  return (yield* store.linkedTransfers(incomeRuleId)).flatMap((r) =>
+    r.householdId === null ? [] : [householdKey(r.householdId)],
+  );
+});
+
+/**
+ * An occurrence of an income is certain: the transfers that follow its rule
+ * move the whole amount, as of the day of the occurrence. The caller holds
+ * the locks of [linkedKeys].
+ */
+export const runLinked = Effect.fn("engine.runLinked")(function* (
+  incomeRuleId: string,
+  userId: string,
+  day: Day,
+  amountMinor: number,
+) {
+  const user = yield* store.userById(userId);
+  if (user === undefined || amountMinor <= 0) return 0;
+  let made = 0;
+  for (const rule of yield* store.linkedTransfers(incomeRuleId))
+    if ((yield* runTransfer(rule, user, day, amountMinor)) === "done") made++;
+  return made;
 });
 
 /** Step 3: an estimated income goes in with its estimate on its day and waits for the real amount. */
@@ -144,7 +175,8 @@ export const runTransfers = Effect.fn("engine.runTransfers")(function* (
 ) {
   let made = 0;
   for (const rule of yield* store.activeRules("transfer", user.id)) {
-    if (rule.householdId === null) continue;
+    // these go with their income
+    if (rule.householdId === null || rule.incomeRuleId !== null) continue;
     const h = yield* store.householdById(rule.householdId);
     if (h === undefined) continue;
     for (const day of yield* pending(rule, todayIn(h.timeZone)))

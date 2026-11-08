@@ -11,10 +11,14 @@ class PillChip extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.expand = false,
+    this.check = false,
   });
 
   final String label;
   final bool selected;
+
+  /// A tick before the label when [selected]: for choosing several.
+  final bool check;
 
   /// Null disables the chip.
   final VoidCallback? onTap;
@@ -42,15 +46,30 @@ class PillChip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Center(
                 widthFactor: expand ? null : 1,
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: selected ? c.onPrimary : c.text,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (check) ...[
+                      Icon(
+                        selected ? Icons.check_circle : Icons.circle_outlined,
+                        size: 18,
+                        color: selected ? c.onPrimary : c.textMuted,
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: selected ? c.onPrimary : c.text,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -487,6 +487,7 @@ class RecurringRule {
     this.anchorOn,
     this.startsOn,
     this.toNextPeriod = false,
+    this.incomeRuleId,
     this.active = true,
   });
 
@@ -508,7 +509,13 @@ class RecurringRule {
 
   /// A transfer goes to the period after the one of its day.
   final bool toNextPeriod;
+
+  /// A transfer that moves the whole of each certain occurrence of this
+  /// income rule; it has no amount or schedule of its own.
+  final String? incomeRuleId;
   final bool active;
+
+  bool get followsIncome => incomeRuleId != null;
 
   RecurringRule copyWith({bool? active}) => RecurringRule(
     id: id,
@@ -525,6 +532,7 @@ class RecurringRule {
     anchorOn: anchorOn,
     startsOn: startsOn,
     toNextPeriod: toNextPeriod,
+    incomeRuleId: incomeRuleId,
     active: active ?? this.active,
   );
 }

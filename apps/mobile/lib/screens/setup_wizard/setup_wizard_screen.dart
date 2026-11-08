@@ -197,12 +197,18 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
               l10n.wizardEnvelopesBody,
               style: TextStyle(color: c.textMuted),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
+            Text(
+              l10n.wizardEnvelopesChosen(_envelopes.length),
+              style: TextStyle(color: c.textMuted, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
             ChipWrap(
               children: [
                 for (final e in defaultEnvelopes)
                   PillChip(
                     label: e,
+                    check: true,
                     selected: _envelopes.contains(e),
                     onTap: () => setState(() {
                       // at least one stays

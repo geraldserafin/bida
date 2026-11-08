@@ -86,12 +86,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           : FabBar(
               children: [
                 AppButton(
-                  label: l10n.addIncomeShort,
-                  kind: ButtonKind.raised,
-                  height: 48,
-                  onPressed: () => showIncomeSheet(context),
-                ),
-                AppButton(
                   label: l10n.addExpenseShort,
                   height: 48,
                   onPressed: () => Navigator.of(context).push(

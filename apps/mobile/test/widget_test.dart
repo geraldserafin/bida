@@ -8,6 +8,8 @@ import 'package:money_planner/l10n/app_localizations.dart';
 import 'package:money_planner/screens/add_expense/add_expense_screen.dart';
 import 'package:money_planner/screens/dashboard/dashboard_screen.dart';
 import 'package:money_planner/screens/household/household_screen.dart';
+import 'package:money_planner/screens/household/plan_editor_screen.dart';
+import 'package:money_planner/screens/login/login_screen.dart';
 import 'package:money_planner/state/app_settings.dart';
 import 'package:money_planner/state/auth_state.dart';
 import 'package:money_planner/state/budget_state.dart';
@@ -184,5 +186,85 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(backend.sent('POST /households/h1/periods/next').length, 1);
+  });
+
+  testWidgets('tapping an envelope adds an expense to it', (tester) async {
+    final backend = FakeBackend()..household();
+    final state = stateFor(backend);
+    await tester.runAsync(state.load);
+    await tester.pumpWidget(app(state, backend, home: const HouseholdScreen()));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('plan-card')), findsOneWidget);
+    await tester.ensureVisible(find.text('Jedzenie'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Jedzenie'));
+    await tester.pumpAndSettle();
+    final screen = tester.widget<AddExpenseScreen>(
+      find.byType(AddExpenseScreen),
+    );
+    expect(screen.initialEnvelopeId, 'e1');
+  });
+
+  testWidgets('the plan editor starts empty and counts the free money', (
+    tester,
+  ) async {
+    final backend = FakeBackend()..household();
+    backend
+      ..on('GET /periods/p1', (_) => Reply(summaryJson(balanceMinor: 50000)))
+      ..on(
+        'PUT /periods/p1/plans/e1',
+        (_) => Reply(summaryJson(balanceMinor: 50000)),
+      );
+    final state = stateFor(backend);
+    await tester.runAsync(state.load);
+    await tester.pumpWidget(
+      app(state, backend, home: PlanEditorScreen(summary: state.summary!)),
+    );
+    await tester.pump();
+
+    final field = find.byKey(PlanEditorScreen.fieldKey('e1'));
+    expect(tester.widget<TextField>(field).controller!.text, isEmpty);
+    expect(find.textContaining('500,00'), findsWidgets);
+    await tester.enterText(field, '300');
+    await tester.pump();
+    expect(find.textContaining('200,00'), findsOneWidget);
+
+    await tester.tap(find.text('Zapisz plan'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    final sent = backend.sent('PUT /periods/p1/plans/e1').toList();
+    expect(sent.length, 1);
+    expect((sent.single.body! as Map)['amountMinor'], 30000);
+  });
+
+  testWidgets('the address can be changed after the code was sent', (
+    tester,
+  ) async {
+    final backend = FakeBackend()
+      ..on('POST /auth/magic-link', (_) => const Reply(null, status: 204));
+    final state = stateFor(backend);
+    await tester.pumpWidget(app(state, backend, home: const LoginScreen()));
+    await tester.enterText(
+      find.byKey(LoginScreen.emailFieldKey),
+      'ann@example.com',
+    );
+    await tester.tap(find.byKey(LoginScreen.consentKey));
+    await tester.tap(find.text('Wyślij kod'));
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(LoginScreen.codeFieldKey), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(LoginScreen.emailFieldKey),
+      'anna@example.com',
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byKey(LoginScreen.codeFieldKey), findsNothing);
+    expect(find.text('Wyślij kod'), findsOneWidget);
   });
 }

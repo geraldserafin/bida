@@ -25,6 +25,7 @@ import {
 } from "../ledger/ledger.module.ts";
 import {
   addRuleIncome,
+  linkedKeys,
   pendingDays,
   runExpense,
   runTransfer,
@@ -48,6 +49,18 @@ const fieldsOf = Effect.fn("recurring.fieldsOf")(function* (
     return yield* new InvalidSchedule();
   if (input.kind === "transfer" && input.target === null)
     return yield* new InvalidSchedule();
+  // a transfer that follows an income takes its amount and schedule
+  const incomeRuleId =
+    input.kind === "transfer" ? (input.incomeRuleId ?? null) : null;
+  const income =
+    incomeRuleId === null ? undefined : yield* store.ruleById(incomeRuleId);
+  if (
+    incomeRuleId !== null &&
+    (income === undefined ||
+      income.kind !== "income" ||
+      income.userId !== userId)
+  )
+    return yield* new RuleNotFound({ id: incomeRuleId });
   let householdId: string | null = null;
   let envelopeId: string | null = null;
   let today = walletToday();
@@ -67,6 +80,24 @@ const fieldsOf = Effect.fn("recurring.fieldsOf")(function* (
       return yield* new EnvelopeNotFound({ id: input.envelopeId ?? "" });
     envelopeId = envelope.id;
   }
+  if (income !== undefined)
+    return {
+      kind: input.kind,
+      userId,
+      householdId,
+      envelopeId,
+      name: input.name.trim(),
+      amountMinor: income.amountMinor,
+      estimated: false,
+      frequency: income.frequency,
+      dayOfMonth: income.dayOfMonth,
+      everyWeeks: income.everyWeeks,
+      anchorOn: income.anchorOn,
+      startsOn: income.startsOn,
+      target: input.target,
+      incomeRuleId: income.id,
+      active: input.active,
+    } satisfies RuleFields;
   const startsOn = input.startsOn ?? today;
   return {
     kind: input.kind,
@@ -83,6 +114,7 @@ const fieldsOf = Effect.fn("recurring.fieldsOf")(function* (
     anchorOn: input.frequency === "weeks" ? (input.anchorOn ?? startsOn) : null,
     startsOn,
     target: input.kind === "transfer" ? input.target : null,
+    incomeRuleId: null,
     active: input.active,
   } satisfies RuleFields;
 });
@@ -196,8 +228,13 @@ export const apply = Effect.fn("recurring.apply")(function* (
 ) {
   const rule = yield* ruleFor(userId, id, false);
   const user = yield* userOf(userId);
+  // it goes when its income goes
+  if (rule.incomeRuleId !== null) return { applied: 0, todo: 0 };
   return yield* inTx(
-    keysOf(rule, userId),
+    [
+      ...keysOf(rule, userId),
+      ...(rule.kind === "income" ? yield* linkedKeys(rule.id) : []),
+    ],
     Effect.gen(function* () {
       if (rule.kind === "income") {
         const today = walletToday();

@@ -657,6 +657,101 @@ layer(TestLayer)("the app start (F25, F26, F34)", (it) => {
     }),
   );
 
+  it.effect("a transfer that follows an income moves all of it, once", () =>
+    Effect.gen(function* () {
+      const { ann, home, period } = yield* setup;
+      const pay = yield* recurring.create(
+        ann.id,
+        rule({ kind: "income", amountMinor: 50_000 }),
+      );
+      const all = yield* recurring.create(
+        ann.id,
+        rule({
+          kind: "transfer",
+          householdId: home.id,
+          target: "current",
+          amountMinor: 1,
+          incomeRuleId: pay.id,
+        }),
+      );
+      assert.strictEqual(all.incomeRuleId, pay.id);
+      assert.strictEqual(all.amountMinor, 50_000);
+      const result = yield* sync.run(ann.id);
+      assert.strictEqual(result.incomes, 1);
+      // the 1 000 zł of before stays; the income went on whole
+      assert.strictEqual((yield* wallet.get(ann.id)).balanceMinor, 100_000);
+      const summary = yield* households.summary(ann.id, period.id);
+      assert.strictEqual(summary.balanceMinor, 50_000);
+      // nothing twice, and not on its own schedule either
+      yield* sync.run(ann.id);
+      assert.strictEqual(
+        (yield* households.summary(ann.id, period.id)).balanceMinor,
+        50_000,
+      );
+      const applied = yield* recurring.apply(ann.id, all.id, null);
+      assert.deepStrictEqual(applied, { applied: 0, todo: 0 });
+    }),
+  );
+
+  it.effect(
+    "an estimated income goes on only once its real amount is known",
+    () =>
+      Effect.gen(function* () {
+        const { ann, home, period } = yield* setup;
+        const pay = yield* recurring.create(
+          ann.id,
+          rule({ kind: "income", amountMinor: 50_000, estimated: true }),
+        );
+        yield* recurring.create(
+          ann.id,
+          rule({
+            kind: "transfer",
+            householdId: home.id,
+            target: "current",
+            incomeRuleId: pay.id,
+          }),
+        );
+        yield* sync.run(ann.id);
+        assert.strictEqual(
+          (yield* households.summary(ann.id, period.id)).balanceMinor,
+          0,
+        );
+        const [item] = yield* sync.todo(ann.id);
+        if (item === undefined) return yield* Effect.die("no item");
+        yield* sync.resolve(ann.id, item.id, { amountMinor: 48_500 });
+        assert.strictEqual(
+          (yield* households.summary(ann.id, period.id)).balanceMinor,
+          48_500,
+        );
+        assert.deepStrictEqual(yield* wallet.get(ann.id), {
+          balanceMinor: 100_000,
+          unconfirmedMinor: 0,
+        });
+      }),
+  );
+
+  it.effect("only the user's own income rule can be followed", () =>
+    Effect.gen(function* () {
+      const { ann, bob, home } = yield* setup;
+      const theirs = yield* recurring.create(
+        bob.id,
+        rule({ kind: "income", amountMinor: 50_000 }),
+      );
+      const error = yield* recurring
+        .create(
+          ann.id,
+          rule({
+            kind: "transfer",
+            householdId: home.id,
+            target: "current",
+            incomeRuleId: theirs.id,
+          }),
+        )
+        .pipe(Effect.flip);
+      assert.strictEqual(error._tag, "RuleNotFound");
+    }),
+  );
+
   it.effect(
     "a recurring expense that does not fit waits for the household",
     () =>

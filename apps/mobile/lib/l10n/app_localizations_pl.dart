@@ -1106,4 +1106,98 @@ class AppLocalizationsPl extends AppLocalizations {
   @override
   String get appliedNothing =>
       'Nic do zastosowania w tym okresie – następne wystąpienie jest później.';
+
+  @override
+  String wholeIncomeOf(String name) {
+    return 'Cały wpływ „$name”';
+  }
+
+  @override
+  String get transferHowMuch => 'Ile przelewać';
+
+  @override
+  String get fixedAmount => 'Stała kwota';
+
+  @override
+  String get wholeIncomeHint =>
+      'Za każdym razem, gdy wpłynie ten wpływ, cała jego kwota przeleje się do gospodarstwa tego samego dnia. Wpływ szacowany przeleje się dopiero wtedy, gdy potwierdzisz prawdziwą kwotę.';
+
+  @override
+  String get deleteIncomeRuleConfirm =>
+      'To, co reguła już dodała, zostanie. Przelewy, które idą za tym wpływem, też zostaną usunięte.';
+
+  @override
+  String get editPlan => 'Edytuj plan';
+
+  @override
+  String get savePlan => 'Zapisz plan';
+
+  @override
+  String get periodPlan => 'Plan okresu';
+
+  @override
+  String planBalanceOf(String amount) {
+    return 'Saldo skarbonki: $amount';
+  }
+
+  @override
+  String spentAmount(String amount) {
+    return 'wydano $amount';
+  }
+
+  @override
+  String freeToPlan(String amount) {
+    return '$amount czeka na rozplanowanie.';
+  }
+
+  @override
+  String get everythingPlanned => 'Wszystkie pieniądze są rozplanowane.';
+
+  @override
+  String get tapEnvelopeToSpend => 'Dotknij koperty, aby dodać z niej wydatek.';
+
+  @override
+  String wizardEnvelopesChosen(int count) {
+    return 'Zaznaczone: $count · dotknij, aby zaznaczyć lub odznaczyć';
+  }
+
+  @override
+  String expensesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wydatku',
+      many: '$count wydatków',
+      few: '$count wydatki',
+      one: '1 wydatek',
+      zero: 'brak wydatków',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filters => 'Filtry';
+
+  @override
+  String filtersActive(int count) {
+    return 'Filtry ($count)';
+  }
+
+  @override
+  String get clearFilters => 'Wyczyść';
+
+  @override
+  String get showResults => 'Pokaż';
+
+  @override
+  String get author => 'Kto dodał';
+
+  @override
+  String get today => 'Dziś';
+
+  @override
+  String get yesterday => 'Wczoraj';
+
+  @override
+  String get signedInLabel => 'Zalogowano';
 }

@@ -141,6 +141,8 @@ export interface RuleRow {
   readonly anchorOn: Day | null;
   readonly startsOn: Day;
   readonly target: "current" | "next" | null;
+  /** A transfer that follows this income rule, whole. */
+  readonly incomeRuleId: string | null;
   readonly active: boolean;
 }
 
@@ -887,7 +889,7 @@ const ruleColumns = (sql: SqlClient.SqlClient) =>
   sql`r.id, r.kind, r.user_id, r.household_id, r.envelope_id, r.name,
     r.amount_minor::float8 AS amount_minor, r.estimated, r.frequency, r.day_of_month,
     r.every_weeks, r.anchor_on::text AS anchor_on, r.starts_on::text AS starts_on,
-    r.target, r.active`;
+    r.target, r.income_rule_id, r.active`;
 
 /** The user's own incomes and transfers, and the expense rules of their households. */
 export const rulesVisibleTo = (userId: string) =>
@@ -911,6 +913,15 @@ export const activeRules = (kind: RuleKind, userId: string) =>
     (sql) =>
       sql<RuleRow>`SELECT ${ruleColumns(sql)} FROM recurring_rules r
         WHERE r.kind = ${kind} AND r.user_id = ${userId} AND r.active
+        ORDER BY r.created_at, r.id`,
+  );
+
+/** The active transfers that follow an income rule. */
+export const linkedTransfers = (incomeRuleId: string) =>
+  run(
+    (sql) =>
+      sql<RuleRow>`SELECT ${ruleColumns(sql)} FROM recurring_rules r
+        WHERE r.kind = 'transfer' AND r.income_rule_id = ${incomeRuleId} AND r.active
         ORDER BY r.created_at, r.id`,
   );
 
@@ -943,7 +954,8 @@ export const updateRule = (id: string, row: RuleFields) =>
         amount_minor = ${row.amountMinor}, estimated = ${row.estimated},
         frequency = ${row.frequency}, day_of_month = ${row.dayOfMonth},
         every_weeks = ${row.everyWeeks}, anchor_on = ${row.anchorOn},
-        starts_on = ${row.startsOn}, target = ${row.target}, active = ${row.active},
+        starts_on = ${row.startsOn}, target = ${row.target},
+        income_rule_id = ${row.incomeRuleId}, active = ${row.active},
         updated_at = now()
         WHERE id = ${id}`,
   ).pipe(Effect.asVoid);

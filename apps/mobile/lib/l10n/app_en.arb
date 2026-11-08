@@ -714,5 +714,77 @@
   },
   "changePlan": "Change the plan",
   "appliedDone": "Applied.",
-  "appliedNothing": "Nothing to apply in this period – the next occurrence comes later."
+  "appliedNothing": "Nothing to apply in this period – the next occurrence comes later.",
+  "wholeIncomeOf": "All of “{name}”",
+  "@wholeIncomeOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "transferHowMuch": "How much to transfer",
+  "fixedAmount": "A fixed amount",
+  "wholeIncomeHint": "Each time this income comes in, all of it goes on into the household on the same day. An estimated income goes on only once you confirm its real amount.",
+  "deleteIncomeRuleConfirm": "What the rule has made stays. The transfers that follow this income are deleted too.",
+  "editPlan": "Edit the plan",
+  "savePlan": "Save the plan",
+  "periodPlan": "The plan of the period",
+  "planBalanceOf": "Piggy bank balance: {amount}",
+  "@planBalanceOf": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "spentAmount": "{amount} spent",
+  "@spentAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "freeToPlan": "{amount} is waiting to be planned.",
+  "@freeToPlan": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "everythingPlanned": "All the money is planned.",
+  "tapEnvelopeToSpend": "Tap an envelope to add an expense to it.",
+  "wizardEnvelopesChosen": "Chosen: {count} · tap to choose or leave out",
+  "@wizardEnvelopesChosen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "expensesCount": "{count, plural, =0{no expenses} =1{1 expense} other{{count} expenses}}",
+  "@expensesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "filters": "Filters",
+  "filtersActive": "Filters ({count})",
+  "@filtersActive": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "clearFilters": "Clear",
+  "showResults": "Show",
+  "author": "Added by",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "signedInLabel": "Signed in"
 }

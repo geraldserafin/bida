@@ -436,6 +436,8 @@ export const RecurringRule = Schema.Struct({
   startsOn: IsoDate,
   /** Transfers: the period of the day, or the one after it. */
   target: Schema.NullOr(Schema.Literals(["current", "next"])),
+  /** Transfers: the income rule whose every certain occurrence goes on whole. */
+  incomeRuleId: Schema.NullOr(Uuid),
   active: Schema.Boolean,
 }).annotate({ identifier: "RecurringRule" });
 export type RecurringRule = typeof RecurringRule.Type;
@@ -458,6 +460,12 @@ export const SaveRule = Schema.Struct({
   /** Today when left out. */
   startsOn: Schema.optional(Schema.NullOr(IsoDate)),
   target: Schema.NullOr(Schema.Literals(["current", "next"])),
+  /**
+   * Transfers only: follow this income rule of the user. Each occurrence of
+   * the income, once its amount is certain, goes on whole into the
+   * household; amount and schedule are then taken from the income.
+   */
+  incomeRuleId: Schema.optional(Schema.NullOr(Uuid)),
   active: Schema.Boolean,
 }).annotate({ identifier: "SaveRule" });
 export type SaveRule = typeof SaveRule.Type;

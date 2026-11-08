@@ -23,6 +23,7 @@ import 'household_settings_screen.dart';
 import 'log_screen.dart';
 import 'members_screen.dart';
 import 'periods_screen.dart';
+import 'plan_editor_screen.dart';
 
 final _day = DateFormat('d.MM');
 
@@ -426,67 +427,25 @@ class _MoneyButtons extends StatelessWidget {
 }
 
 /// The envelopes with plan, spent and left (F17, F19). Tapping one adds an
-/// expense to it (F08) or changes its plan.
+/// expense to it (F08) in the current period, or plans it in the next one.
 class _Plans extends StatelessWidget {
   const _Plans({required this.summary});
   final PeriodSummary summary;
 
-  Future<void> _setPlan(BuildContext context, EnvelopeFigures e) async {
-    final l10n = AppLocalizations.of(context);
-    final state = context.read<BudgetState>();
-    final amount = await askAmount(
-      context,
-      title: l10n.planOf(e.name),
-      message: e.recurringMinor > 0
-          ? l10n.planRecurringPart(formatMinor(e.recurringMinor))
-          : null,
-      initialMinor: e.planMinor,
-    );
-    if (amount == null || !context.mounted) return;
-    await attemptMoney(
-      context,
-      () => state.change(
-        (repo) => repo.setPlan(summary.period.id, e.envelopeId, amount),
-      ),
-    );
-  }
+  void _editPlan(BuildContext context) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => PlanEditorScreen(summary: summary)));
 
-  Future<void> _choose(BuildContext context, EnvelopeFigures e) async {
-    final l10n = AppLocalizations.of(context);
-    final spend = summary.period.status == PeriodStatus.current;
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: Text(e.name, style: Theme.of(ctx).textTheme.titleMedium),
-            ),
-            if (spend)
-              ListTile(
-                leading: const Icon(Icons.shopping_bag_outlined),
-                title: Text(l10n.todoAddExpense),
-                onTap: () => Navigator.of(ctx).pop('spend'),
-              ),
-            ListTile(
-              leading: const Icon(Icons.tune),
-              title: Text(l10n.changePlan),
-              onTap: () => Navigator.of(ctx).pop('plan'),
-            ),
-          ],
-        ),
+  void _tap(BuildContext context, EnvelopeFigures e) {
+    if (summary.period.status != PeriodStatus.current) {
+      _editPlan(context);
+      return;
+    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AddExpenseScreen(initialEnvelopeId: e.envelopeId),
       ),
     );
-    if (!context.mounted) return;
-    if (action == 'plan') return _setPlan(context, e);
-    if (action == 'spend') {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => AddExpenseScreen(initialEnvelopeId: e.envelopeId),
-        ),
-      );
-    }
   }
 
   @override
@@ -512,11 +471,23 @@ class _Plans extends StatelessWidget {
             ),
           ],
         ),
+        if (open) ...[
+          _PlanCard(summary: summary, onTap: () => _editPlan(context)),
+          const SizedBox(height: 12),
+          if (summary.period.status == PeriodStatus.current)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                l10n.tapEnvelopeToSpend,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+        ],
         for (final e in summary.envelopes)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: SurfaceCard(
-              onTap: open && !e.archived ? () => _choose(context, e) : null,
+              onTap: open && !e.archived ? () => _tap(context, e) : null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -557,6 +528,43 @@ class _Plans extends StatelessWidget {
         ? ''
         : ' ($sign${(diff / before * 100).round()}%)';
     return '$sign${formatMinor(diff)}$percent';
+  }
+}
+
+/// The way into planning the period, in the green of what is chosen: the
+/// key decision of the household.
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({required this.summary, required this.onTap});
+  final PeriodSummary summary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final c = AppColors.of(context);
+    final free = summary.freeMinor;
+    return SurfaceCard(
+      key: const Key('plan-card'),
+      outline: CardOutline.selected,
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.periodPlan, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 2),
+          Text(
+            free > 0
+                ? l10n.freeToPlan(formatMinor(free))
+                : free < 0
+                ? l10n.plansExceedBalance
+                : l10n.everythingPlanned,
+            style: TextStyle(color: free < 0 ? c.warning : c.textMuted),
+          ),
+          const SizedBox(height: 10),
+          AppButton(label: l10n.editPlan, height: 44, onPressed: onTap),
+        ],
+      ),
+    );
   }
 }
 

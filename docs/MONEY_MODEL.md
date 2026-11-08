@@ -105,6 +105,7 @@ Reguła ma rodzaj: `income` (do portfela), `transfer` (portfel → okres) albo `
 
 - Szacowany wpływ wchodzi z kwotą szacowaną w swoim dniu. Trafia też do „Do załatwienia” (`income_estimate`), gdzie czeka na korektę.
 - Przelew trafia do okresu swojego dnia albo, przy `target: next`, do okresu po nim. Następny okres otwiera się wtedy sam. Przelew do zamkniętego okresu trafia do bieżącego. Gdy w portfelu brakuje pieniędzy, przelew się nie wykonuje i trafia do `transfer_no_money`.
+- Przelew może iść za regułą wpływu (`incomeRuleId`, migracja `0002_linked_transfer`). Nie ma wtedy własnej kwoty ani harmonogramu i nie stosuje się go ręcznie. Gdy wystąpienie wpływu staje się pewne, cała jego kwota przelewa się z tym samym dniem wystąpienia. Dzieje się tak, gdy wpływ wchodzi ze znaną kwotą (przy otwarciu aplikacji albo przy ręcznym zastosowaniu) albo gdy szacunek zostaje potwierdzony. Usunięcie reguły wpływu usuwa przelewy, które za nią idą.
 - Wydatek cykliczny dolicza się do planu swojej koperty. Dodaje się w swoim dniu. Krok 2 z F08 działa przy tym sam. Wydatek, który się nie mieści, trafia do `expense_not_fit`. Wydatek szacowany zapisuje się od razu i czeka w `expense_estimate` na potwierdzenie, ale tylko do końca okresu. Po zamknięciu zostaje z kwotą szacowaną.
 - Wystąpienie z okresu, który zamknął się, zanim ktoś otworzył aplikację, trafia do `expense_missed`. Można je dodać w bieżącym okresie.
 - Wcześniejsze zastosowanie reguły: `POST /recurring-rules/:id/apply`. Wszystkie wydatki cykliczne gospodarstwa z bieżącego okresu: `POST /households/:id/recurring-rules/apply`.
@@ -190,6 +191,8 @@ Dokumentacja nie rozstrzygnęła tych spraw. Przyjęliśmy poniższe ustalenia; 
 | 11 | Migracje | `0001`–`0012` zastąpione przez `0001_base`; wymaga wyczyszczenia bazy razem z `effect_sql_migrations` | `wipe-database.sql` |
 | 12 | Twórca reguły wydatku wychodzi z gospodarstwa | jego reguły w tym gospodarstwie się wyłączają | `deactivateRulesOf` |
 | 13 | Wpływy portfela nie mają strefy gospodarstwa | dni liczą się w `Europe/Warsaw` | `walletToday` |
+| 14 | Przelew „cały wpływ” przy wpływie szacowanym | czeka na potwierdzenie i przelewa prawdziwą kwotę; późniejsza edycja wpływu już niczego nie przelewa | `runLinked` |
+| 15 | Reguła wpływu, za którą idzie przelew, zostaje usunięta | przelew też znika (nie zaczyna przelewać starej kwoty sam) | `ON DELETE CASCADE` |
 
 ## Wdrożenie
 

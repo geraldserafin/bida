@@ -18,6 +18,7 @@ import {
   walletKey,
   withdrawOut,
 } from "../ledger/ledger.module.ts";
+import { engine } from "../recurring/recurring.module.ts";
 
 export const get = Effect.fn("wallet.get")(function* (userId: UserId) {
   return yield* store.walletOf(userId);
@@ -137,8 +138,11 @@ export const updateIncome = Effect.fn("wallet.updateIncome")(function* (
     readonly correction?: Correction | null | undefined;
   },
 ) {
-  yield* incomeFor(userId, id);
-  const keys = yield* correctionKeys(userId, input.correction);
+  const before = yield* incomeFor(userId, id);
+  const keys = [
+    ...(yield* correctionKeys(userId, input.correction)),
+    ...(yield* engine.linkedKeys(before.ruleId)),
+  ];
   yield* inTx(
     keys,
     Effect.gen(function* () {
@@ -155,6 +159,19 @@ export const updateIncome = Effect.fn("wallet.updateIncome")(function* (
         estimated: input.estimated,
       });
       if (!input.estimated) yield* store.resolveTodoOfRef(id, userId);
+      // the estimate is now certain: what follows the income goes on whole
+      if (
+        entry.estimated &&
+        !input.estimated &&
+        entry.ruleId !== null &&
+        entry.occurrenceOn !== null
+      )
+        yield* engine.runLinked(
+          entry.ruleId,
+          userId,
+          entry.occurrenceOn,
+          input.amountMinor,
+        );
     }),
   );
   return yield* saved(id);

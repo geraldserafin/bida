@@ -4608,7 +4608,7 @@
             }
           },
           "404": {
-            "description": "HouseholdNotFound | EnvelopeNotFound",
+            "description": "HouseholdNotFound | EnvelopeNotFound | RuleNotFound",
             "content": {
               "application/json": {
                 "schema": {
@@ -4618,6 +4618,9 @@
                     },
                     {
                       "$ref": "#/components/schemas/EnvelopeNotFound"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RuleNotFound"
                     }
                   ]
                 }
@@ -5214,6 +5217,18 @@
               }
             ]
           },
+          "incomeRuleId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "active": {
             "type": "boolean"
           }
@@ -5233,6 +5248,7 @@
           "anchorOn",
           "startsOn",
           "target",
+          "incomeRuleId",
           "active"
         ],
         "additionalProperties": false
@@ -5350,6 +5366,21 @@
                   "current",
                   "next"
                 ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "incomeRuleId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|[fF]{8}-[fF]{4}-[fF]{4}-[fF]{4}-[fF]{12})$",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
               },
               {
                 "type": "null"

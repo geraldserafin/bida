@@ -143,6 +143,7 @@ export const ruleJson = (r: RuleRow): RecurringRule => ({
   anchorOn: r.anchorOn,
   startsOn: r.startsOn,
   target: r.target,
+  incomeRuleId: r.incomeRuleId,
   active: r.active,
 });
 

@@ -26,6 +26,7 @@ class SaveRule {
     required this.target,
     required this.active,
     this.startsOn,
+    this.incomeRuleId,
   });
 
   factory SaveRule.fromJson(Map<String, Object?> json) =>
@@ -50,6 +51,8 @@ class SaveRule {
   final String? startsOn;
   @JsonKey(includeIfNull: true)
   final SaveRuleTarget? target;
+  @JsonKey(includeIfNull: false)
+  final String? incomeRuleId;
   final bool active;
 
   Map<String, Object?> toJson() => _$SaveRuleToJson(this);

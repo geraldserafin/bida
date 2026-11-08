@@ -1103,4 +1103,96 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appliedNothing =>
       'Nothing to apply in this period – the next occurrence comes later.';
+
+  @override
+  String wholeIncomeOf(String name) {
+    return 'All of “$name”';
+  }
+
+  @override
+  String get transferHowMuch => 'How much to transfer';
+
+  @override
+  String get fixedAmount => 'A fixed amount';
+
+  @override
+  String get wholeIncomeHint =>
+      'Each time this income comes in, all of it goes on into the household on the same day. An estimated income goes on only once you confirm its real amount.';
+
+  @override
+  String get deleteIncomeRuleConfirm =>
+      'What the rule has made stays. The transfers that follow this income are deleted too.';
+
+  @override
+  String get editPlan => 'Edit the plan';
+
+  @override
+  String get savePlan => 'Save the plan';
+
+  @override
+  String get periodPlan => 'The plan of the period';
+
+  @override
+  String planBalanceOf(String amount) {
+    return 'Piggy bank balance: $amount';
+  }
+
+  @override
+  String spentAmount(String amount) {
+    return '$amount spent';
+  }
+
+  @override
+  String freeToPlan(String amount) {
+    return '$amount is waiting to be planned.';
+  }
+
+  @override
+  String get everythingPlanned => 'All the money is planned.';
+
+  @override
+  String get tapEnvelopeToSpend => 'Tap an envelope to add an expense to it.';
+
+  @override
+  String wizardEnvelopesChosen(int count) {
+    return 'Chosen: $count · tap to choose or leave out';
+  }
+
+  @override
+  String expensesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count expenses',
+      one: '1 expense',
+      zero: 'no expenses',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get filters => 'Filters';
+
+  @override
+  String filtersActive(int count) {
+    return 'Filters ($count)';
+  }
+
+  @override
+  String get clearFilters => 'Clear';
+
+  @override
+  String get showResults => 'Show';
+
+  @override
+  String get author => 'Added by';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String get signedInLabel => 'Signed in';
 }

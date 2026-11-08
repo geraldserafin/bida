@@ -27,6 +27,7 @@ class RecurringRule {
     required this.anchorOn,
     required this.startsOn,
     required this.target,
+    required this.incomeRuleId,
     required this.active,
   });
 
@@ -53,6 +54,8 @@ class RecurringRule {
   final String startsOn;
   @JsonKey(includeIfNull: true)
   final RecurringRuleTarget? target;
+  @JsonKey(includeIfNull: true)
+  final String? incomeRuleId;
   final bool active;
 
   Map<String, Object?> toJson() => _$RecurringRuleToJson(this);

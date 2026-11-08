@@ -121,6 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _useOtherEmail() => setState(() {
     _sentTo = null;
     _error = null;
+    _codeController.clear();
   });
 
   @override
@@ -169,7 +170,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         fieldKey: LoginScreen.emailFieldKey,
                         label: l10n.emailAddress,
                         controller: _emailController,
-                        enabled: sentTo == null && !_busy,
+                        // changing the address goes back to sending a code
+                        enabled: !_busy,
+                        onChanged: (v) {
+                          if (_sentTo != null && v.trim() != _sentTo) {
+                            _useOtherEmail();
+                          }
+                        },
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.email],
                         textInputAction: TextInputAction.done,
@@ -260,12 +267,16 @@ class _LoginScreenState extends State<LoginScreen> {
             onTap: _busy ? null : _sendCode,
             child: Text(l10n.resendShort, style: link),
           ),
-          Text('·', style: caption),
-          GestureDetector(
-            onTap: _busy ? null : _useOtherEmail,
-            child: Text(l10n.useOtherEmail, style: link),
-          ),
         ],
+      ),
+      const SizedBox(height: 8),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: TextButton.icon(
+          onPressed: _busy ? null : _useOtherEmail,
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: Text(l10n.useOtherEmail),
+        ),
       ),
     ];
   }

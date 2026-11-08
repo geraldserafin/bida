@@ -24,6 +24,7 @@ RecurringRule _$RecurringRuleFromJson(Map<String, dynamic> json) =>
       target: json['target'] == null
           ? null
           : RecurringRuleTarget.fromJson(json['target'] as String),
+      incomeRuleId: json['incomeRuleId'] as String?,
       active: json['active'] as bool,
     );
 
@@ -43,6 +44,7 @@ Map<String, dynamic> _$RecurringRuleToJson(RecurringRule instance) =>
       'anchorOn': instance.anchorOn,
       'startsOn': instance.startsOn,
       'target': _$RecurringRuleTargetEnumMap[instance.target],
+      'incomeRuleId': instance.incomeRuleId,
       'active': instance.active,
     };
 

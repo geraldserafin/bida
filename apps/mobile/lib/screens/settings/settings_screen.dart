@@ -9,7 +9,12 @@ import '../../services/auth_service.dart';
 import '../../state/app_settings.dart';
 import '../../state/auth_state.dart';
 import '../../state/budget_state.dart';
+import '../../theme/app_theme.dart';
 import '../../util/money_steps.dart';
+import '../../widgets/pill_chip.dart';
+import '../../widgets/screen_header.dart';
+import '../../widgets/surface_card.dart';
+import '../../widgets/toggle_switch.dart';
 import '../wallet/wallet_screen.dart';
 
 /// App settings: general, appearance, security, data.
@@ -235,76 +240,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final settings = context.watch<AppSettings>();
+    final c = AppColors.of(context);
 
     if (_loading) {
       return Scaffold(
-        appBar: AppBar(title: Text(l10n.settings)),
+        appBar: FormTopBar(title: l10n.settings),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settings)),
+      appBar: FormTopBar(title: l10n.settings),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          // ---- Appearance ----
-          _SectionHeader(l10n.appearance),
+          // ---- Account ----
+          _SectionHeader(l10n.account),
           _Group(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.theme,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: SegmentedButton<ThemeMode>(
-                        segments: [
-                          ButtonSegment(
-                            value: ThemeMode.dark,
-                            label: Text(l10n.themeDark),
-                          ),
-                          ButtonSegment(
-                            value: ThemeMode.light,
-                            label: Text(l10n.themeLight),
-                          ),
-                          ButtonSegment(
-                            value: ThemeMode.system,
-                            label: Text(l10n.themeAuto),
-                          ),
-                        ],
-                        selected: {settings.themeMode},
-                        showSelectedIcon: false,
-                        onSelectionChanged: (s) =>
-                            settings.setThemeMode(s.first),
-                      ),
-                    ),
-                  ],
-                ),
+              _Row(
+                icon: Icons.person_outline,
+                title: context.watch<AuthState>().email ?? '',
+                subtitle: l10n.signedInLabel,
               ),
-            ],
-          ),
-
-          // ---- The dashboard ----
-          _SectionHeader(l10n.general),
-          _Group(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.date_range_outlined),
-                title: Text(l10n.dashboardShows),
-                subtitle: Text(_rangeLabel(l10n, settings.dashboardRange)),
-                onTap: () => _pickRange(settings),
+              _Row(
+                icon: Icons.badge_outlined,
+                title: l10n.yourName,
+                onTap: _setName,
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.account_balance_wallet_outlined),
-                title: Text(l10n.wallet),
+              _Row(
+                icon: Icons.account_balance_wallet_outlined,
+                title: l10n.wallet,
                 onTap: () => Navigator.of(
                   context,
                 ).push(MaterialPageRoute(builder: (_) => const WalletScreen())),
@@ -312,33 +278,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
 
-          // ---- Account ----
-          _SectionHeader(l10n.account),
+          // ---- Appearance and the dashboard ----
+          _SectionHeader(l10n.appearance),
           _Group(
             children: [
-              ListTile(
-                leading: const Icon(Icons.person_outline),
-                title: Text(
-                  l10n.signedInAs(context.watch<AuthState>().email ?? ''),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(l10n.theme, style: _Row.titleStyle(context)),
+                    const SizedBox(height: 10),
+                    SegmentedPills<ThemeMode>(
+                      trayColor: c.surface2,
+                      options: [
+                        (ThemeMode.dark, l10n.themeDark),
+                        (ThemeMode.light, l10n.themeLight),
+                        (ThemeMode.system, l10n.themeAuto),
+                      ],
+                      selected: settings.themeMode,
+                      onChanged: settings.setThemeMode,
+                    ),
+                  ],
                 ),
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.badge_outlined),
-                title: Text(l10n.yourName),
-                onTap: _setName,
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.logout),
-                title: Text(l10n.signOut),
-                onTap: _signOut,
-              ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.person_remove_outlined),
-                title: Text(l10n.deleteAccount),
-                onTap: _deleteAccount,
+              _Row(
+                icon: Icons.date_range_outlined,
+                title: l10n.dashboardShows,
+                subtitle: _rangeLabel(l10n, settings.dashboardRange),
+                onTap: () => _pickRange(settings),
               ),
             ],
           ),
@@ -347,52 +315,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SectionHeader(l10n.security),
           _Group(
             children: [
-              SwitchListTile(
-                secondary: const Icon(Icons.lock_outline),
-                title: Text(l10n.appLock),
-                subtitle: Text(l10n.appLockSubtitle),
-                value: _hasPin,
-                onChanged: _toggleLock,
+              _Row(
+                icon: Icons.lock_outline,
+                title: l10n.appLock,
+                subtitle: l10n.appLockSubtitle,
+                trailing: ToggleSwitch(
+                  value: _hasPin,
+                  onChanged: _toggleLock,
+                  semanticLabel: l10n.appLock,
+                ),
               ),
-              if (_hasPin) ...[
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.pin_outlined),
-                  title: Text(l10n.changePin),
+              if (_hasPin)
+                _Row(
+                  icon: Icons.pin_outlined,
+                  title: l10n.changePin,
                   onTap: _changePin,
                 ),
-              ],
-              if (_hasPin && _biometricAvailable) ...[
-                const Divider(height: 1),
-                SwitchListTile(
-                  secondary: const Icon(Icons.fingerprint),
-                  title: Text(l10n.biometricUnlock),
-                  value: _biometricEnabled,
-                  onChanged: _toggleBiometric,
+              if (_hasPin && _biometricAvailable)
+                _Row(
+                  icon: Icons.fingerprint,
+                  title: l10n.biometricUnlock,
+                  trailing: ToggleSwitch(
+                    value: _biometricEnabled,
+                    onChanged: _toggleBiometric,
+                    semanticLabel: l10n.biometricUnlock,
+                  ),
                 ),
-              ],
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           _Group(
             children: [
-              ListTile(
-                title: Text(l10n.about),
-                trailing: Text(
-                  'v1.0.0',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
+              _Row(icon: Icons.logout, title: l10n.signOut, onTap: _signOut),
+              _Row(
+                icon: Icons.person_remove_outlined,
+                title: l10n.deleteAccount,
+                danger: true,
+                onTap: _deleteAccount,
               ),
             ],
+          ),
+          const SizedBox(height: 20),
+          Center(
+            child: Text(
+              '${l10n.appTitle} v$appVersion',
+              style: TextStyle(color: c.textMuted, fontSize: 12),
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+/// The version of the build, given by the release workflow.
+const appVersion = String.fromEnvironment('APP_VERSION', defaultValue: 'dev');
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader(this.text);
@@ -403,27 +381,100 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 20, 4, 8),
       child: Text(
-        text.toUpperCase(),
+        text,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 13,
           fontWeight: FontWeight.w600,
-          letterSpacing: 0.6,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: AppColors.of(context).textMuted,
         ),
       ),
     );
   }
 }
 
-/// A card that groups related rows, like the design's rounded sections.
+/// Rows that belong together, in one card with hairlines between them.
 class _Group extends StatelessWidget {
   const _Group({required this.children});
   final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Column(mainAxisSize: MainAxisSize.min, children: children),
+    final c = AppColors.of(context);
+    return SurfaceCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) Divider(height: 1, color: c.border),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// One setting: an icon, its name (and what it is set to), and a switch or
+/// a chevron when it opens something.
+class _Row extends StatelessWidget {
+  const _Row({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.trailing,
+    this.onTap,
+    this.danger = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final bool danger;
+
+  static TextStyle titleStyle(BuildContext context) => TextStyle(
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    color: AppColors.of(context).text,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final color = danger ? c.danger : null;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: color ?? c.textMuted),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: titleStyle(context).copyWith(color: color),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle!,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                ],
+              ),
+            ),
+            if (trailing != null)
+              trailing!
+            else if (onTap != null)
+              Icon(Icons.chevron_right, color: c.textMuted),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -246,7 +246,8 @@ Future<int?> askAmount(
   String? action,
 }) async {
   final controller = TextEditingController(
-    text: initialMinor == null
+    // nothing yet (or nothing planned): an empty field, not "0,00"
+    text: initialMinor == null || initialMinor == 0
         ? ''
         : (initialMinor / 100).toStringAsFixed(2).replaceAll('.', ','),
   );
@@ -267,6 +268,7 @@ Future<int?> askAmount(
             decoration: InputDecoration(
               suffixText: 'zł',
               labelText: l10n.amount,
+              hintText: '0',
             ),
           ),
         ],
@@ -278,9 +280,13 @@ Future<int?> askAmount(
         ),
         FilledButton(
           onPressed: () {
-            final value = double.tryParse(
-              controller.text.trim().replaceAll(',', '.').replaceAll(' ', ''),
-            );
+            final text = controller.text.trim();
+            // an empty field is zero (no plan)
+            final value = text.isEmpty
+                ? 0.0
+                : double.tryParse(
+                    text.replaceAll(',', '.').replaceAll(' ', ''),
+                  );
             if (value == null || value < 0) return;
             Navigator.of(ctx).pop((value * 100).round());
           },

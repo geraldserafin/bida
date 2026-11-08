@@ -649,6 +649,7 @@ export class RecurringApi extends HttpApiGroup.make("recurring")
         wire(HouseholdNotFound),
         wire(EnvelopeNotFound),
         wire(InvalidSchedule),
+        wire(RuleNotFound),
       ],
     }).annotateMerge(note("Add a recurring rule (F25, F26, F27)")),
     HttpApiEndpoint.put("update", "/recurring-rules/:id", {

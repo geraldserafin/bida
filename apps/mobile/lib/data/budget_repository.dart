@@ -751,6 +751,7 @@ class BudgetRepository {
     anchorOn: r.anchorOn == null ? null : parseDay(r.anchorOn!),
     startsOn: parseDay(r.startsOn),
     toNextPeriod: r.target == api.RecurringRuleTarget.next,
+    incomeRuleId: r.incomeRuleId,
     active: r.active,
   );
 
@@ -779,6 +780,7 @@ class BudgetRepository {
               ? api.SaveRuleTarget.next
               : api.SaveRuleTarget.current)
         : null,
+    incomeRuleId: r.kind == RuleKind.transfer ? r.incomeRuleId : null,
     active: r.active,
   );
 

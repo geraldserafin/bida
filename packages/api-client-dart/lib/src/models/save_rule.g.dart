@@ -22,6 +22,7 @@ SaveRule _$SaveRuleFromJson(Map<String, dynamic> json) => SaveRule(
       : SaveRuleTarget.fromJson(json['target'] as String),
   active: json['active'] as bool,
   startsOn: json['startsOn'] as String?,
+  incomeRuleId: json['incomeRuleId'] as String?,
 );
 
 Map<String, dynamic> _$SaveRuleToJson(SaveRule instance) => <String, dynamic>{
@@ -37,6 +38,7 @@ Map<String, dynamic> _$SaveRuleToJson(SaveRule instance) => <String, dynamic>{
   'anchorOn': instance.anchorOn,
   'startsOn': ?instance.startsOn,
   'target': _$SaveRuleTargetEnumMap[instance.target],
+  'incomeRuleId': ?instance.incomeRuleId,
   'active': instance.active,
 };
 

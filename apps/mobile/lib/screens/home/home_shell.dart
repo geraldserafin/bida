@@ -23,17 +23,24 @@ class HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _tab.index,
-        children: const [
-          DashboardScreen(),
-          HistoryScreen(),
-          RecurringRulesScreen(),
-          HouseholdScreen(),
-        ],
+    // back from another tab goes to the dashboard first, not out of the app
+    return PopScope(
+      canPop: _tab == AppTab.dashboard,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) select(AppTab.dashboard);
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _tab.index,
+          children: const [
+            DashboardScreen(),
+            HistoryScreen(),
+            RecurringRulesScreen(),
+            HouseholdScreen(),
+          ],
+        ),
+        bottomNavigationBar: BottomMenu(current: _tab, onSelect: select),
       ),
-      bottomNavigationBar: BottomMenu(current: _tab, onSelect: select),
     );
   }
 }

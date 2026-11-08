@@ -1975,6 +1975,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing to apply in this period – the next occurrence comes later.'**
   String get appliedNothing;
+
+  /// No description provided for @wholeIncomeOf.
+  ///
+  /// In en, this message translates to:
+  /// **'All of “{name}”'**
+  String wholeIncomeOf(String name);
+
+  /// No description provided for @transferHowMuch.
+  ///
+  /// In en, this message translates to:
+  /// **'How much to transfer'**
+  String get transferHowMuch;
+
+  /// No description provided for @fixedAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'A fixed amount'**
+  String get fixedAmount;
+
+  /// No description provided for @wholeIncomeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each time this income comes in, all of it goes on into the household on the same day. An estimated income goes on only once you confirm its real amount.'**
+  String get wholeIncomeHint;
+
+  /// No description provided for @deleteIncomeRuleConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'What the rule has made stays. The transfers that follow this income are deleted too.'**
+  String get deleteIncomeRuleConfirm;
+
+  /// No description provided for @editPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit the plan'**
+  String get editPlan;
+
+  /// No description provided for @savePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Save the plan'**
+  String get savePlan;
+
+  /// No description provided for @periodPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'The plan of the period'**
+  String get periodPlan;
+
+  /// No description provided for @planBalanceOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Piggy bank balance: {amount}'**
+  String planBalanceOf(String amount);
+
+  /// No description provided for @spentAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} spent'**
+  String spentAmount(String amount);
+
+  /// No description provided for @freeToPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} is waiting to be planned.'**
+  String freeToPlan(String amount);
+
+  /// No description provided for @everythingPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'All the money is planned.'**
+  String get everythingPlanned;
+
+  /// No description provided for @tapEnvelopeToSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an envelope to add an expense to it.'**
+  String get tapEnvelopeToSpend;
+
+  /// No description provided for @wizardEnvelopesChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen: {count} · tap to choose or leave out'**
+  String wizardEnvelopesChosen(int count);
+
+  /// No description provided for @expensesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no expenses} =1{1 expense} other{{count} expenses}}'**
+  String expensesCount(int count);
+
+  /// No description provided for @filters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get filters;
+
+  /// No description provided for @filtersActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters ({count})'**
+  String filtersActive(int count);
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearFilters;
+
+  /// No description provided for @showResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Show'**
+  String get showResults;
+
+  /// No description provided for @author.
+  ///
+  /// In en, this message translates to:
+  /// **'Added by'**
+  String get author;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @signedInLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get signedInLabel;
 }
 
 class _AppLocalizationsDelegate
