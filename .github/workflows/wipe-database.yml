@@ -31,6 +31,7 @@ jobs:
             "${{ secrets.VPS_HOST }}" "${{ secrets.VPS_USER }}" "${{ vars.VPS_PORT || 22 }}" > ~/.ssh/config
       - name: Dump, wipe and restart the API
         run: |
+          # every docker command reads /dev/null: the script itself comes on stdin
           ssh vps 'bash -s' <<'REMOTE'
           set -euo pipefail
           cd "${{ vars.VPS_DIR }}"
@@ -39,13 +40,13 @@ jobs:
           if [ -z "$db" ]; then echo "no postgres service in the compose project, nothing done"; exit 1; fi
           echo "database service: $db"
           dump="$HOME/bida-before-v05-$(date +%Y%m%d-%H%M%S).sql"
-          docker compose exec -T "$db" sh -c 'pg_dump -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}"' > "$dump"
+          docker compose exec -T "$db" sh -c 'pg_dump -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}"' < /dev/null > "$dump"
           if [ ! -s "$dump" ]; then echo "the dump is empty, nothing wiped"; exit 1; fi
           echo "dump: $dump ($(wc -c < "$dump") bytes)"
-          docker compose exec -T "$db" sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"'
-          docker compose restart backend
+          docker compose exec -T "$db" sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"' < /dev/null
+          docker compose restart backend < /dev/null
           for i in $(seq 1 30); do
-            if docker compose exec -T backend node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"; then
+            if docker compose exec -T backend node -e "fetch('http://127.0.0.1:'+process.env.PORT+'/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))" < /dev/null; then
               echo "API is up on the new schema"; exit 0
             fi
             sleep 2
