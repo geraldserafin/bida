@@ -484,13 +484,15 @@ class BudgetRepository {
       guard(() => _api.recurring.recurringDelete(id: id));
 
   /// Its next occurrence now; [amountMinor] is the real amount of an estimate.
-  /// Returns how many went to the to-do list instead.
-  Future<int> applyRule(String id, {int? amountMinor}) => guard(
-    () async => (await _api.recurring.recurringApply(
-      id: id,
-      body: api.ApplyRule(amountMinor: amountMinor),
-    )).todo,
-  );
+  /// Returns how many entries it made and how many went to the to-do list.
+  Future<({int applied, int todo})> applyRule(String id, {int? amountMinor}) =>
+      guard(() async {
+        final r = await _api.recurring.recurringApply(
+          id: id,
+          body: api.ApplyRule(amountMinor: amountMinor),
+        );
+        return (applied: r.applied, todo: r.todo);
+      });
 
   Future<void> applyAllRules(String householdId) =>
       guard(() => _api.recurring.recurringApplyAll(id: householdId));

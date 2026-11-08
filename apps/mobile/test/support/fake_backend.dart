@@ -59,6 +59,7 @@ class FakeBackend implements HttpClientAdapter {
     on('GET /todo', (_) => Reply(todo));
     on('GET /invitations', (_) => const Reply([]));
     on('GET /periods/p1', (_) => Reply(summaryJson()));
+    on('GET /households/h1/periods', (_) => Reply([periodJson()]));
     on(
       'GET /households/h1/envelopes',
       (_) => Reply([envelopeJson('e1', 'Jedzenie')]),

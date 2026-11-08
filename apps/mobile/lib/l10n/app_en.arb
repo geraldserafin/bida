@@ -119,7 +119,7 @@
     }
   },
   "applyEstimateHint": "Enter the real amount.",
-  "applyNow": "Apply",
+  "applyNow": "Apply now",
   "archive": "Archive",
   "archived": "archived",
   "byAuthor": "By {name}",
@@ -682,5 +682,37 @@
   "later": "Later",
   "next": "Next",
   "income": "Income",
-  "addIncome": "Add income"
+  "addIncome": "Add income",
+  "addIncomeShort": "+ Income",
+  "recurringIncomeName": "Recurring income",
+  "recurringIncome": "Repeat every month",
+  "recurringIncomeOn": "Every month on day {day}",
+  "@recurringIncomeOn": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "openNextConfirm": "The next period starts on {date}. The plans of the envelopes are copied from the current one, and you can transfer into it now.",
+  "@openNextConfirm": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "previousPeriodTooltip": "Previous period",
+  "nextPeriodTooltip": "Next period",
+  "piggyBalanceShort": "Piggy bank balance: {amount} · tap for details",
+  "@piggyBalanceShort": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "changePlan": "Change the plan",
+  "appliedDone": "Applied.",
+  "appliedNothing": "Nothing to apply in this period – the next occurrence comes later."
 }

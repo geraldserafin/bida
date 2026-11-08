@@ -301,7 +301,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get applyEstimateHint => 'Enter the real amount.';
 
   @override
-  String get applyNow => 'Apply';
+  String get applyNow => 'Apply now';
 
   @override
   String get archive => 'Archive';
@@ -1063,4 +1063,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addIncome => 'Add income';
+
+  @override
+  String get addIncomeShort => '+ Income';
+
+  @override
+  String get recurringIncomeName => 'Recurring income';
+
+  @override
+  String get recurringIncome => 'Repeat every month';
+
+  @override
+  String recurringIncomeOn(int day) {
+    return 'Every month on day $day';
+  }
+
+  @override
+  String openNextConfirm(String date) {
+    return 'The next period starts on $date. The plans of the envelopes are copied from the current one, and you can transfer into it now.';
+  }
+
+  @override
+  String get previousPeriodTooltip => 'Previous period';
+
+  @override
+  String get nextPeriodTooltip => 'Next period';
+
+  @override
+  String piggyBalanceShort(String amount) {
+    return 'Piggy bank balance: $amount · tap for details';
+  }
+
+  @override
+  String get changePlan => 'Change the plan';
+
+  @override
+  String get appliedDone => 'Applied.';
+
+  @override
+  String get appliedNothing =>
+      'Nothing to apply in this period – the next occurrence comes later.';
 }

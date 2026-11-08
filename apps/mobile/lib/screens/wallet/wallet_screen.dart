@@ -10,6 +10,7 @@ import '../../util/amounts.dart';
 import '../../util/money_format.dart';
 import '../../util/money_steps.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/fab_bar.dart';
 import '../../widgets/labeled_field.dart';
 import '../../widgets/remote_data.dart';
 import '../../widgets/screen_header.dart';
@@ -32,10 +33,15 @@ class WalletScreen extends StatelessWidget {
     final wallet = state.wallet;
     return Scaffold(
       appBar: FormTopBar(title: l10n.wallet),
-      floatingActionButton: AppButton(
-        label: l10n.addIncome,
-        height: 48,
-        onPressed: () => showIncomeSheet(context),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FabBar(
+        children: [
+          AppButton(
+            label: l10n.addIncome,
+            height: 48,
+            onPressed: () => showIncomeSheet(context),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
@@ -125,6 +131,9 @@ class _IncomeSheetState extends State<_IncomeSheet> {
   final _note = TextEditingController();
   DateTime _onDate = DateTime.now();
   bool _estimated = false;
+
+  /// A new income can come every month on its day (a recurring rule, F25).
+  bool _recurring = false;
   bool _saving = false;
 
   @override
@@ -153,7 +162,22 @@ class _IncomeSheetState extends State<_IncomeSheet> {
     final state = context.read<BudgetState>();
     final note = _note.text.trim().isEmpty ? null : _note.text.trim();
     final existing = widget.existing;
-    final ok = existing == null
+    final ok = existing == null && _recurring
+        ? await attemptMoney(context, () async {
+            await state.repository.saveRule(
+              RecurringRule(
+                kind: RuleKind.income,
+                name: note ?? AppLocalizations.of(context).recurringIncomeName,
+                amountMinor: minor,
+                estimated: _estimated,
+                dayOfMonth: _onDate.day,
+                startsOn: _onDate,
+              ),
+            );
+            // the rule adds the income of its day at the app start: run it now
+            await state.syncNow();
+          })
+        : existing == null
         ? await attemptMoney(
             context,
             () => state.repository.addIncome(
@@ -257,6 +281,22 @@ class _IncomeSheetState extends State<_IncomeSheet> {
               ),
             ],
           ),
+          if (widget.existing == null)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _recurring
+                        ? l10n.recurringIncomeOn(_onDate.day)
+                        : l10n.recurringIncome,
+                  ),
+                ),
+                ToggleSwitch(
+                  value: _recurring,
+                  onChanged: (v) => setState(() => _recurring = v),
+                ),
+              ],
+            ),
           const SizedBox(height: 16),
           AppButton(label: l10n.save, busy: _saving, onPressed: _save),
           if (widget.existing != null) ...[

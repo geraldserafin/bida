@@ -75,7 +75,7 @@ class PeriodScreen extends StatelessWidget {
         builder: (context, s) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            PiggyBankCard(summary: s),
+            PiggyBankCard(summary: s, expanded: true),
             const SizedBox(height: 16),
             if (s.spentMinor == 0)
               Text(l10n.noExpensesInPeriod)

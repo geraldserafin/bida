@@ -77,8 +77,13 @@ class BudgetState extends ChangeNotifier {
     final h = household;
     if (h == null) return null;
     if (_periodId == h.next?.id) return h.next;
-    return h.current;
+    return _periods.where((p) => p.id == _periodId).firstOrNull ?? h.current;
   }
+
+  List<Period> _periods = const [];
+
+  /// The periods of the household on screen, oldest first.
+  List<Period> get periods => _periods;
 
   PeriodSummary? _summary;
   PeriodSummary? get summary => _summary;
@@ -153,6 +158,14 @@ class BudgetState extends ChangeNotifier {
     }
   }
 
+  /// The app start again, without the loading screen: after a change that
+  /// makes something due now (a recurring rule of today).
+  Future<void> syncNow() async {
+    final synced = await repository.sync();
+    _unseen = synced.summaries;
+    await refresh();
+  }
+
   Future<void> refresh() async {
     await _fetch();
     notifyListeners();
@@ -166,10 +179,12 @@ class BudgetState extends ChangeNotifier {
     _invitations = await repository.myInvitations();
     final h = household;
     if (h == null) {
+      _periods = const [];
       _summary = null;
       _envelopes = const [];
       _members = const [];
     } else {
+      _periods = (await repository.periods(h.id)).reversed.toList();
       final p = period ?? h.current;
       _summary = await repository.periodSummary(p.id);
       _envelopes = await repository.envelopes(h.id);

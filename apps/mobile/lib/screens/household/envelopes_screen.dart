@@ -9,6 +9,7 @@ import '../../theme/app_theme.dart';
 import '../../theme/envelope_visuals.dart';
 import '../../util/money_steps.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/fab_bar.dart';
 import '../../widgets/screen_header.dart';
 
 /// The envelopes of the household (F12): any member adds, renames and
@@ -24,12 +25,17 @@ class EnvelopesScreen extends StatelessWidget {
     final household = state.household;
     return Scaffold(
       appBar: FormTopBar(title: l10n.envelopes, where: household?.name),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: household == null
           ? null
-          : AppButton(
-              label: l10n.addEnvelope,
-              height: 48,
-              onPressed: () => _edit(context, null),
+          : FabBar(
+              children: [
+                AppButton(
+                  label: l10n.addEnvelope,
+                  height: 48,
+                  onPressed: () => _edit(context, null),
+                ),
+              ],
             ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(8, 8, 8, 96),

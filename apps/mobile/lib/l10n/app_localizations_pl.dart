@@ -302,7 +302,7 @@ class AppLocalizationsPl extends AppLocalizations {
   String get applyEstimateHint => 'Podaj rzeczywistą kwotę.';
 
   @override
-  String get applyNow => 'Zastosuj';
+  String get applyNow => 'Zastosuj teraz';
 
   @override
   String get archive => 'Archiwizuj';
@@ -1066,4 +1066,44 @@ class AppLocalizationsPl extends AppLocalizations {
 
   @override
   String get addIncome => 'Dodaj wpływ';
+
+  @override
+  String get addIncomeShort => '+ Wpływ';
+
+  @override
+  String get recurringIncomeName => 'Wpływ cykliczny';
+
+  @override
+  String get recurringIncome => 'Powtarzaj co miesiąc';
+
+  @override
+  String recurringIncomeOn(int day) {
+    return 'Co miesiąc, $day. dnia';
+  }
+
+  @override
+  String openNextConfirm(String date) {
+    return 'Następny okres zacznie się $date. Plany kopert skopiują się z bieżącego, a przelewać na niego możesz już teraz.';
+  }
+
+  @override
+  String get previousPeriodTooltip => 'Poprzedni okres';
+
+  @override
+  String get nextPeriodTooltip => 'Następny okres';
+
+  @override
+  String piggyBalanceShort(String amount) {
+    return 'Saldo skarbonki: $amount · dotknij, by zobaczyć szczegóły';
+  }
+
+  @override
+  String get changePlan => 'Zmień plan';
+
+  @override
+  String get appliedDone => 'Zastosowano.';
+
+  @override
+  String get appliedNothing =>
+      'Nic do zastosowania w tym okresie – następne wystąpienie jest później.';
 }

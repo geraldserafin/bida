@@ -7,6 +7,7 @@ import 'package:money_planner/data/session_store.dart';
 import 'package:money_planner/l10n/app_localizations.dart';
 import 'package:money_planner/screens/add_expense/add_expense_screen.dart';
 import 'package:money_planner/screens/dashboard/dashboard_screen.dart';
+import 'package:money_planner/screens/household/household_screen.dart';
 import 'package:money_planner/state/app_settings.dart';
 import 'package:money_planner/state/auth_state.dart';
 import 'package:money_planner/state/budget_state.dart';
@@ -145,5 +146,43 @@ void main() {
       'transferMinor': 2500,
       'allowNegativeWallet': false,
     });
+  });
+
+  testWidgets('the next period opens only after asking', (tester) async {
+    final backend = FakeBackend()..household();
+    backend
+      ..on(
+        'POST /households/h1/periods/next',
+        (_) => Reply(
+          periodJson(
+            id: 'p2',
+            status: 'next',
+            startsOn: '2026-08-01',
+            endsOn: '2026-08-31',
+          ),
+          status: 201,
+        ),
+      )
+      ..on('GET /periods/p2', (_) => Reply(summaryJson()));
+    final state = stateFor(backend);
+    await tester.runAsync(state.load);
+    await tester.pumpWidget(app(state, backend, home: const HouseholdScreen()));
+    await tester.pumpAndSettle();
+
+    // ( < ) ( 1.07 – 31.07 ) ( + ): no period before, the next one not open
+    expect(find.text('1.07 – 31.07'), findsOneWidget);
+    await tester.tap(find.byTooltip('Otwórz następny okres'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('1.08.2026'), findsOneWidget);
+    expect(backend.sent('POST /households/h1/periods/next'), isEmpty);
+
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Otwórz następny okres'),
+    );
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pumpAndSettle();
+    expect(backend.sent('POST /households/h1/periods/next').length, 1);
   });
 }

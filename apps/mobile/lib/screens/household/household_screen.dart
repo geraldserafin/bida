@@ -11,11 +11,12 @@ import '../../util/money_format.dart';
 import '../../util/money_steps.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/error_view.dart';
+import '../../widgets/fab_bar.dart';
 import '../../widgets/labeled_field.dart';
-import '../../widgets/pill_chip.dart';
 import '../../widgets/screen_header.dart';
 import '../../widgets/surface_card.dart';
 import '../../widgets/transaction_row.dart';
+import '../add_expense/add_expense_screen.dart';
 import '../setup_wizard/setup_wizard_screen.dart';
 import 'envelopes_screen.dart';
 import 'household_settings_screen.dart';
@@ -36,7 +37,24 @@ class HouseholdScreen extends StatelessWidget {
     final state = context.watch<BudgetState>();
     final household = state.household;
     final summary = state.summary;
+    final spending =
+        summary?.period.status == PeriodStatus.current &&
+        household?.frozen == false;
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: spending
+          ? FabBar(
+              children: [
+                AppButton(
+                  label: l10n.addExpenseShort,
+                  height: 48,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
+                  ),
+                ),
+              ],
+            )
+          : null,
       body: SafeArea(
         bottom: false,
         child: Builder(
@@ -62,7 +80,7 @@ class HouseholdScreen extends StatelessWidget {
             return RefreshIndicator(
               onRefresh: state.refresh,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
                 children: [
                   _Header(household: household),
                   const SizedBox(height: 12),
@@ -133,107 +151,156 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// The current period, the next one (when open), or the button to open it.
+/// ( < ) ( 1.11 – 30.11 ) ( > ): steps through the periods of the household.
+/// Past the current one it opens the next period, after asking.
 class _PeriodSwitch extends StatelessWidget {
   const _PeriodSwitch({required this.household, required this.shown});
   final Household household;
   final Period shown;
 
-  @override
-  Widget build(BuildContext context) {
+  Future<void> _openNext(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final state = context.read<BudgetState>();
-    final next = household.next;
-    String label(Period p) =>
-        '${_day.format(p.startsOn)} – ${_day.format(p.endsOn)}';
-    return ChipWrap(
-      children: [
-        PillChip(
-          label: '${l10n.currentPeriod} · ${label(household.current)}',
-          selected: shown.id == household.current.id,
-          onTap: () => state.showPeriod(null),
+    final starts = household.current.endsOn.add(const Duration(days: 1));
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.openNextPeriod),
+        content: Text(
+          l10n.openNextConfirm(DateFormat('d.MM.yyyy').format(starts)),
         ),
-        if (next != null)
-          PillChip(
-            label: '${l10n.nextPeriod} · ${label(next)}',
-            selected: shown.id == next.id,
-            onTap: () => state.showPeriod(next.id),
-          )
-        else
-          PillChip(
-            label: '+ ${l10n.openNextPeriod}',
-            selected: false,
-            onTap: () => attemptMoney(context, () async {
-              final period = await state.repository.openNextPeriod(
-                household.id,
-              );
-              await state.showPeriod(period.id);
-            }),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
           ),
-      ],
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.openNextPeriod),
+          ),
+        ],
+      ),
     );
+    if (yes != true || !context.mounted) return;
+    await attemptMoney(context, () async {
+      final period = await state.repository.openNextPeriod(household.id);
+      await state.showPeriod(period.id);
+    });
   }
-}
-
-/// Saldo skarbonki and how it came about (F16); the warning when the plans
-/// exceed it (F19).
-class PiggyBankCard extends StatelessWidget {
-  const PiggyBankCard({super.key, required this.summary});
-  final PeriodSummary summary;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final c = AppColors.of(context);
-    final s = summary;
-    return SurfaceCard(
+    final state = context.read<BudgetState>();
+    final periods = context.watch<BudgetState>().periods;
+    final index = periods.indexWhere((p) => p.id == shown.id);
+    final previous = index > 0 ? periods[index - 1] : null;
+    final later = index >= 0 && index < periods.length - 1
+        ? periods[index + 1]
+        : null;
+    // past the current period with no next one: the arrow opens it
+    final canOpen =
+        later == null &&
+        shown.status == PeriodStatus.current &&
+        household.next == null;
+    final status = switch (shown.status) {
+      PeriodStatus.current => l10n.currentPeriod,
+      PeriodStatus.next => l10n.nextPeriod,
+      PeriodStatus.closed => l10n.closedPeriod,
+    };
+    return Row(
+      children: [
+        IconButton.outlined(
+          tooltip: l10n.previousPeriodTooltip,
+          onPressed: previous == null
+              ? null
+              : () => state.showPeriod(
+                  previous.id == household.current.id ? null : previous.id,
+                ),
+          icon: const Icon(Icons.chevron_left),
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              Text(
+                '${_day.format(shown.startsOn)} – ${_day.format(shown.endsOn)}',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(status, style: TextStyle(color: c.textMuted, fontSize: 12)),
+            ],
+          ),
+        ),
+        IconButton.outlined(
+          tooltip: canOpen ? l10n.openNextPeriod : l10n.nextPeriodTooltip,
+          onPressed: later != null
+              ? () => state.showPeriod(
+                  later.id == household.current.id ? null : later.id,
+                )
+              : canOpen
+              ? () => _openNext(context)
+              : null,
+          icon: Icon(canOpen ? Icons.add : Icons.chevron_right),
+        ),
+      ],
+    );
+  }
+}
+
+/// What is free to plan and what the plans hold, up front (F19); the balance
+/// and how it came about (F16) one tap away. The warning when the plans
+/// exceed the balance always shows.
+class PiggyBankCard extends StatefulWidget {
+  const PiggyBankCard({
+    super.key,
+    required this.summary,
+    this.expanded = false,
+  });
+  final PeriodSummary summary;
+
+  /// Start with the details shown (a past period).
+  final bool expanded;
+
+  @override
+  State<PiggyBankCard> createState() => _PiggyBankCardState();
+}
+
+class _PiggyBankCardState extends State<PiggyBankCard> {
+  late bool _expanded = widget.expanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final c = AppColors.of(context);
+    final theme = Theme.of(context);
+    final s = widget.summary;
+    Widget figure(String label, int minor, {Color? color}) => Expanded(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ValueRow(
-            label: l10n.piggyBalance,
-            value: formatMinor(s.balanceMinor),
-            strong: true,
+          Text(label, style: theme.textTheme.bodySmall),
+          Text(
+            formatMinor(minor),
+            style: theme.textTheme.headlineSmall?.copyWith(color: color),
           ),
-          ValueRow(
-            small: true,
-            label: l10n.transfers,
-            value: formatMinor(s.transfersMinor),
-          ),
-          if (s.withdrawalsMinor > 0)
-            ValueRow(
-              small: true,
-              label: l10n.withdrawals,
-              value: '−${formatMinor(s.withdrawalsMinor)}',
-            ),
-          if (s.carryInMinor > 0)
-            ValueRow(
-              small: true,
-              label: l10n.carryIn,
-              value: formatMinor(s.carryInMinor),
-            ),
-          ValueRow(
-            small: true,
-            label: l10n.spent,
-            value: '−${formatMinor(s.spentMinor)}',
-          ),
-          if (s.estimatedSpentMinor > 0)
-            ValueRow(
-              small: true,
-              label: l10n.estimatedSpent,
-              value: formatMinor(s.estimatedSpentMinor),
-              valueColor: c.estimate,
-            ),
-          const Divider(),
-          ValueRow(
-            small: true,
-            label: l10n.plansTotal,
-            value: formatMinor(s.plansTotalMinor),
-          ),
-          ValueRow(
-            small: true,
-            label: l10n.freeMoneyLabel,
-            value: formatMinor(s.freeMinor),
-            valueColor: s.freeMinor < 0 ? c.warning : null,
+        ],
+      ),
+    );
+    return SurfaceCard(
+      onTap: () => setState(() => _expanded = !_expanded),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              figure(
+                l10n.freeMoneyLabel,
+                s.freeMinor,
+                color: s.freeMinor < 0 ? c.warning : c.accent,
+              ),
+              figure(l10n.plansTotal, s.plansTotalMinor),
+              Icon(_expanded ? Icons.expand_less : Icons.expand_more),
+            ],
           ),
           if (s.plansExceedBalance)
             Padding(
@@ -243,10 +310,54 @@ class PiggyBankCard extends StatelessWidget {
                 style: TextStyle(color: c.warning),
               ),
             ),
-          if (s.carryOutMinor != null)
+          if (_expanded) ...[
+            const Divider(),
             ValueRow(
-              label: l10n.closedCarried,
-              value: formatMinor(s.carryOutMinor!),
+              label: l10n.piggyBalance,
+              value: formatMinor(s.balanceMinor),
+              strong: true,
+            ),
+            ValueRow(
+              small: true,
+              label: l10n.transfers,
+              value: formatMinor(s.transfersMinor),
+            ),
+            if (s.withdrawalsMinor > 0)
+              ValueRow(
+                small: true,
+                label: l10n.withdrawals,
+                value: formatMinor(s.withdrawalsMinor),
+              ),
+            if (s.carryInMinor > 0)
+              ValueRow(
+                small: true,
+                label: l10n.carryIn,
+                value: formatMinor(s.carryInMinor),
+              ),
+            ValueRow(
+              small: true,
+              label: l10n.spent,
+              value: formatMinor(s.spentMinor),
+            ),
+            if (s.estimatedSpentMinor > 0)
+              ValueRow(
+                small: true,
+                label: l10n.estimatedSpent,
+                value: formatMinor(s.estimatedSpentMinor),
+                valueColor: c.estimate,
+              ),
+            if (s.carryOutMinor != null)
+              ValueRow(
+                label: l10n.closedCarried,
+                value: formatMinor(s.carryOutMinor!),
+              ),
+          ] else
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                l10n.piggyBalanceShort(formatMinor(s.balanceMinor)),
+                style: theme.textTheme.bodySmall?.copyWith(color: c.textMuted),
+              ),
             ),
         ],
       ),
@@ -254,6 +365,7 @@ class PiggyBankCard extends StatelessWidget {
   }
 }
 
+/// "Przelej" is the everyday button; "Wycofaj" is rare, so it stays small.
 class _MoneyButtons extends StatelessWidget {
   const _MoneyButtons({required this.period});
   final Period period;
@@ -296,26 +408,25 @@ class _MoneyButtons extends StatelessWidget {
       children: [
         Expanded(
           child: AppButton(
-            label: l10n.transfer,
-            height: 44,
+            label: l10n.transferFromWallet,
+            kind: ButtonKind.tonal,
+            height: 40,
             onPressed: () => _move(context, withdraw: false),
           ),
         ),
         const SizedBox(width: 10),
-        Expanded(
-          child: AppButton(
-            label: l10n.withdraw,
-            kind: ButtonKind.secondary,
-            height: 44,
-            onPressed: () => _move(context, withdraw: true),
-          ),
+        SmallButton(
+          label: l10n.withdraw,
+          outlined: true,
+          onPressed: () => _move(context, withdraw: true),
         ),
       ],
     );
   }
 }
 
-/// The envelopes with plan, spent and left (F17, F19); tapping one sets its plan.
+/// The envelopes with plan, spent and left (F17, F19). Tapping one adds an
+/// expense to it (F08) or changes its plan.
 class _Plans extends StatelessWidget {
   const _Plans({required this.summary});
   final PeriodSummary summary;
@@ -338,6 +449,44 @@ class _Plans extends StatelessWidget {
         (repo) => repo.setPlan(summary.period.id, e.envelopeId, amount),
       ),
     );
+  }
+
+  Future<void> _choose(BuildContext context, EnvelopeFigures e) async {
+    final l10n = AppLocalizations.of(context);
+    final spend = summary.period.status == PeriodStatus.current;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text(e.name, style: Theme.of(ctx).textTheme.titleMedium),
+            ),
+            if (spend)
+              ListTile(
+                leading: const Icon(Icons.shopping_bag_outlined),
+                title: Text(l10n.todoAddExpense),
+                onTap: () => Navigator.of(ctx).pop('spend'),
+              ),
+            ListTile(
+              leading: const Icon(Icons.tune),
+              title: Text(l10n.changePlan),
+              onTap: () => Navigator.of(ctx).pop('plan'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+    if (action == 'plan') return _setPlan(context, e);
+    if (action == 'spend') {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => AddExpenseScreen(initialEnvelopeId: e.envelopeId),
+        ),
+      );
+    }
   }
 
   @override
@@ -367,7 +516,7 @@ class _Plans extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: SurfaceCard(
-              onTap: open && !e.archived ? () => _setPlan(context, e) : null,
+              onTap: open && !e.archived ? () => _choose(context, e) : null,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

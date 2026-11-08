@@ -91,7 +91,7 @@
   "appliedToTodo": "Nie zmieściło się – trafiło do „Do załatwienia”.",
   "applyAllExpenses": "Zastosuj wszystkie wydatki cykliczne: {name}",
   "applyEstimateHint": "Podaj rzeczywistą kwotę.",
-  "applyNow": "Zastosuj",
+  "applyNow": "Zastosuj teraz",
   "archive": "Archiwizuj",
   "archived": "w archiwum",
   "byAuthor": "Autor: {name}",
@@ -301,5 +301,16 @@
   "later": "Później",
   "next": "Dalej",
   "income": "Wpływ",
-  "addIncome": "Dodaj wpływ"
+  "addIncome": "Dodaj wpływ",
+  "addIncomeShort": "+ Wpływ",
+  "recurringIncomeName": "Wpływ cykliczny",
+  "recurringIncome": "Powtarzaj co miesiąc",
+  "recurringIncomeOn": "Co miesiąc, {day}. dnia",
+  "openNextConfirm": "Następny okres zacznie się {date}. Plany kopert skopiują się z bieżącego, a przelewać na niego możesz już teraz.",
+  "previousPeriodTooltip": "Poprzedni okres",
+  "nextPeriodTooltip": "Następny okres",
+  "piggyBalanceShort": "Saldo skarbonki: {amount} · dotknij, by zobaczyć szczegóły",
+  "changePlan": "Zmień plan",
+  "appliedDone": "Zastosowano.",
+  "appliedNothing": "Nic do zastosowania w tym okresie – następne wystąpienie jest później."
 }

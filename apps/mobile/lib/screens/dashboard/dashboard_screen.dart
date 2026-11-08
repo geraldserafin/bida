@@ -8,6 +8,7 @@ import '../../state/budget_state.dart';
 import '../../theme/app_theme.dart';
 import '../../util/money_format.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/fab_bar.dart';
 import '../../widgets/bottom_menu.dart';
 import '../../widgets/error_view.dart';
 import '../../widgets/logo_box.dart';
@@ -79,14 +80,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: empty || state.isLoading || state.loadError != null
           ? null
-          : AppButton(
-              label: l10n.addExpenseShort,
-              height: 48,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
-              ),
+          : FabBar(
+              children: [
+                AppButton(
+                  label: l10n.addIncomeShort,
+                  kind: ButtonKind.raised,
+                  height: 48,
+                  onPressed: () => showIncomeSheet(context),
+                ),
+                AppButton(
+                  label: l10n.addExpenseShort,
+                  height: 48,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
+                  ),
+                ),
+              ],
             ),
     );
   }

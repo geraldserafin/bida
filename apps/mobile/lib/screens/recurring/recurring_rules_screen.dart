@@ -10,6 +10,7 @@ import '../../util/amounts.dart';
 import '../../util/money_format.dart';
 import '../../util/money_steps.dart';
 import '../../widgets/app_button.dart';
+import '../../widgets/fab_bar.dart';
 import '../../widgets/labeled_field.dart';
 import '../../widgets/pill_chip.dart';
 import '../../widgets/remote_data.dart';
@@ -72,10 +73,15 @@ class RecurringRulesScreen extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButton: AppButton(
-        label: l10n.addRule,
-        height: 48,
-        onPressed: () => showRuleSheet(context),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FabBar(
+        children: [
+          AppButton(
+            label: l10n.addRule,
+            height: 48,
+            onPressed: () => showRuleSheet(context),
+          ),
+        ],
       ),
     );
   }
@@ -127,39 +133,15 @@ class _RuleRow extends StatelessWidget {
                   style: TextStyle(color: c.textMuted),
                 ),
                 Text(formatMinor(rule.amountMinor)),
+                const SizedBox(height: 8),
+                SmallButton(
+                  label: l10n.applyNow,
+                  onPressed: rule.active
+                      ? () => applyRuleNow(context, rule)
+                      : null,
+                ),
               ],
             ),
-          ),
-          TextButton(
-            onPressed: rule.active
-                ? () async {
-                    final amount = rule.estimated
-                        ? await askAmount(
-                            context,
-                            title: l10n.applyNow,
-                            message: l10n.applyEstimateHint,
-                            initialMinor: rule.amountMinor,
-                          )
-                        : rule.amountMinor;
-                    if (amount == null || !context.mounted) return;
-                    var todo = 0;
-                    final ok = await attemptMoney(
-                      context,
-                      () async => todo = await state.change(
-                        (repo) => repo.applyRule(
-                          rule.id!,
-                          amountMinor: rule.estimated ? amount : null,
-                        ),
-                      ),
-                    );
-                    if (ok && todo > 0 && context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.appliedToTodo)),
-                      );
-                    }
-                  }
-                : null,
-            child: Text(l10n.applyNow),
           ),
           ToggleSwitch(
             value: rule.active,
@@ -174,6 +156,38 @@ class _RuleRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Applies the next occurrence of a rule now (F25, F26) and says what came
+/// of it: made, sent to the to-do list, or nothing left in this period.
+Future<void> applyRuleNow(BuildContext context, RecurringRule rule) async {
+  final l10n = AppLocalizations.of(context);
+  final state = context.read<BudgetState>();
+  final messenger = ScaffoldMessenger.of(context);
+  final amount = rule.estimated
+      ? await askAmount(
+          context,
+          title: l10n.applyNow,
+          message: l10n.applyEstimateHint,
+          initialMinor: rule.amountMinor,
+        )
+      : rule.amountMinor;
+  if (amount == null || !context.mounted) return;
+  ({int applied, int todo})? result;
+  final ok = await attemptMoney(
+    context,
+    () async => result = await state.change(
+      (repo) =>
+          repo.applyRule(rule.id!, amountMinor: rule.estimated ? amount : null),
+    ),
+  );
+  if (!ok || result == null) return;
+  final message = result!.applied > 0
+      ? l10n.appliedDone
+      : result!.todo > 0
+      ? l10n.appliedToTodo
+      : l10n.appliedNothing;
+  messenger.showSnackBar(SnackBar(content: Text(message)));
 }
 
 Future<void> showRuleSheet(BuildContext context, {RecurringRule? existing}) =>
@@ -442,6 +456,20 @@ class _RuleSheetState extends State<_RuleSheet> {
               ),
             const SizedBox(height: 16),
             AppButton(label: l10n.save, busy: _saving, onPressed: _save),
+            if (!isNew && widget.existing!.active) ...[
+              const SizedBox(height: 8),
+              AppButton(
+                label: l10n.applyNow,
+                kind: ButtonKind.tonal,
+                onPressed: _saving
+                    ? null
+                    : () async {
+                        final navigator = Navigator.of(context);
+                        await applyRuleNow(context, widget.existing!);
+                        navigator.pop();
+                      },
+              ),
+            ],
             if (!isNew) ...[
               const SizedBox(height: 8),
               AppButton(

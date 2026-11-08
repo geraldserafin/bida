@@ -647,7 +647,7 @@ abstract class AppLocalizations {
   /// No description provided for @applyNow.
   ///
   /// In en, this message translates to:
-  /// **'Apply'**
+  /// **'Apply now'**
   String get applyNow;
 
   /// No description provided for @archive.
@@ -1909,6 +1909,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add income'**
   String get addIncome;
+
+  /// No description provided for @addIncomeShort.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Income'**
+  String get addIncomeShort;
+
+  /// No description provided for @recurringIncomeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring income'**
+  String get recurringIncomeName;
+
+  /// No description provided for @recurringIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat every month'**
+  String get recurringIncome;
+
+  /// No description provided for @recurringIncomeOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Every month on day {day}'**
+  String recurringIncomeOn(int day);
+
+  /// No description provided for @openNextConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The next period starts on {date}. The plans of the envelopes are copied from the current one, and you can transfer into it now.'**
+  String openNextConfirm(String date);
+
+  /// No description provided for @previousPeriodTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous period'**
+  String get previousPeriodTooltip;
+
+  /// No description provided for @nextPeriodTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Next period'**
+  String get nextPeriodTooltip;
+
+  /// No description provided for @piggyBalanceShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Piggy bank balance: {amount} · tap for details'**
+  String piggyBalanceShort(String amount);
+
+  /// No description provided for @changePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the plan'**
+  String get changePlan;
+
+  /// No description provided for @appliedDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied.'**
+  String get appliedDone;
+
+  /// No description provided for @appliedNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to apply in this period – the next occurrence comes later.'**
+  String get appliedNothing;
 }
 
 class _AppLocalizationsDelegate
