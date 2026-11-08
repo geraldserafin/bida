@@ -38,10 +38,10 @@ jobs:
           db=$(docker compose ps --format '{{.Service}} {{.Image}}' | awk '$2 ~ /postgres/ {print $1; exit}')
           if [ -z "$db" ]; then echo "no postgres service in the compose project, nothing done"; exit 1; fi
           echo "database service: $db"
-          dump="bida-before-v05-$(date +%Y%m%d-%H%M%S).sql"
+          dump="$HOME/bida-before-v05-$(date +%Y%m%d-%H%M%S).sql"
           docker compose exec -T "$db" sh -c 'pg_dump -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}"' > "$dump"
           if [ ! -s "$dump" ]; then echo "the dump is empty, nothing wiped"; exit 1; fi
-          echo "dump: $(pwd)/$dump ($(wc -c < "$dump") bytes)"
+          echo "dump: $dump ($(wc -c < "$dump") bytes)"
           docker compose exec -T "$db" sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "${POSTGRES_DB:-$POSTGRES_USER}" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"'
           docker compose restart backend
           for i in $(seq 1 30); do
