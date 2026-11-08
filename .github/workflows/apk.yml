@@ -50,7 +50,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version=$(sed -n 's/^version: \([0-9.]*\)+.*//p' apps/mobile/pubspec.yaml)
+          version=$(grep '^version:' apps/mobile/pubspec.yaml | cut -d' ' -f2 | cut -d+ -f1)
           cp apps/mobile/build/app/outputs/flutter-apk/app-release.apk plning.apk
           gh release delete apk-latest --yes --cleanup-tag || true
-          gh release create apk-latest plning.apk             --target "$SHA"             --latest             --title "PLNing v$version (${SHA::7})"             --notes "Wersja $version zbudowana z ${SHA::7} na main, API: $API_URL. Jest podpisana innym kluczem niż v1.0.0: przed instalacją odinstaluj starą aplikację."
+          gh release create apk-latest plning.apk \
+            --target "$SHA" \
+            --latest \
+            --title "PLNing v$version (${SHA::7})" \
+            --notes "Wersja $version zbudowana z ${SHA::7} na main, API: $API_URL. Jest podpisana innym kluczem niż v1.0.0: przed instalacją odinstaluj starą aplikację."
