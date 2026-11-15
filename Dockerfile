@@ -1,6 +1,7 @@
 # Image of the API. Build from the repository root:
 #   docker build -t bida-api .
-FROM node:22-slim
+FROM node:26-slim
+
 
 RUN npm install --global pnpm@12.9.0
 
