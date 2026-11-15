@@ -1,7 +1,8 @@
 # Image of the API. Build from the repository root:
 #   docker build -t bida-api .
-FROM node:22-slim
+FROM node:26-slim
 
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 RUN npm install --global pnpm@12.9.0
 
 WORKDIR /app
